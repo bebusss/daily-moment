@@ -1,3 +1,23 @@
+# Daily Moment: an evening wind-down
+
+Each night of the month sets one piece of a stained-glass window. My notes on the thinking (inspiration, the bet, what I'd measure, tools) are in [WRITEUP.md](WRITEUP.md).
+
+```bash
+npm install && npm run dev
+```
+
+Where things live, for the live session:
+
+- `app/page.tsx` loads the month and renders `components/Moment.tsx`, which holds the screen's state.
+- `components/WindowScene.tsx` draws the window (three.js). It only draws what it's given: `goal`, `selected`, `onSelect`.
+- `components/Ritual.tsx` is tonight's three steps. `components/NightCard.tsx` is the card under the window. `components/Windows.tsx` is where Plus goes.
+- `lib/window-model.ts` decides what each piece of glass means. `lib/sunset.ts` calls Open-Meteo.
+- `data/sample.json` is the month. Colors and the shared UI shapes are tokens in `app/globals.css`.
+
+---
+
+The original brief follows.
+
 # Design Engineer take-home
 
 Thanks for making it this far. This is the part we care about most, and it's small
