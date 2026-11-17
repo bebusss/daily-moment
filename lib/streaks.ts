@@ -100,3 +100,43 @@ export function turned(t: THREE.Texture, seed: number): THREE.Texture {
   copy.needsUpdate = true;
   return copy;
 }
+
+let plasterCache: THREE.CanvasTexture | null = null;
+
+/** Plaster: a fine, uneven surface for the wall, as a normal map (no image files). */
+export function plaster(): THREE.CanvasTexture {
+  if (plasterCache) return plasterCache;
+  const size = 256;
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const g = c.getContext("2d")!;
+  g.fillStyle = "rgb(128,128,128)";
+  g.fillRect(0, 0, size, size);
+  for (let i = 0; i < 1400; i++) {
+    const v = 90 + Math.random() * 80;
+    g.fillStyle = `rgba(${v},${v},${v},0.18)`;
+    g.beginPath();
+    g.arc(Math.random() * size, Math.random() * size, 1 + Math.random() * 5, 0, Math.PI * 2);
+    g.fill();
+  }
+  const src = g.getImageData(0, 0, size, size).data;
+  const img = g.createImageData(size, size);
+  const at = (x: number, y: number) => src[(((y + size) % size) * size + ((x + size) % size)) * 4] / 255;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = (at(x + 1, y) - at(x - 1, y)) * 2;
+      const dy = (at(x, y + 1) - at(x, y - 1)) * 2;
+      const len = Math.hypot(dx, dy, 1);
+      const k = (y * size + x) * 4;
+      img.data[k] = ((-dx / len) * 0.5 + 0.5) * 255;
+      img.data[k + 1] = ((dy / len) * 0.5 + 0.5) * 255;
+      img.data[k + 2] = ((1 / len) * 0.5 + 0.5) * 255;
+      img.data[k + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  plasterCache = new THREE.CanvasTexture(c);
+  plasterCache.wrapS = plasterCache.wrapT = THREE.RepeatWrapping;
+  plasterCache.repeat.set(1.5, 1.5);
+  return plasterCache;
+}
