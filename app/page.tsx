@@ -24,7 +24,7 @@ export default function Page() {
         <code className="rounded bg-neutral-200 px-1 py-0.5 font-mono text-[0.85em] text-neutral-700">
           README
         </code>
-        . Build your daily moment here — edit{" "}
+        . Build your daily moment here. Edit{" "}
         <code className="rounded bg-neutral-200 px-1 py-0.5 font-mono text-[0.85em] text-neutral-700">
           app/page.tsx
         </code>

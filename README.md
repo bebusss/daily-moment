@@ -1,9 +1,9 @@
-# Mobile-first Design Engineer — Take-home
+# Mobile-first Design Engineer, take-home
 
-Thanks for getting this far. This is the part we care about most — it's how we see
-how you actually work. It's small on purpose, and we pay you for your time.
+Thanks for getting this far. This is the part we care about most. It's how we see
+how you actually work. It's small on purpose.
 
-**We'll pay you $50 for this, whatever the outcome. Your work stays yours.**
+**Your work stays yours.**
 
 Everything you need is in this repo. Clone it, read this README, and build.
 
@@ -18,7 +18,7 @@ A **Next.js** app that already runs and already deploys. It includes Tailwind,
 TypeScript, a sample data file, and one blank screen for you to build on. Setup is
 done for you, so you can spend your time on design and product thinking.
 
-Please start from this project — don't rebuild it from scratch. We use the same
+Please start from this project, don't rebuild it from scratch. We use the same
 starting point for everyone so we can compare fairly, and so we can build on your
 project together later (see "What happens next").
 
@@ -31,7 +31,7 @@ goal.
 
 The main daily moment is the screen where a person does the thing each day, marks
 it done, and gets a small, satisfying sense of progress that makes them want to
-come back tomorrow. That one moment is the whole task — you don't need to build the
+come back tomorrow. That one moment is the whole task. You don't need to build the
 rest of the app. Build it in **`app/page.tsx`**.
 
 **You choose what the goal is.** Some examples:
@@ -58,7 +58,7 @@ We're testing two different things at once. Please keep them straight.
 **You must follow these exactly. These are not optional:**
 
 1. Start from this scaffold. Don't rebuild the project yourself.
-2. Design **mobile-first** — we open and judge it on a phone. Making it responsive
+2. Design **mobile-first**. We open and judge it on a phone. Making it responsive
    so it also looks good on desktop is welcome, but it's your call.
 3. Your app must read the **sample data file** (`data/sample.json`). Change the
    contents to fit your goal, but keep it a local file. **No backend.**
@@ -67,11 +67,11 @@ We're testing two different things at once. Please keep them straight.
 5. Plan for **about 5 hours**. Please don't go over. If you want to do more, write
    it down instead of building it.
 6. **Send it the way we describe in ["How to submit"](#how-to-submit).** Please
-   don't push to this repo or open a pull request against it — it's read-only for
-   candidates. Work in your own copy.
+   don't push to this repo or open a pull request against it. It's read-only for
+   candidates, so work in your own copy.
 
-If anything here is unclear, email us before you start. Asking a good question is a
-point in your favor, not against you.
+If anything is unclear, email **jamieson@chooseyourhorizon.com** before you start.
+Asking a good question is a point in your favor, not against you.
 
 ## The business reality to design around
 
@@ -108,7 +108,7 @@ When you're done, pick whichever is easier for you:
 
 - **Email a zip** of your project to **jamieson@chooseyourhorizon.com** (you can
   leave out `node_modules`), **or**
-- **Push to your own GitHub repo** and send us the link — make it public, or add
+- **Push to your own GitHub repo** and email us the link. Make it public, or add
   **jamieson@chooseyourhorizon.com** as a collaborator.
 
 Either way, make sure it still **runs with one command**, since we build on it
@@ -117,25 +117,25 @@ together in the live session.
 ## Deploy it (optional)
 
 Not required. If you'd like to include a live link, the easiest way is to import
-your repo at [vercel.com/new](https://vercel.com/new) — no config, it deploys
-as-is. A live link is a nice bonus; we don't score it.
+your repo at [vercel.com/new](https://vercel.com/new), no config, it deploys as-is.
+A live link is a nice bonus; we don't score it.
 
 ## What's inside this repo
 
 ```
 app/
   layout.tsx       Root layout + mobile viewport. Fonts are a neutral default.
-  page.tsx         ← YOUR CANVAS. Replace this with your daily moment.
+  page.tsx         <- YOUR CANVAS. Replace this with your daily moment.
   globals.css      Tailwind + a neutral base. Restyle freely.
 data/
   sample.json      Local sample data. Reshape it to fit your goal (keep it local).
 lib/
-  data.ts          Tiny typed loader for the sample data. No backend — this is it.
+  data.ts          Tiny typed loader for the sample data. No backend, this is it.
 ```
 
 ## What to send back
 
-1. Your **project** (your copy of this scaffold), still runnable with one command —
+1. Your **project** (your copy of this scaffold), still runnable with one command,
    as a zip or a link to your own repo (see ["How to submit"](#how-to-submit)).
 2. A short **README note, or a Loom video under 5 minutes**, that covers:
    - what you **looked at** before you designed (apps, patterns, references)
@@ -166,7 +166,7 @@ same project**. That's why we ask you to keep it runnable and easy to extend.
 Something small and alive beats something large and fragile.
 
 Separately, we'll send you a short online **reasoning exercise (about 15 minutes)**.
-It's not part of the build and doesn't count toward your 5 hours — do it whenever
+It's not part of the build and doesn't count toward your 5 hours, so do it whenever
 you like.
 
 ## How we'll judge it
@@ -184,4 +184,8 @@ you like.
   sent?
 - **Research instinct.** Did you look before you leaped?
 
-Questions as you go are welcome. Have fun with it.
+Questions as you go are welcome, email **jamieson@chooseyourhorizon.com** anytime.
+
+Have fun with it, and be creative. We're excited to see what you come up with, and
+don't forget to use your README to explain your process, so we can understand the
+way you think.

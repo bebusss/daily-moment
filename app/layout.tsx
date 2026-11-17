@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Daily Moment — take-home",
+  title: "Daily Moment take-home",
   description: "Build the main daily moment of an app that helps someone stick with one daily goal.",
 };
 
