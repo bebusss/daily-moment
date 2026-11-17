@@ -5,15 +5,31 @@
   --font-display: var(--font-fraunces);
 }
 
-/* Design tokens: every color on the screen comes from here. */
+/* Design tokens: every color on the screen comes from here. A warm, dim room at night. */
 @theme {
-  --color-night: #0a0e18;
-  --color-night-2: #131a2c;
-  --color-stone: #1a1f2b;
-  --color-lead: #10131a;
-  --color-gold: #e2b455;
-  --color-ink: #f1ebdd;
-  --color-mist: #9aa3b5;
+  --color-night: #120d0a;
+  --color-night-2: #1e1712;
+  --color-wood: #3a2517;
+  --color-lead: #1f1712;
+  --color-gold: #e7b24f;
+  --color-ink: #f3eadc;
+  --color-mist: #ab9c8b;
+}
+
+@keyframes ray {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+  }
 }
 
 html,
@@ -24,6 +40,6 @@ body {
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
   color: var(--color-ink);
-  background: radial-gradient(ellipse 120% 70% at 50% 28%, #19223a 0%, var(--color-night) 62%);
+  background: radial-gradient(ellipse 110% 60% at 50% 32%, #2a1d14 0%, var(--color-night) 65%);
   background-color: var(--color-night);
 }

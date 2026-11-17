@@ -1,8 +1,6 @@
-// How the glass looks: each night's color comes from the month's palette, and
-// how heavy the day was decides how deep it glows. Every pane looks good;
-// weight changes how deep it is, never whether it counts.
+// Color helpers for the glass: blending toward white or black, and one palette
+// color per night (seeded, so the same month always looks the same).
 
-import type { Weight } from "@/lib/data";
 import { seeded } from "@/lib/geometry";
 
 type RGB = [number, number, number];
@@ -21,9 +19,6 @@ export function mix(hex: string, amount: number): string {
   return toHex(toRgb(hex).map((v) => v + (target - v) * t) as RGB);
 }
 
-/** Heavy days are deep, rich glass; light days are paler and airier. */
-const DEPTH: Record<Weight, number> = { 3: -0.3, 2: -0.12, 1: 0.1 };
-
 /** One palette color per night, never the same as the night before. */
 export function paneColors(palette: string[], days: number, seed: string): string[] {
   const rand = seeded(seed + ":colors");
@@ -36,10 +31,4 @@ export function paneColors(palette: string[], days: number, seed: string): strin
     prev = pick;
   }
   return out;
-}
-
-/** Each shard of a lit pane: the night's color, at its depth, varied a little piece by piece like hand-made glass. */
-export function shardColors(base: string, weight: Weight, shards: number, seed: string): string[] {
-  const rand = seeded(seed);
-  return Array.from({ length: shards }, () => mix(base, DEPTH[weight] + (rand() - 0.5) * 0.3));
 }
