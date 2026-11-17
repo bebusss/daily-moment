@@ -151,7 +151,9 @@ lib/
 Please don't spend time on any of this. It won't earn you points, and skipping it
 is the right call.
 
-- No backend and no hosted database. Use the local data file.
+- No backend, database, or persistence. The sample file is just content to render.
+  If you want interactions like checking something off or a streak going up, holding
+  that in local state for the session is perfectly fine.
 - No real sign-in or user accounts.
 - No real payments. Show us where a paid feature would go and what it would unlock,
   but don't connect Stripe or anything like it.
