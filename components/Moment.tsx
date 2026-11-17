@@ -5,15 +5,19 @@
 // everything the person reads and touches sits on top of it: the month and intention
 // above, and one card below with the month's row of nights and the open night.
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import MonthStrip from "@/components/MonthStrip";
 import NightCard from "@/components/NightCard";
 import Ritual from "@/components/Ritual";
-import WindowScene from "@/components/WindowScene";
 import Windows from "@/components/Windows";
 import { dayOf, monthName, type DailyGoal, type LineKind, type Weight } from "@/lib/data";
 import { useSunset } from "@/lib/sunset";
 import { nightLooks } from "@/lib/window-model";
+
+// The 3D window (three.js and its effects, most of the page's code) loads on its own, after the
+// screen around it already responds; it fades in when it's ready.
+const WindowScene = dynamic(() => import("@/components/WindowScene"), { ssr: false });
 
 /** How much of the screen the text above and the card below cover, so the window fits between them. */
 function useInsets() {
@@ -49,6 +53,8 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   const sunset = useSunset();
   const { top, bottom, insets } = useInsets();
   const looks = useMemo(() => nightLooks(goal), [goal]);
+  // When the screen first responds to taps (DevTools > Performance, or performance.getEntriesByName).
+  useEffect(() => void performance.mark("ui:ready"), []);
 
   const done = goal.nights.filter((n) => n.done).length;
   const label = `${goal.intention}: this month's window, ${done} of ${goal.nights.length} nights so far`;

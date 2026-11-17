@@ -16,16 +16,20 @@
 // - Otherwise the camera holds still, framing the window between the text above and the card below.
 // - On phones it draws less: lower resolution, fewer light slices, 30 frames a second, and
 //   nothing at all while the wind-down covers it.
+// - Loading never freezes the page: the heavy work (cutting the vine, painting the glass and the
+//   stone) runs a step at a time with the browser free in between, the shaders compile in the
+//   background, and the window fades in once it can be drawn.
 
-import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { Component, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import type { DailyGoal } from "@/lib/data";
 import { len, seeded, sub, type Pt } from "@/lib/geometry";
-import { paintOutside, paintStone, paintWindow, STONE } from "@/lib/paint";
+import { paintOutside, paintStone, paintWindow, repaintWindow, STONE, type PaintedWindow } from "@/lib/paint";
 import { archPath, leafMid } from "@/lib/vine";
+import { timed } from "@/lib/perf";
 import { buildWindow, type WindowModel } from "@/lib/window-model";
 import FlatWindow from "./FlatWindow";
 
@@ -52,26 +56,62 @@ function canvasTexture(c: HTMLCanvasElement, color: boolean, nearest = false) {
   return t;
 }
 
+// The window is painted once; after that only the nights that change are repainted, and a canvas
+// that didn't change keeps its texture (so it isn't sent to the graphics card again).
+let lastPainted: PaintedWindow | null = null;
+let lastOutside: {
+  outline: Pt[];
+  painted: ReturnType<typeof paintOutside>;
+} | null = null;
+const textureOf = new WeakMap<HTMLCanvasElement, THREE.CanvasTexture>();
+
+function paintFor(model: WindowModel) {
+  if (lastPainted?.model === model) return lastPainted;
+  const again = lastPainted && timed("window:repaint", () => repaintWindow(lastPainted!, model));
+  lastPainted = again || timed("window:paint-glass", () => paintWindow(model));
+  return lastPainted;
+}
+
+function outsideFor(model: WindowModel) {
+  if (lastOutside?.outline !== model.outline)
+    lastOutside = {
+      outline: model.outline,
+      painted: timed("window:paint-outside", () => paintOutside(model)),
+    };
+  return lastOutside.painted;
+}
+
+function textureFor(c: HTMLCanvasElement, color: boolean, nearest = false) {
+  let t = textureOf.get(c);
+  if (!t) textureOf.set(c, (t = canvasTexture(c, color, nearest)));
+  return t;
+}
+
 function useWindowTextures(model: WindowModel) {
-  const painted = useMemo(() => paintWindow(model), [model]);
+  const painted = useMemo(() => paintFor(model), [model]);
   const textures = useMemo(() => {
-    const outside = paintOutside(model);
+    const outside = outsideFor(model);
     return {
-      glass: canvasTexture(painted.glass, true),
-      lead: canvasTexture(painted.lead, false),
-      mask: canvasTexture(painted.mask, false),
-      ids: canvasTexture(painted.ids, false, true),
-      sharp: canvasTexture(outside.sharp, true),
-      soft: canvasTexture(outside.soft, true),
+      glass: textureFor(painted.glass, true),
+      lead: textureFor(painted.lead, false),
+      mask: textureFor(painted.mask, false),
+      ids: textureFor(painted.ids, false, true),
+      sharp: textureFor(outside.sharp, true),
+      soft: textureFor(outside.soft, true),
       sun: new THREE.Vector2(...outside.sun),
     };
   }, [model, painted]);
-  useEffect(
-    () => () => {
-      for (const t of Object.values(textures)) if (t instanceof THREE.Texture) t.dispose();
-    },
-    [textures],
-  );
+  // Free textures nothing uses any more: not this set, nor the one before it (tonight's leaf
+  // fills in from that one).
+  const live = useRef<THREE.Texture[]>([]);
+  const recent = useRef<THREE.Texture[][]>([]);
+  useEffect(() => {
+    const now: THREE.Texture[] = Object.values(textures).filter((t) => t instanceof THREE.Texture);
+    recent.current = [...recent.current.slice(-1), now];
+    const keep = new Set(recent.current.flat());
+    for (const t of live.current) if (!keep.has(t)) t.dispose();
+    live.current = [...keep];
+  }, [textures]);
   return { textures, paneAt: painted.paneAt };
 }
 
@@ -203,22 +243,27 @@ const glassFragment = /* glsl */ `
 
 type Painted = ReturnType<typeof useWindowTextures>["textures"];
 
-function glassMaterial(t: Painted, model: WindowModel) {
+/**
+ * The glass's material is made once and its textures swapped on it as the window changes:
+ * making a new one would make the graphics card compile the same program again (about a
+ * third of a second on a phone, right as tonight's leaf is set).
+ */
+function glassMaterial() {
   return new THREE.ShaderMaterial({
     vertexShader: glassVertex,
     fragmentShader: glassFragment,
     uniforms: {
-      glassMap: { value: t.glass },
-      prevMap: { value: t.glass },
-      leadMap: { value: t.lead },
-      maskMap: { value: t.mask },
-      prevMask: { value: t.mask },
-      idMap: { value: t.ids },
-      outSharp: { value: t.sharp },
-      outSoft: { value: t.soft },
-      texel: { value: new THREE.Vector2(1 / t.lead.image.width, 1 / t.lead.image.height) },
-      size: { value: new THREE.Vector2(model.width, model.height) },
-      sun: { value: t.sun },
+      glassMap: { value: null },
+      prevMap: { value: null },
+      leadMap: { value: null },
+      maskMap: { value: null },
+      prevMask: { value: null },
+      idMap: { value: null },
+      outSharp: { value: null },
+      outSoft: { value: null },
+      texel: { value: new THREE.Vector2() },
+      size: { value: new THREE.Vector2() },
+      sun: { value: new THREE.Vector2() },
       exposure: { value: 1.9 },
       time: { value: 0 },
       today: { value: 0 },
@@ -246,7 +291,8 @@ function Glass({
   selected?: number;
   onSelect?: (day: number) => void;
 }) {
-  const material = useMemo(() => glassMaterial(textures, model), [textures, model]);
+  const material = useMemo(() => glassMaterial(), []);
+  useEffect(() => () => material.dispose(), [material]);
   const mesh = useRef<THREE.Mesh>(null);
   const todayIndex = model.panes.findIndex((p) => p.status === "today");
   const shown = selected ?? model.panes[todayIndex]?.day;
@@ -254,21 +300,37 @@ function Glass({
   // The last window drawn and its waiting leaf, so a leaf just filled in can come up from it.
   const drawn = useRef<{ textures: Painted; today: number } | null>(null);
   const lastPick = useRef(-1);
-  const fill = useRef<{ from: Painted; index: number; start: number | null } | null>(null);
+  const fill = useRef<{
+    from: Painted;
+    index: number;
+    start: number | null;
+  } | null>(null);
 
   useEffect(() => {
     const before = drawn.current;
     if (before && before.textures !== textures && before.today >= 0 && model.panes[before.today]?.status === "done") {
-      fill.current = { from: before.textures, index: before.today, start: null };
+      fill.current = {
+        from: before.textures,
+        index: before.today,
+        start: null,
+      };
     }
     drawn.current = { textures, today: todayIndex };
-    return () => material.dispose();
-  }, [textures, material, model, todayIndex]);
+  }, [textures, model, todayIndex]);
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
     const u = (mesh.current.material as THREE.ShaderMaterial).uniforms;
     const t = state.clock.elapsedTime;
+    u.glassMap.value = textures.glass;
+    u.leadMap.value = textures.lead;
+    u.maskMap.value = textures.mask;
+    u.idMap.value = textures.ids;
+    u.outSharp.value = textures.sharp;
+    u.outSoft.value = textures.soft;
+    u.sun.value.copy(textures.sun);
+    u.texel.value.set(1 / textures.lead.image.width, 1 / textures.lead.image.height);
+    u.size.value.set(model.width, model.height);
     u.time.value = t;
     u.selected.value = selectedIndex + 1;
     u.today.value = todayIndex + 1;
@@ -340,21 +402,37 @@ function useSun(model: WindowModel, textures: Painted) {
     const light = new THREE.SpotLight("#ffd7a0", 40, 0, 0.21, 0, 0);
     light.position.copy(SUN.clone().multiplyScalar(22));
     light.target.position.copy(SUN.clone().multiplyScalar(-4));
-    const target = new THREE.WebGLRenderTarget(512, 512, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+    const target = new THREE.WebGLRenderTarget(512, 512, {
+      type: THREE.HalfFloatType,
+      generateMipmaps: true,
+      minFilter: THREE.LinearMipmapLinearFilter,
+    });
     light.map = target.texture;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#000");
     return { light, target, scene };
   }, []);
+  // One material for the sun's picture too, its textures swapped as the window changes.
+  const cast = useRef<THREE.ShaderMaterial | null>(null);
 
   useEffect(() => {
-    const material = new THREE.ShaderMaterial({
+    cast.current ??= new THREE.ShaderMaterial({
       vertexShader: glassVertex,
       fragmentShader: castFragment,
-      uniforms: { glassMap: { value: textures.glass }, leadMap: { value: textures.lead }, idMap: { value: textures.ids }, outSoft: { value: textures.soft } },
+      uniforms: {
+        glassMap: { value: null },
+        leadMap: { value: null },
+        idMap: { value: null },
+        outSoft: { value: null },
+      },
       // The sun sees the glass from outside: its back.
       side: THREE.DoubleSide,
     });
+    const material = cast.current;
+    material.uniforms.glassMap.value = textures.glass;
+    material.uniforms.leadMap.value = textures.lead;
+    material.uniforms.idMap.value = textures.ids;
+    material.uniforms.outSoft.value = textures.soft;
     const pane = new THREE.Mesh(new THREE.PlaneGeometry(model.width, model.height), material);
     // The saddle bars block the sun too.
     const bars = model.bars.map((y) => {
@@ -368,20 +446,28 @@ function useSun(model: WindowModel, textures: Painted) {
     light.updateMatrixWorld();
     light.target.updateMatrixWorld();
     light.shadow.updateMatrices(light);
-    const before = gl.getRenderTarget();
-    gl.setRenderTarget(target);
-    gl.clear();
-    gl.render(scene, light.shadow.camera);
-    gl.setRenderTarget(before);
+    let live = true;
+    gl.compileAsync(scene, light.shadow.camera).then(() => {
+      if (!live) return;
+      const before = gl.getRenderTarget();
+      gl.setRenderTarget(target);
+      gl.clear();
+      timed("window:sun-picture", () => gl.render(scene, light.shadow.camera));
+      gl.setRenderTarget(before);
+    });
     return () => {
+      live = false;
       scene.remove(pane, ...bars);
       pane.geometry.dispose();
-      material.dispose();
       bars.forEach((b) => b.geometry.dispose());
     };
   }, [gl, sun, model, textures]);
 
   useEffect(() => () => sun.target.dispose(), [sun]);
+  useEffect(() => {
+    const material = cast;
+    return () => material.current?.dispose();
+  }, []);
   return sun;
 }
 
@@ -420,7 +506,7 @@ const airFragment = /* glsl */ `
 `;
 
 function Air({ sun, model, slices }: { sun: ReturnType<typeof useSun>; model: WindowModel; slices: number }) {
-  const noise = useMemo(() => noiseTexture(), []);
+  const noise = useMemo(() => timed("window:paint-air", noiseTexture), []);
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -517,7 +603,11 @@ function Dust({ sun, model }: { sun: ReturnType<typeof useSun>; model: WindowMod
     const m = new THREE.ShaderMaterial({
       vertexShader: dustVertex,
       fragmentShader: dustFragment,
-      uniforms: { lightMap: { value: sun.target.texture }, lightMatrix: { value: sun.light.shadow.matrix }, time: { value: 0 } },
+      uniforms: {
+        lightMap: { value: sun.target.texture },
+        lightMatrix: { value: sun.light.shadow.matrix },
+        time: { value: 0 },
+      },
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
@@ -579,9 +669,16 @@ function facing(g: THREE.BufferGeometry, toward: THREE.Vector3) {
   return g;
 }
 
-function useStone() {
+const stones = new Map<number, ReturnType<typeof paintStone>>();
+function stoneFor(size: number) {
+  let stone = stones.get(size);
+  if (!stone) stones.set(size, (stone = timed("window:paint-stone", () => paintStone(size))));
+  return stone;
+}
+
+function useStone(size: number) {
   const maps = useMemo(() => {
-    const { color, normal } = paintStone();
+    const { color, normal } = stoneFor(size);
     const c = new THREE.CanvasTexture(color);
     c.colorSpace = THREE.SRGBColorSpace;
     const n = new THREE.CanvasTexture(normal);
@@ -590,7 +687,7 @@ function useStone() {
       t.anisotropy = 8;
     }
     return { color: c, normal: n };
-  }, []);
+  }, [size]);
   useEffect(
     () => () => {
       maps.color.dispose();
@@ -601,8 +698,8 @@ function useStone() {
   return maps;
 }
 
-function Wall({ model }: { model: WindowModel }) {
-  const stone = useStone();
+function Wall({ model, stoneSize }: { model: WindowModel; stoneSize: number }) {
+  const stone = useStone(stoneSize);
   const { jambs, sill, face, ledge, ledgeY, ledgeWidth } = useMemo(() => {
     const a = archPath(-REBATE);
     const top = Math.max(...a.map((p) => p[1]));
@@ -630,9 +727,7 @@ function Wall({ model }: { model: WindowModel }) {
     },
     [jambs, sill, face, ledge],
   );
-  const material = (
-    <meshStandardMaterial map={stone.color} normalMap={stone.normal} normalScale={new THREE.Vector2(0.9, 0.9)} roughness={0.92} metalness={0} />
-  );
+  const material = <meshStandardMaterial map={stone.color} normalMap={stone.normal} normalScale={new THREE.Vector2(0.9, 0.9)} roughness={0.92} metalness={0} />;
   return (
     <group>
       <mesh geometry={jambs}>{material}</mesh>
@@ -706,6 +801,30 @@ function Rig({ model, insets, focus, still }: { model: WindowModel; insets: Inse
   return null;
 }
 
+/**
+ * A safety net for devices that can't keep up: if frames take much longer than they should
+ * (half again the target, judged over a couple of seconds), draw at a lower resolution from then on.
+ */
+function Adapt({ frameMs }: { frameMs: number }) {
+  const setDpr = useThree((s) => s.setDpr);
+  const samples = useRef<number[]>([]);
+  const lowered = useRef(false);
+  useFrame((_, delta) => {
+    if (lowered.current) return;
+    samples.current.push(delta * 1000);
+    const total = samples.current.reduce((a, b) => a + b, 0);
+    if (total < 2500 || samples.current.length < 5) return;
+    const sorted = [...samples.current].sort((a, b) => a - b);
+    samples.current = [];
+    if (sorted[Math.floor(sorted.length / 2)] > frameMs * 1.5) {
+      lowered.current = true;
+      setDpr(1);
+      performance.mark("window:lowered-resolution");
+    }
+  });
+  return null;
+}
+
 /** On a phone, draw at 30 frames a second instead of every frame. */
 function Pace({ fps }: { fps: number }) {
   const invalidate = useThree((s) => s.invalidate);
@@ -732,8 +851,29 @@ function useMedia(query: string) {
 /** Phones and tablets (a finger, not a mouse) get the lighter scene. */
 const useLite = () => useMedia("(pointer: coarse)");
 
+/** Compiles every shader in the scene in the background, then lets the window be drawn. */
+function Compile({ onCompiled }: { onCompiled: () => void }) {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  useEffect(() => {
+    let live = true;
+    const start = performance.now();
+    gl.compileAsync(scene, camera).then(() => {
+      if (!live) return;
+      performance.measure("window:compile", { start, end: performance.now() });
+      onCompiled();
+    });
+    return () => {
+      live = false;
+    };
+  }, [gl, scene, camera, onCompiled]);
+  return null;
+}
+
 type SceneProps = {
   model: WindowModel;
+  onCompiled: () => void;
   selected?: number;
   spotlight?: number | null;
   onSelect?: (day: number) => void;
@@ -741,7 +881,18 @@ type SceneProps = {
   lite: boolean;
 };
 
-function Scene({ model, selected, spotlight, onSelect, insets, lite }: SceneProps) {
+/** Marks the first frame drawn, so the time to a visible window can be measured. */
+function FirstFrame() {
+  const done = useRef(false);
+  useFrame(() => {
+    if (done.current) return;
+    done.current = true;
+    performance.mark("window:first-frame");
+  });
+  return null;
+}
+
+function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled }: SceneProps) {
   const { textures, paneAt } = useWindowTextures(model);
   const sun = useSun(model, textures);
   const still = useMedia("(prefers-reduced-motion: reduce)");
@@ -755,6 +906,7 @@ function Scene({ model, selected, spotlight, onSelect, insets, lite }: SceneProp
     <>
       <color attach="background" args={["#0b0806"]} />
       <Rig model={model} insets={insets} focus={focus} still={still} />
+      <FirstFrame />
       <hemisphereLight args={["#6a4c38", "#0a0604", 0.5]} />
       {/* The glow of the glass, lighting the stone around it from inside the opening. */}
       {[
@@ -768,7 +920,7 @@ function Scene({ model, selected, spotlight, onSelect, insets, lite }: SceneProp
       <pointLight position={[0, -1, DEPTH + 1.6]} intensity={2.2} distance={9} decay={2} color="#ff9f5a" />
       <primitive object={sun.light} />
       <primitive object={sun.light.target} />
-      <Wall model={model} />
+      <Wall model={model} stoneSize={lite ? STONE_LITE : STONE_FULL} />
       <Glass model={model} textures={textures} paneAt={paneAt} selected={selected} spotlight={Boolean(spotlight)} onSelect={onSelect} />
       <Bars model={model} />
       <Air sun={sun} model={model} slices={lite ? 14 : 26} />
@@ -778,8 +930,59 @@ function Scene({ model, selected, spotlight, onSelect, insets, lite }: SceneProp
         <ToneMapping mode={ToneMappingMode.NEUTRAL} />
         <Vignette offset={0.28} darkness={0.72} />
       </EffectComposer>
+      <Compile onCompiled={onCompiled} />
     </>
   );
+}
+
+/**
+ * If WebGL can't start (an old phone, a browser that blocks it), the 3D window throws. Caught
+ * here, so the flat window shows instead and the rest of the screen keeps working.
+ */
+class WebGLBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+/** Without WebGL: the flat window, shown at once. */
+function FlatFallback({ model, label, insets, onShown }: { model: WindowModel; label: string; insets: Insets; onShown: () => void }) {
+  useEffect(() => onShown(), [onShown]);
+  // In the same space as the 3D window: between the text above and the card below.
+  return (
+    <div className="absolute inset-x-0 flex justify-center px-6 py-3" style={{ top: insets.top, bottom: insets.bottom }}>
+      <div className="h-full" style={{ aspectRatio: `${model.width + 0.15} / ${model.height + 0.15}` }}>
+        <FlatWindow model={model} label={label} />
+      </div>
+    </div>
+  );
+}
+
+/** The stone's texture size: phones don't need the full one. */
+const STONE_FULL = 1024;
+const STONE_LITE = 512;
+
+/** Lets the browser handle taps and paint the page between two heavy steps. */
+const breathe = () => new Promise<void>((done) => setTimeout(done, 0));
+
+/**
+ * Everything the scene needs before its first frame, a step at a time. Each step's result is
+ * kept, so the scene finds it ready, and setting tonight's leaf only redoes what changed.
+ */
+async function prepare(goal: DailyGoal, lite: boolean, alive: () => boolean) {
+  await breathe();
+  if (!alive()) return null;
+  const model = timed("window:build", () => buildWindow(goal));
+  for (const step of [() => paintFor(model), () => outsideFor(model), () => stoneFor(lite ? STONE_LITE : STONE_FULL)]) {
+    await breathe();
+    if (!alive()) return null;
+    step();
+  }
+  return model;
 }
 
 export default function WindowScene({
@@ -802,24 +1005,41 @@ export default function WindowScene({
   /** Stop drawing (the last frame stays), e.g. while the wind-down covers the window. */
   paused?: boolean;
 }) {
-  const model = useMemo(() => buildWindow(goal), [goal]);
   const lite = useLite();
+  const [model, setModel] = useState<WindowModel | null>(null);
+  const [compiled, setCompiled] = useState(false);
+  const reveal = useCallback(() => setCompiled(true), []);
+  useEffect(() => {
+    let live = true;
+    prepare(goal, lite, () => live).then((m) => {
+      if (live && m) setModel(m);
+    });
+    return () => {
+      live = false;
+    };
+  }, [goal, lite]);
+  const drawing = compiled && !paused;
   return (
-    <div className="absolute inset-0" role="img" aria-label={label}>
-      <Canvas
-        dpr={[1, lite ? 1.5 : 2]}
-        frameloop={paused ? "never" : lite ? "demand" : "always"}
-        camera={{ position: [0, -0.5, 16], fov: 36, near: 0.1, far: 80 }}
-        gl={{ antialias: false, powerPreference: "high-performance" }}
-        fallback={
-          <div className="mx-auto mt-[18vh] w-[62%] max-w-[280px]">
-            <FlatWindow model={model} label={label} />
-          </div>
-        }
-      >
-        <Scene model={model} selected={selected} spotlight={spotlight} onSelect={onSelect} insets={insets} lite={lite} />
-        {lite && !paused && <Pace fps={30} />}
-      </Canvas>
+    <div className="absolute inset-0 transition-opacity duration-1000 ease-out" style={{ opacity: compiled ? 1 : 0 }} role="img" aria-label={label}>
+      {model && (
+        <WebGLBoundary fallback={<FlatFallback model={model} label={label} insets={insets} onShown={reveal} />}>
+          <Canvas
+            dpr={[1, lite ? 1.5 : 2]}
+            frameloop={!drawing ? "never" : lite ? "demand" : "always"}
+            camera={{ position: [0, -0.5, 16], fov: 36, near: 0.1, far: 80 }}
+            gl={{ antialias: false, powerPreference: "high-performance" }}
+            onCreated={({ gl }) => {
+              // Checking that every shader compiled makes the page wait on the graphics card. Worth it
+              // while developing; in production they're compiled in the background (see Compile).
+              gl.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
+            }}
+          >
+            <Scene model={model} selected={selected} spotlight={spotlight} onSelect={onSelect} insets={insets} lite={lite} onCompiled={reveal} />
+            {lite && drawing && <Pace fps={30} />}
+            {drawing && <Adapt frameMs={lite ? 1000 / 30 : 1000 / 60} />}
+          </Canvas>
+        </WebGLBoundary>
+      )}
     </div>
   );
 }

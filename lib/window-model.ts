@@ -11,7 +11,7 @@
 import type { DailyGoal, Weight } from "@/lib/data";
 import type { Pt } from "@/lib/geometry";
 import { mix, paneColors, pick, saturate } from "@/lib/glass";
-import { vineWindow, type LeafFrame, type PieceKind } from "@/lib/vine";
+import { vineWindow, type Design, type LeafFrame, type PieceKind } from "@/lib/vine";
 
 export type PaneStatus = "done" | "gap" | "today" | "future" | "decor";
 
@@ -76,10 +76,17 @@ export function nightLooks(goal: DailyGoal): NightLook[] {
   });
 }
 
+/** The vine's geometry depends only on the month, so each month's is cut once and kept. */
+const designs = new Map<string, Design>();
+function designFor(month: string): Design {
+  let design = designs.get(month);
+  if (!design) designs.set(month, (design = vineWindow(daysIn(month), month)));
+  return design;
+}
+
 export function buildWindow(goal: DailyGoal): WindowModel {
-  const days = daysIn(goal.month);
   const looks = nightLooks(goal);
-  const design = vineWindow(days, goal.month);
+  const design = designFor(goal.month);
   let border = 0;
 
   const panes = design.pieces.map((p): PaneModel => {

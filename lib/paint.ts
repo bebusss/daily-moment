@@ -8,7 +8,9 @@
 // - lead:  where the lead cames are (a rounded profile, brightest along their middle);
 // - mask:  red = gold (mended) lead, green = tonight's glow, blue = how milky the glass is;
 // - ids:   which piece each pixel belongs to (for picking, and for tonight's glow).
-// paintOutside() paints the evening the window looks out on; paintStone() the wall.
+// repaintWindow() redoes only the pieces that changed (tonight's leaf when it's set, a missed
+// night when it's mended), reusing the rest. paintOutside() paints the evening the window looks
+// out on; paintStone() the wall.
 
 import { seeded, type Pt } from "@/lib/geometry";
 import { leafHalf, leafMid } from "@/lib/vine";
@@ -24,7 +26,12 @@ const canvas = (w: number, h: number) => {
   return c;
 };
 
-const ctx = (c: HTMLCanvasElement) => c.getContext("2d", { willReadFrequently: false })!;
+/**
+ * A canvas's 2D context. `readable` keeps it in memory instead of on the graphics card: reading
+ * pixels back from a card-held canvas makes the browser finish all its pending drawing first.
+ * (The first call decides; later calls get the same context.)
+ */
+const ctx = (c: HTMLCanvasElement, readable = false) => c.getContext("2d", { willReadFrequently: readable })!;
 
 type Rand = () => number;
 
@@ -138,6 +145,10 @@ export type PaintedWindow = {
   ids: HTMLCanvasElement;
   /** The pane at a spot on the window (u, v in 0..1, v up), if any. */
   paneAt: (u: number, v: number) => PaneModel | undefined;
+  /** What it was painted from, and the mask's three layers, for repainting a piece later. */
+  model: WindowModel;
+  layers: { gold: HTMLCanvasElement; milk: HTMLCanvasElement; glow: HTMLCanvasElement };
+  idPx: Uint8ClampedArray;
 };
 
 /** Lead widths, in scene units. */
@@ -155,20 +166,18 @@ export function paintWindow(model: WindowModel): PaintedWindow {
     p.closePath();
     return p;
   };
-  const rand = seeded("paint");
-
   const glass = canvas(w, h);
   const g = ctx(glass);
   const lead = canvas(w, h);
   const l = ctx(lead);
   const gold = canvas(w, h);
-  const au = ctx(gold);
+  const au = ctx(gold, true);
   const milk = canvas(w, h);
-  const m = ctx(milk);
+  const m = ctx(milk, true);
   const ids = canvas(w, h);
-  const id = ctx(ids);
+  const id = ctx(ids, true);
   const glowCanvas = canvas(w, h);
-  const ri = ctx(glowCanvas);
+  const ri = ctx(glowCanvas, true);
   for (const c of [g, l, au, m, id, ri]) {
     c.fillStyle = "#000";
     c.fillRect(0, 0, w, h);
@@ -178,36 +187,10 @@ export function paintWindow(model: WindowModel): PaintedWindow {
 
   model.panes.forEach((pane, index) => {
     const shape = path(pane.points);
-    const xs = pane.points.map((p) => px(p)[0]);
-    const ys = pane.points.map((p) => px(p)[1]);
-    const box = { x: Math.min(...xs) - 4, y: Math.min(...ys) - 4, w: Math.max(...xs) - Math.min(...xs) + 8, h: Math.max(...ys) - Math.min(...ys) + 8 };
-
-    // The glass: its color, then its sheet's texture, cut along its own grain.
-    g.save();
-    g.clip(shape);
-    g.fillStyle = pane.color;
-    g.fillRect(box.x, box.y, box.w, box.h);
-    g.globalCompositeOperation = "multiply";
-    const pattern = g.createPattern(sheet(pane.glass), "repeat")!;
-    const [cx, cy] = [box.x + box.w / 2, box.y + box.h / 2];
-    pattern.setTransform(
-      new DOMMatrix()
-        .translateSelf(cx, cy)
-        .rotateSelf(((-pane.grain + Math.PI / 2) * 180) / Math.PI)
-        .translateSelf(pane.tone * TILE, ((pane.tone * 7.3) % 1) * TILE)
-        .scaleSelf(pane.glass === "seedy" ? 0.8 : 1.15),
-    );
-    g.fillStyle = pattern;
-    g.fillRect(box.x - box.w, box.y - box.h, box.w * 3, box.h * 3);
-    paintGrisaille(g, pane, shape, px, rand);
-    g.restore();
+    paintGlass(g, pane, shape, px);
 
     // Its lead, and where it is: what's painted later covers what's behind it.
     const lw = leadWidth(pane) * PX;
-    g.strokeStyle = "#17110c";
-    g.lineWidth = lw;
-    g.stroke(shape);
-
     l.globalCompositeOperation = "source-over";
     l.fillStyle = "#000";
     l.fill(shape);
@@ -234,40 +217,14 @@ export function paintWindow(model: WindowModel): PaintedWindow {
 
     au.fillStyle = "#000";
     au.fill(shape);
-    m.fillStyle = `rgb(${Math.round(pane.diffusion * 255)},${Math.round(pane.diffusion * 255)},${Math.round(pane.diffusion * 255)})`;
-    m.fill(shape);
-    m.lineWidth = lw;
-    m.strokeStyle = m.fillStyle;
-    m.stroke(shape);
+    paintMilk(m, pane, shape);
     id.fillStyle = `rgb(${(index + 1) & 255},${(index + 1) >> 8},255)`;
     id.fill(shape);
   });
 
-  // Mended nights: their whole lead, gold.
-  for (const pane of model.panes.filter((p) => p.mended)) {
-    au.strokeStyle = "#fff";
-    au.lineWidth = leadWidth(pane) * PX * 1.8;
-    au.stroke(path(pane.points));
-  }
-
-  // Tonight's leaf: a glow just inside its lead, for the light that waits in it.
-  for (const pane of model.panes.filter((p) => p.status === "today")) {
-    const shape = path(pane.points);
-    ri.save();
-    ri.clip(shape);
-    ri.globalCompositeOperation = "lighter";
-    for (const [k, a] of [
-      [0.16, 0.22],
-      [0.09, 0.3],
-      [0.045, 0.45],
-    ] as const) {
-      ri.strokeStyle = `rgba(255,255,255,${a})`;
-      ri.lineWidth = k * PX;
-      ri.stroke(shape);
-    }
-    ri.fillStyle = "rgba(255,255,255,0.3)";
-    ri.fill(shape);
-    ri.restore();
+  for (const pane of model.panes) {
+    if (pane.mended) paintGold(au, pane, path(pane.points));
+    if (pane.status === "today") paintWaiting(ri, path(pane.points));
   }
 
   // The outer lead, heavier, all the way round.
@@ -286,31 +243,165 @@ export function paintWindow(model: WindowModel): PaintedWindow {
     l.stroke(rim);
   }
 
-  // Gold in red, tonight's glow in green, milkiness in blue.
   const mask = canvas(w, h);
-  const mk = ctx(mask);
-  const out = mk.createImageData(w, h);
-  const goldPx = au.getImageData(0, 0, w, h).data;
-  const milkPx = m.getImageData(0, 0, w, h).data;
-  const rimPx = ri.getImageData(0, 0, w, h).data;
-  for (let i = 0; i < out.data.length; i += 4) {
-    out.data[i] = goldPx[i];
-    out.data[i + 1] = rimPx[i];
-    out.data[i + 2] = milkPx[i];
-    out.data[i + 3] = 255;
-  }
-  mk.putImageData(out, 0, 0);
-
+  const layers = { gold, milk, glow: glowCanvas };
+  composeMask(mask, layers, { x: 0, y: 0, w, h });
   const idPx = id.getImageData(0, 0, w, h).data;
-  const paneAt = (u: number, v: number) => {
+  return { glass, lead, mask, ids, paneAt: picker(model, idPx, w, h), model, layers, idPx };
+}
+
+/**
+ * The same window after some nights changed (tonight's leaf set, a missed night mended): only
+ * those pieces are painted again; the lead and the piece map are reused as they are.
+ * Returns null when the geometry differs (another month), so the caller paints from scratch.
+ */
+export function repaintWindow(before: PaintedWindow, model: WindowModel): PaintedWindow | null {
+  const was = before.model;
+  if (was.outline !== model.outline || was.panes.length !== model.panes.length) return null;
+  const changed = model.panes.filter((p, i) => {
+    const q = was.panes[i];
+    return q.color !== p.color || q.status !== p.status || q.mended !== p.mended || q.diffusion !== p.diffusion || q.glass !== p.glass;
+  });
+  if (!changed.length) return { ...before, model, paneAt: picker(model, before.idPx, before.glass.width, before.glass.height) };
+
+  const { glass: w0 } = before;
+  const [w, h] = [w0.width, w0.height];
+  const px = ([x, y]: Pt): Pt => [(x + model.width / 2) * PX, (model.height / 2 - y) * PX];
+  const path = (pts: Pt[]) => {
+    const p = new Path2D();
+    pts.forEach((pt, i) => (i ? p.lineTo(...px(pt)) : p.moveTo(...px(pt))));
+    p.closePath();
+    return p;
+  };
+  const copy = (c: HTMLCanvasElement, readable = false) => {
+    const out = canvas(w, h);
+    ctx(out, readable).drawImage(c, 0, 0);
+    return out;
+  };
+  const glass = copy(before.glass);
+  const layers = { gold: copy(before.layers.gold, true), milk: copy(before.layers.milk, true), glow: copy(before.layers.glow, true) };
+  const [g, au, m, ri] = [ctx(glass), ctx(layers.gold), ctx(layers.milk), ctx(layers.glow)];
+  for (const c of [g, au, m, ri]) {
+    c.lineJoin = "round";
+    c.lineCap = "round";
+  }
+
+  const pad = LEAD.outline * PX * 2;
+  let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const pane of changed) {
+    const shape = path(pane.points);
+    paintGlass(g, pane, shape, px);
+    paintMilk(m, pane, shape);
+    ri.save();
+    ri.clip(shape);
+    ri.fillStyle = "#000";
+    ri.fillRect(0, 0, w, h);
+    ri.restore();
+    if (pane.status === "today") paintWaiting(ri, shape);
+    if (pane.mended) paintGold(au, pane, shape);
+    for (const p of pane.points) {
+      const [x, y] = px(p);
+      [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];
+    }
+  }
+  const area = { x: Math.max(0, Math.floor(x0 - pad)), y: Math.max(0, Math.floor(y0 - pad)), w: 0, h: 0 };
+  area.w = Math.min(w, Math.ceil(x1 + pad)) - area.x;
+  area.h = Math.min(h, Math.ceil(y1 + pad)) - area.y;
+  const mask = copy(before.mask);
+  composeMask(mask, layers, area);
+  return { glass, lead: before.lead, mask, ids: before.ids, paneAt: picker(model, before.idPx, w, h), model, layers, idPx: before.idPx };
+}
+
+/** The pane at a spot on the window, read from the piece map. */
+function picker(model: WindowModel, idPx: Uint8ClampedArray, w: number, h: number) {
+  return (u: number, v: number) => {
     const x = Math.min(w - 1, Math.max(0, Math.floor(u * w)));
     const y = Math.min(h - 1, Math.max(0, Math.floor((1 - v) * h)));
     const k = (y * w + x) * 4;
     if (idPx[k + 2] < 128) return undefined;
     return model.panes[idPx[k] + idPx[k + 1] * 256 - 1];
   };
+}
 
-  return { glass, lead, mask, ids, paneAt };
+/** One piece of glass: its color, its sheet's texture cut along its own grain, its paint, its lead. */
+function paintGlass(g: CanvasRenderingContext2D, pane: PaneModel, shape: Path2D, px: (p: Pt) => Pt) {
+  const xs = pane.points.map((p) => px(p)[0]);
+  const ys = pane.points.map((p) => px(p)[1]);
+  const box = { x: Math.min(...xs) - 4, y: Math.min(...ys) - 4, w: Math.max(...xs) - Math.min(...xs) + 8, h: Math.max(...ys) - Math.min(...ys) + 8 };
+  g.save();
+  g.clip(shape);
+  g.fillStyle = pane.color;
+  g.fillRect(box.x, box.y, box.w, box.h);
+  g.globalCompositeOperation = "multiply";
+  const pattern = g.createPattern(sheet(pane.glass), "repeat")!;
+  const [cx, cy] = [box.x + box.w / 2, box.y + box.h / 2];
+  pattern.setTransform(
+    new DOMMatrix()
+      .translateSelf(cx, cy)
+      .rotateSelf(((-pane.grain + Math.PI / 2) * 180) / Math.PI)
+      .translateSelf(pane.tone * TILE, ((pane.tone * 7.3) % 1) * TILE)
+      .scaleSelf(pane.glass === "seedy" ? 0.8 : 1.15),
+  );
+  g.fillStyle = pattern;
+  g.fillRect(box.x - box.w, box.y - box.h, box.w * 3, box.h * 3);
+  // Each piece's paint has its own seed, so it looks the same however the window is painted.
+  paintGrisaille(g, pane, shape, px, seeded("paint:" + pane.key));
+  g.restore();
+  g.strokeStyle = "#17110c";
+  g.lineWidth = leadWidth(pane) * PX;
+  g.stroke(shape);
+}
+
+/** How milky the piece is (blue channel of the mask). */
+function paintMilk(m: CanvasRenderingContext2D, pane: PaneModel, shape: Path2D) {
+  const v = Math.round(pane.diffusion * 255);
+  m.fillStyle = `rgb(${v},${v},${v})`;
+  m.fill(shape);
+  m.lineWidth = leadWidth(pane) * PX;
+  m.strokeStyle = m.fillStyle;
+  m.stroke(shape);
+}
+
+/** A mended night: its whole lead, gold (red channel of the mask). */
+function paintGold(au: CanvasRenderingContext2D, pane: PaneModel, shape: Path2D) {
+  au.strokeStyle = "#fff";
+  au.lineWidth = leadWidth(pane) * PX * 1.8;
+  au.stroke(shape);
+}
+
+/** Tonight's leaf: a glow just inside its lead, for the light that waits in it (green channel). */
+function paintWaiting(ri: CanvasRenderingContext2D, shape: Path2D) {
+  ri.save();
+  ri.clip(shape);
+  ri.globalCompositeOperation = "lighter";
+  for (const [k, a] of [
+    [0.16, 0.22],
+    [0.09, 0.3],
+    [0.045, 0.45],
+  ] as const) {
+    ri.strokeStyle = `rgba(255,255,255,${a})`;
+    ri.lineWidth = k * PX;
+    ri.stroke(shape);
+  }
+  ri.fillStyle = "rgba(255,255,255,0.3)";
+  ri.fill(shape);
+  ri.restore();
+}
+
+/** Gold in red, tonight's glow in green, milkiness in blue: packed into the mask, in `area` only. */
+function composeMask(mask: HTMLCanvasElement, layers: PaintedWindow["layers"], area: { x: number; y: number; w: number; h: number }) {
+  if (area.w <= 0 || area.h <= 0) return;
+  const read = (c: HTMLCanvasElement) => ctx(c, true).getImageData(area.x, area.y, area.w, area.h).data;
+  const [goldPx, glowPx, milkPx] = [read(layers.gold), read(layers.glow), read(layers.milk)];
+  const mk = ctx(mask);
+  const out = mk.createImageData(area.w, area.h);
+  for (let i = 0; i < out.data.length; i += 4) {
+    out.data[i] = goldPx[i];
+    out.data[i + 1] = glowPx[i];
+    out.data[i + 2] = milkPx[i];
+    out.data[i + 3] = 255;
+  }
+  mk.putImageData(out, area.x, area.y);
 }
 
 /** Grisaille: the dark paint fired onto the glass. Called with the piece's shape as the clip. */
@@ -548,14 +639,19 @@ export function paintOutside(model: WindowModel): { sharp: HTMLCanvasElement; so
 
 export const STONE = 3.2;
 
-export function paintStone(): { color: HTMLCanvasElement; normal: HTMLCanvasElement } {
-  const size = 1024;
+export function paintStone(size = 1024): { color: HTMLCanvasElement; normal: HTMLCanvasElement } {
   const per = size / STONE;
   const color = canvas(size, size);
   const g = ctx(color);
   const height = canvas(size, size);
-  const hg = ctx(height);
+  const hg = ctx(height, true);
   const rand = seeded("stone");
+  // Specks: as many per stone whatever the texture's size, from a few ready-made colors.
+  const k = size / 1024;
+  const lightSpecks = Array.from({ length: 8 }, (_, i) => `rgba(255,245,225,${(0.05 + (0.07 * i) / 7).toFixed(3)})`);
+  const darkSpecks = Array.from({ length: 8 }, (_, i) => `rgba(45,32,20,${(0.05 + (0.1 * i) / 7).toFixed(3)})`);
+  const pits = Array.from({ length: 8 }, (_, i) => `rgba(0,0,0,${(0.25 + (0.3 * i) / 7).toFixed(3)})`);
+  const pick8 = (list: string[]) => list[Math.min(7, Math.floor(rand() * 8))];
   g.fillStyle = "#6f604f";
   g.fillRect(0, 0, size, size);
   hg.fillStyle = "rgb(40,40,40)";
@@ -571,7 +667,7 @@ export function paintStone(): { color: HTMLCanvasElement; normal: HTMLCanvasElem
       const bw = (0.55 + rand() * 0.6) * per;
       const tone = 0.82 + rand() * 0.25;
       const base = [178 * tone, 160 * tone, 134 * tone].map(Math.round);
-      const gap = 3;
+      const gap = Math.max(2, 3 * k);
       for (const dx of [0, -size, size]) {
         const bx = x + dx + gap;
         const by = r * ch + gap;
@@ -590,15 +686,15 @@ export function paintStone(): { color: HTMLCanvasElement; normal: HTMLCanvasElem
     }
   }
   // Speckle and pitting.
-  for (let i = 0; i < 26000; i++) {
+  for (let i = 0; i < 26000 * k * k; i++) {
     const x = rand() * size;
     const y = rand() * size;
-    const r = 0.4 + rand() * 1.8;
+    const r = (0.4 + rand() * 1.8) * Math.max(k, 0.6);
     const v = rand();
-    g.fillStyle = v > 0.5 ? `rgba(255,245,225,${0.05 + rand() * 0.07})` : `rgba(45,32,20,${0.05 + rand() * 0.1})`;
+    g.fillStyle = v > 0.5 ? pick8(lightSpecks) : pick8(darkSpecks);
     g.fillRect(x, y, r, r);
     if (v < 0.25) {
-      hg.fillStyle = `rgba(0,0,0,${0.25 + rand() * 0.3})`;
+      hg.fillStyle = pick8(pits);
       hg.beginPath();
       hg.arc(x, y, r * 1.4, 0, Math.PI * 2);
       hg.fill();
@@ -608,7 +704,7 @@ export function paintStone(): { color: HTMLCanvasElement; normal: HTMLCanvasElem
   for (let i = 0; i < 60; i++) {
     const x = rand() * size;
     const y = rand() * size;
-    const r = 30 + rand() * 120;
+    const r = (30 + rand() * 120) * k;
     const grad = g.createRadialGradient(x, y, 0, x, y, r);
     const c = rand() > 0.5 ? "255,236,205" : "60,42,26";
     grad.addColorStop(0, `rgba(${c},0.08)`);
