@@ -1,45 +1,34 @@
-// ============================================================================
-// This is your canvas.
-//
-// Replace everything in this component with the main daily moment of your app:
-// the screen where a person does the thing each day, marks it done, and feels a
-// small, satisfying pull to come back tomorrow.
-//
-// What's here now is just a starter message. Delete it and build your own thing.
-// Design mobile-first; make it responsive if you like. Full brief is in the
-// README. A sample data file is ready for you at data/sample.json, with a small
-// typed loader in lib/data.ts (import { getDailyGoal } from "@/lib/data").
-// ============================================================================
+// The daily moment: this month's window, and tonight's wind-down.
+// Iteration 1: the window alone, static. Tonight's ritual comes next.
+
+import RoseWindow from "@/components/RoseWindow";
+import { getDailyGoal } from "@/lib/data";
 
 export default function Page() {
+  const goal = getDailyGoal();
+  const month = new Date(`${goal.month}-01T12:00:00`).toLocaleString("en-US", { month: "long" });
+  const done = goal.nights.filter((n) => n.done).length;
+  const tonight = new Date(`${goal.today}T12:00:00`).toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-6 px-6 text-center">
-      <span className="rounded-full border border-neutral-200 px-3 py-1 text-xs font-medium uppercase tracking-wide text-neutral-500">
-        Starter scaffold
-      </span>
+    <main className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-6 pb-8 pt-12">
+      <header className="text-center">
+        <p className="text-xs font-medium uppercase tracking-[0.22em] text-mist">{month}</p>
+        <h1 className="mt-2 font-display text-[28px] leading-tight text-ink">{goal.intention}</h1>
+      </header>
 
-      <div className="flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold text-neutral-900">
-          This screen is your canvas
-        </h1>
-        <p className="text-base leading-relaxed text-neutral-600">
-          Build the main daily moment here, in{" "}
-          <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[0.85em] text-neutral-700">
-            app/page.tsx
-          </code>
-          . The full brief is in the{" "}
-          <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[0.85em] text-neutral-700">
-            README
-          </code>
-          .
-        </p>
-      </div>
+      <section className="mx-auto mt-6 w-full max-w-[380px]">
+        <RoseWindow goal={goal} />
+      </section>
 
-      <p className="text-sm text-neutral-400">
-        There&apos;s a sample data file at{" "}
-        <code className="font-mono">data/sample.json</code> to build from. Reshape
-        it to fit your goal.
+      <p className="mt-5 text-center text-sm text-mist">
+        {done} of {goal.nights.length} nights
       </p>
+
+      <div className="mt-auto rounded-3xl bg-night-2 p-5">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-mist">Tonight · {tonight}</p>
+        <button className="mt-4 w-full rounded-2xl bg-ink py-4 text-base font-medium text-night">Begin the wind-down</button>
+      </div>
     </main>
   );
 }

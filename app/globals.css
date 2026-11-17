@@ -1,11 +1,21 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-fraunces);
 }
 
-/* Neutral base. The look is yours to define, restyle freely. */
+/* Design tokens: every color on the screen comes from here. */
+@theme {
+  --color-night: #0a0e18;
+  --color-night-2: #131a2c;
+  --color-stone: #1a1f2b;
+  --color-lead: #10131a;
+  --color-gold: #e2b455;
+  --color-ink: #f1ebdd;
+  --color-mist: #9aa3b5;
+}
+
 html,
 body {
   height: 100%;
@@ -13,4 +23,7 @@ body {
 
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
+  color: var(--color-ink);
+  background: radial-gradient(ellipse 120% 70% at 50% 28%, #19223a 0%, var(--color-night) 62%);
+  background-color: var(--color-night);
 }

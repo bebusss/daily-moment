@@ -1,18 +1,31 @@
 {
-  "_comment": "This is placeholder data so the scaffold has something to render. Replace all of it to fit the daily goal you choose. Keep it a local file in this repo. Do not add a backend or a database.",
-  "goalTitle": "Sample daily goal",
-  "goalSubtitle": "Swap this content for whatever your daily moment needs",
-  "streakDays": 4,
-  "history": [
-    { "date": "2026-11-13", "done": true },
-    { "date": "2026-11-14", "done": true },
-    { "date": "2026-11-15", "done": false },
-    { "date": "2026-11-16", "done": true },
-    { "date": "2026-11-17", "done": false }
+  "_comment": "One month of a nightly wind-down. Local data only: no backend, no database. Weights: 1 light day, 2 normal, 3 heavy.",
+  "goal": "Wind down before bed",
+  "month": "2026-11",
+  "intention": "Slower evenings",
+  "palette": ["#2152d6", "#7b2fcf", "#0a9aa0", "#c81d55", "#e39b1b", "#1f8a4c"],
+  "today": "2026-11-17",
+  "ritual": [
+    { "id": "lights", "label": "Dim the lights", "detail": "Lamps on, overhead off." },
+    { "id": "phone", "label": "Phone face down", "detail": "Across the room if you can." },
+    { "id": "breathe", "label": "Three slow breaths", "detail": "In for four, out for six." }
   ],
-  "items": [
-    { "id": "a", "label": "First sample item", "detail": "e.g. a word to learn, an amount to save, a wind-down step" },
-    { "id": "b", "label": "Second sample item", "detail": "Shape this list around your goal" },
-    { "id": "c", "label": "Third sample item", "detail": "The scaffold just proves the data loads; the design is yours" }
+  "nights": [
+    { "date": "2026-11-01", "done": true, "weight": 2, "note": "First night. Felt strange, in a good way." },
+    { "date": "2026-11-02", "done": true, "weight": 1 },
+    { "date": "2026-11-03", "done": true, "weight": 2, "note": "Read instead of scrolling." },
+    { "date": "2026-11-04", "done": true, "weight": 3, "note": "Long day. Did it anyway." },
+    { "date": "2026-11-05", "done": false },
+    { "date": "2026-11-06", "done": true, "weight": 2 },
+    { "date": "2026-11-07", "done": true, "weight": 1, "note": "Slept like a rock." },
+    { "date": "2026-11-08", "done": true, "weight": 2 },
+    { "date": "2026-11-09", "done": false },
+    { "date": "2026-11-10", "done": false },
+    { "date": "2026-11-11", "done": true, "weight": 3, "note": "Back." },
+    { "date": "2026-11-12", "done": true, "weight": 2 },
+    { "date": "2026-11-13", "done": true, "weight": 1 },
+    { "date": "2026-11-14", "done": true, "weight": 2, "note": "Tea, no phone, early night." },
+    { "date": "2026-11-15", "done": false },
+    { "date": "2026-11-16", "done": true, "weight": 3, "note": "Hard one. Glad I kept it." }
   ]
 }
