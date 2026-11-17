@@ -8,7 +8,7 @@
   "ritual": [
     { "id": "lights", "label": "Dim the lights", "detail": "Lamps on, overhead off." },
     { "id": "phone", "label": "Phone face down", "detail": "Across the room if you can." },
-    { "id": "breathe", "label": "Three slow breaths", "detail": "In for four, out for six." }
+    { "id": "breathe", "label": "Three slow breaths", "detail": "In for four, out for six.", "guide": { "breaths": 3, "inhale": 4, "exhale": 6 } }
   ],
   "nights": [
     { "date": "2026-11-01", "done": true, "weight": 2, "note": "First night. Felt strange, in a good way." },
