@@ -1,189 +1,82 @@
-# Mobile-first Design Engineer, take-home
+# Design Engineer take-home
 
-Thanks for getting this far. This is the part we care about most. It's how we see
-how you actually work. It's small on purpose.
+Thanks for making it this far. This is the part we care about most, and it's small
+on purpose. Everything you need is right here in this repo, and your work stays
+yours.
 
-**Your work stays yours.**
+## What to build
 
-Everything you need is in this repo. Clone it, read this README, and build.
+The main daily moment of an app that helps someone stick with one daily goal. That's
+the screen where they do the thing each day, mark it done, and get a little sense of
+progress that makes them want to come back tomorrow. Just that one screen. You don't
+need to build the rest of the app.
 
-## In one sentence
+You pick the goal: learning a language, saving money, winding down for sleep, a small
+creative habit, whatever you like. We want to see what you choose and why.
 
-Design and build one small app that helps someone reach a daily goal, hand it to us
-runnable, and tell us why you made the choices you made.
+Build it in `app/page.tsx`. Design for a phone first, since that's how we'll look at
+it. Making it responsive for desktop too is up to you.
 
-## What we give you (this repo)
+## The thing I really want you to get
 
-A **Next.js** app that already runs and already deploys. It includes Tailwind,
-TypeScript, a sample data file, and one blank screen for you to build on. Setup is
-done for you, so you can spend your time on design and product thinking.
+This kind of app only makes money as a subscription, and we don't make a cent until
+someone sticks around for about three billing cycles (five is where it really pays
+off). People don't stay because we nag them. They stay because they got hooked on one
+thing early, something they'd miss if it disappeared.
 
-Please start from this project, don't rebuild it from scratch. We use the same
-starting point for everyone so we can compare fairly, and so we can build on your
-project together later (see "What happens next").
+So pick the one thing you think people would get hooked on, and build the daily moment
+around it. Tell me where you're placing that bet.
 
-See [**Run it**](#run-it-one-command) below to get going in one command.
+## A few rules
 
-## Your task
+- Start from this scaffold, don't rebuild it from scratch. We use the same starting
+  point for everyone, and we'll build on your version together later, so keep it
+  runnable.
+- There's a sample data file at `data/sample.json`. Use it as your content and reshape
+  it to fit your goal. No backend, no database, no persistence. If you want something
+  interactive (checking a thing off, a streak ticking up), just keep it in local state.
+- Plan for about 5 hours. Please don't go way over. If you've got bigger ideas, jot
+  them down instead of building them.
 
-Build the **main daily moment** of an app that helps someone stick with one daily
-goal.
+Skip whatever doesn't matter here: no sign-in, no real payments (just show where a paid
+feature would go), no empty states or edge cases. A small, clean, working thing beats a
+big fragile one every time.
 
-The main daily moment is the screen where a person does the thing each day, marks
-it done, and gets a small, satisfying sense of progress that makes them want to
-come back tomorrow. That one moment is the whole task. You don't need to build the
-rest of the app. Build it in **`app/page.tsx`**.
-
-**You choose what the goal is.** Some examples:
-
-- learning a little every day (a language, vocabulary, an instrument)
-- saving money toward something
-- winding down for better sleep
-- a small creative habit (write 100 words, take one photo)
-
-If you have a better idea, use it. We want to see what you choose and why.
-
-## Where to be creative, and where to follow exactly
-
-We're testing two different things at once. Please keep them straight.
-
-**You decide these. Be creative. There's no "right" answer:**
-
-- what daily goal your app is about
-- what the daily moment looks like and how it feels
-- the layout, the words, the color, the type, any motion
-- the one thing that makes people want to come back (the most important design
-  decision you'll make)
-
-**You must follow these exactly. These are not optional:**
-
-1. Start from this scaffold. Don't rebuild the project yourself.
-2. Design **mobile-first**. We open and judge it on a phone. Making it responsive
-   so it also looks good on desktop is welcome, but it's your call.
-3. Your app must read the **sample data file** (`data/sample.json`). Change the
-   contents to fit your goal, but keep it a local file. **No backend.**
-4. Keep the project **runnable with one command**, because we build on it together
-   later.
-5. Plan for **about 5 hours**. Please don't go over. If you want to do more, write
-   it down instead of building it.
-6. **Send it the way we describe in ["How to submit"](#how-to-submit).** Please
-   don't push to this repo or open a pull request against it. It's read-only for
-   candidates, so work in your own copy.
-
-If anything is unclear, email **jamieson@chooseyourhorizon.com** before you start.
-Asking a good question is a point in your favor, not against you.
-
-## The business reality to design around
-
-Your design should serve this. It's the thing we most want to see you understand.
-
-> This kind of app only makes money as a subscription. We don't earn anything on a
-> user until they've stayed about **three billing cycles**, and it really pays off
-> at **five or more**. People don't stay because we remind them or make them feel
-> guilty. They stay because they get genuinely hooked on one core thing early,
-> something they'd miss if it disappeared.
-
-So: pick the one thing you believe people would get hooked on, and design the daily
-moment around it. Most of your choices should trace back to "this helps someone
-stick around long enough to matter." Tell us where you're placing that bet.
-
-## Run it (one command)
+## Running it
 
 ```bash
 npm install && npm run dev
 ```
 
-Then open <http://localhost:3000>. The page hot-reloads as you edit.
+It opens at http://localhost:3000 and reloads as you edit. Use Node 22 if you can
+(there's an `.nvmrc`).
 
-> Node: use **Node 22** (there's an `.nvmrc`). Node 20 works locally too, but Vercel
-> builds on 22.
+## Sending it back
 
-## How to submit
+Work in your own copy (clone it, or hit "Use this template"). Please don't push to this
+repo or open a PR against it.
 
-Work in your **own copy** of this scaffold (clone it, or use the green **Use this
-template** button to make your own repo). Please don't push to this repo or open a
-pull request against it.
+When you're done, email me at jamieson@chooseyourhorizon.com with either a zip of your
+project (skip `node_modules`) or a link to your own repo. Make sure it still runs with
+one command, since we'll build on it together in a short live session. Deploying it
+somewhere like Vercel is optional, a nice bonus but we don't score it.
 
-When you're done, pick whichever is easier for you:
+Send a quick note on your thinking too: what you looked at for inspiration, what you
+chose and why, the one thing you're betting people get hooked on, and what you'd measure
+or test to know it's working. A short write-up or a Loom under 5 minutes is perfect. And
+tell me what tools you used, including AI. We use it, and using it well is a plus.
 
-- **Email a zip** of your project to **jamieson@chooseyourhorizon.com** (you can
-  leave out `node_modules`), **or**
-- **Push to your own GitHub repo** and email us the link. Make it public, or add
-  **jamieson@chooseyourhorizon.com** as a collaborator.
+## How we'll look at it
 
-Either way, make sure it still **runs with one command**, since we build on it
-together in the live session.
+Mostly the design: is it clear, nice to use on a phone, and does it actually make you
+want to come back? We also care that it's built with some consistency instead of random
+one-off styles, that your product bet makes sense, and that we can run it and follow
+your thinking.
 
-## Deploy it (optional)
+If anything's unclear, just email me before you start. Honestly, a good question counts
+in your favor.
 
-Not required. If you'd like to include a live link, the easiest way is to import
-your repo at [vercel.com/new](https://vercel.com/new), no config, it deploys as-is.
-A live link is a nice bonus; we don't score it.
+Have fun with it, and be creative. I'm excited to see what you come up with. And don't
+skip the write-up, that's how I get a feel for the way you think.
 
-## What's inside this repo
-
-```
-app/
-  layout.tsx       Root layout + mobile viewport. Fonts are a neutral default.
-  page.tsx         <- YOUR CANVAS. Replace this with your daily moment.
-  globals.css      Tailwind + a neutral base. Restyle freely.
-data/
-  sample.json      Local sample data. Reshape it to fit your goal (keep it local).
-lib/
-  data.ts          Tiny typed loader for the sample data. No backend, this is it.
-```
-
-## What to send back
-
-1. Your **project** (your copy of this scaffold), still runnable with one command,
-   as a zip or a link to your own repo (see ["How to submit"](#how-to-submit)).
-2. A short **README note, or a Loom video under 5 minutes**, that covers:
-   - what you **looked at** before you designed (apps, patterns, references)
-   - what you **chose and why**: your goal, your design, and the one thing you're
-     betting people get hooked on
-   - what you'd **measure** to know it worked, one thing you'd **test**, and what
-     moves (people staying, or money) if it works
-3. A quick note on **what tools you used, including AI**. Using AI well is a plus
-   here. We hope you do.
-
-## What you do NOT need to do
-
-Please don't spend time on any of this. It won't earn you points, and skipping it
-is the right call.
-
-- No backend, database, or persistence. The sample file is just content to render.
-  If you want interactions like checking something off or a streak going up, holding
-  that in local state for the session is perfectly fine.
-- No real sign-in or user accounts.
-- No real payments. Show us where a paid feature would go and what it would unlock,
-  but don't connect Stripe or anything like it.
-- No empty states or rare edge cases. Just make the main daily moment work well.
-- No extra hours to make it bigger. A small, clean, working thing beats a big,
-  fragile one.
-
-## What happens next
-
-If we move forward, we'll do a short live session together where we **build on this
-same project**. That's why we ask you to keep it runnable and easy to extend.
-Something small and alive beats something large and fragile.
-
-## How we'll judge it
-
-- **Design quality, UI and UX (the big one).** Is it clear, usable, and genuinely
-  nice to use on a phone? Practical beats fancy.
-- **A real design system, not random styling.** Consistent, reusable, intentional.
-- **Your product bet.** Did your goal and your "hook" serve the retention reality
-  above?
-- **Creativity.** Did you make an interesting choice and make a simple idea feel
-  fresh?
-- **It ships.** Runs for us with one command, opens on a phone, reads the data. (A
-  deployed link is a bonus, not required.)
-- **Clear communication.** Can we run it and understand your thinking from what you
-  sent?
-- **Research instinct.** Did you look before you leaped?
-
-Questions as you go are welcome, email **jamieson@chooseyourhorizon.com** anytime.
-
-Have fun with it, and be creative. We're excited to see what you come up with, and
-don't forget to use your README to explain your process, so we can understand the
-way you think.
+Jamieson
