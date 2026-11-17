@@ -3,15 +3,15 @@
 // Tonight's wind-down, at most three steps over the dimmed window:
 //   1. the ritual itself (each step from the data; the breaths are paced on screen),
 //   2. how heavy today was (one tap: it sets how deep tonight's glass is),
-//   3. one optional line.
-// Then the pane is set and the window fills it in.
+//   3. one optional line: an effort, a success or progress (Zinsser's E-S-P), the person picks.
+// Then tonight's leaf is set and the window fills it in.
 
 import { useEffect, useState } from "react";
 import Glass from "@/components/Glass";
-import { WEIGHTS, type DailyGoal, type RitualStep, type Weight } from "@/lib/data";
+import { LINES, WEIGHTS, type DailyGoal, type LineKind, type RitualStep, type Weight } from "@/lib/data";
 
 type Step = 0 | 1 | 2;
-type Props = { goal: DailyGoal; onClose: () => void; onDone: (weight: Weight, note: string) => void };
+type Props = { goal: DailyGoal; onClose: () => void; onDone: (weight: Weight, note: string, line: LineKind) => void };
 
 export default function Ritual({ goal, onClose, onDone }: Props) {
   const [step, setStep] = useState<Step>(0);
@@ -19,6 +19,7 @@ export default function Ritual({ goal, onClose, onDone }: Props) {
   const [guided, setGuided] = useState<RitualStep | null>(null);
   const [weight, setWeight] = useState<Weight>(2);
   const [note, setNote] = useState("");
+  const [line, setLine] = useState<LineKind>("success");
 
   const check = (id: string) => setChecked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
@@ -121,20 +122,34 @@ export default function Ritual({ goal, onClose, onDone }: Props) {
             className="flex flex-1 flex-col justify-end animate-rise"
             onSubmit={(e) => {
               e.preventDefault();
-              onDone(weight, note.trim());
+              onDone(weight, note.trim(), line);
             }}
           >
-            <h2 className="font-display text-[28px] leading-tight">One line for tonight</h2>
-            <p className="mt-2 text-sm text-mist">Optional.</p>
+            <h2 className="font-display text-[28px] leading-tight">{LINES[line].prompt}</h2>
+            <p className="mt-2 text-sm text-mist">Optional. One line.</p>
+            <div role="radiogroup" aria-label="Kind of line" className="mt-6 grid grid-cols-3 gap-1 rounded-2xl bg-white/4 p-1 ring-1 ring-white/8">
+              {(Object.keys(LINES) as LineKind[]).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="radio"
+                  aria-checked={line === k}
+                  onClick={() => setLine(k)}
+                  className={`rounded-xl py-2.5 text-sm transition-colors duration-200 ${line === k ? "bg-ink text-night" : "text-mist"}`}
+                >
+                  {LINES[k].label}
+                </button>
+              ))}
+            </div>
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
               maxLength={120}
-              placeholder="Tea, a book, an early night…"
-              className="mt-6 w-full rounded-2xl bg-white/4 px-4 py-4 text-base text-ink ring-1 ring-white/8 outline-none placeholder:text-mist/60 focus:ring-gold/50"
+              placeholder={LINES[line].example}
+              className="mt-3 w-full rounded-2xl bg-white/4 px-4 py-4 text-base text-ink ring-1 ring-white/8 outline-none placeholder:text-mist/60 focus:ring-gold/50"
             />
             <button type="submit" className="btn-primary mt-6">
-              Set tonight&apos;s pane
+              Set tonight&apos;s leaf
             </button>
           </form>
         )}

@@ -17,6 +17,7 @@ Why it fits the business: the subscription pays back around month three. A strea
 - **Kintsugi** was the spark, and I'd rather say so. The version native to glass is the mending lead: old cathedral windows still show the extra strips of lead that held cracked panes.
 - **Cathedral glass at dusk** for the look: warm, uneven, lit from behind. I wanted it to feel like sitting in a dim room, not like reading a chart.
 - **Forest, Pikmin Bloom and Duolingo** as the safe answers I expected most entries to land near. They work, but they reward the app's artifact, and they break when the streak breaks.
+- **A psychologist friend** pressure-tested the idea, confirmed the core (a lapse should leave a mark you can recover from, never a reset) and pointed me to Nate Zinsser's E-S-P, which became the nightly line.
 
 This month's window happens to be a vine, but the plant isn't the mechanism. The record is. Next month can be a rose window.
 
@@ -26,6 +27,8 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 - **Heavier days set deeper glass.** Hard days count more, with no points.
 - **No emotional copy.** The app never tells you who you are. It shows you what you did.
 - **The breaths are paced on screen.** That's the step people skip when it's just a checkbox.
+- **The line is E-S-P.** One optional line a night: an effort, a success or a bit of progress, and the person picks which. It's a bank of proof of what you can do (Bandura's self-efficacy), in your own words instead of an app's quotes.
+- **The window comes to the night you open.** Tapping a night in the row moves the view in to its leaf. Setting tonight's leaf brings the view in while it fills with color, then steps back to the whole month.
 - **Free REST API.** Open-Meteo gives tonight's sunset where you are, with no key and no location prompt. The phone's time zone names a city and the geocoder turns it into coordinates. Both calls share a three-second budget, and if they fail the sunset line just isn't there.
 - **Paid feature.** Tap the month at the top to see next month's window. The lancet is free and the other designs are Plus. The ritual and your record are never behind the paywall: you pay for variety, never for your own evidence.
 
@@ -35,7 +38,7 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 - **Day 7 and day 30 return.**
 - **Month-3 retention**, by signup cohort.
 - **A/B tests**, both judged on lapse recovery: a gold mend against a plain gap, to isolate the mechanic itself, and "Wind down tonight" against "Be someone who winds down", to isolate the framing.
-- **On this screen:** where people drop off in the three steps, and how many leave a line. Writing a line is a stronger sign of ownership than a tap.
+- **On this screen:** where people drop off in the three steps, how many leave a line, and which of E, S or P they pick. Writing a line is a stronger sign of ownership than a tap.
 
 ## Not built, written down instead
 
@@ -43,6 +46,8 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 - Your intention, or your favorite color, sets the month's palette.
 - A year view: twelve windows on one wall.
 - A print of a finished window.
+- Patterns from the heavy days ("heavy days cluster on Fridays"), as a gentle way to spot triggers.
+- On the night someone comes back after a miss, an optional "what got in the way?", a light version of how CBT looks at a lapse.
 
 ## Tools
 

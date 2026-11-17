@@ -256,15 +256,21 @@ export function vineWindow(days: number, seed: string): Design {
 
   // The leaves, one per night, alternating sides as the vine climbs.
   const leaves: { frame: LeafFrame; points: Pt[] }[] = [];
-  // Each leaf has to clear the ones below it, the stem, the bud and the edge of the field;
-  // one that doesn't fits is trimmed (and turned a touch) until it does. The lower leaves come first.
-  const fits = (pts: Pt[]) =>
+  // Each leaf has to clear the ones below it, the stem, the bud and the edge of the field, and
+  // leave room where the next few nights' leaves will grow from: a night has to be a leaf you
+  // can find, never a speck squeezed in later. A leaf that doesn't fit first turns and slides a
+  // little, then shrinks, but only so far: past that it goes in anyway, brushing a neighbor.
+  // The lower leaves come first.
+  const ts = Array.from({ length: days }, (_, i) => 0.035 + (0.93 * (i + 0.5)) / days + (rand() - 0.5) * 0.008);
+  const sprouts = ts.map((t, i) => edge(t, (i + 1) % 2 ? -1 : 1));
+  const fits = (pts: Pt[], d: number, room = true) =>
     pts.every((p) => inside(p, main) && edgeDistance(p, main) > 0.045) &&
     leaves.every((o) => !overlaps(pts, o.points)) &&
     stemPieces.every((s) => !overlaps(pts.slice(2, -2), s)) &&
-    !overlaps(pts, bud);
+    !overlaps(pts, bud) &&
+    (!room || [sprouts[d + 1], sprouts[d + 3]].filter(Boolean).every((s) => !inside(s, pts) && edgeDistance(s, pts) > 0.14));
   for (let d = 1; d <= days; d++) {
-    const t = 0.035 + (0.93 * (d - 0.5)) / days + (rand() - 0.5) * 0.008;
+    const t = ts[d - 1];
     const side = d % 2 ? -1 : 1;
     const along = tangent(t);
     let frame: LeafFrame = {
@@ -279,8 +285,25 @@ export function vineWindow(days: number, seed: string): Design {
     };
     frame.width = frame.length * (0.3 + rand() * 0.16);
     let points = leafOutline(frame);
-    for (let k = 0; k < 40 && !fits(points); k++) {
-      frame = { ...frame, length: frame.length * 0.96, width: frame.width * 0.975, angle: frame.angle - side * 0.025 };
+    const turn = frame.angle - along;
+    let placed = fits(points, d);
+    search: for (let scale = 1; scale >= 0.55 && !placed; scale *= 0.9)
+        for (const slide of [0, 0.012, -0.012])
+          for (const up of [0, -0.2, 0.25, -0.4]) {
+            const at = t + slide;
+            // A negative "up" turns the leaf toward the stem's tip; a positive one opens it outward.
+            const tried: LeafFrame = { ...frame, base: edge(at, side), angle: tangent(at) + turn + side * up, length: frame.length * scale, width: frame.width * scale };
+            const pts = leafOutline(tried);
+            if (fits(pts, d)) {
+              frame = tried;
+              points = pts;
+              placed = true;
+              break search;
+            }
+          }
+    // Nothing fit: it goes in at a size you can still see, brushing a neighbor if it must.
+    if (!placed) {
+      frame = { ...frame, length: frame.length * 0.6, width: frame.width * 0.6 };
       points = leafOutline(frame);
     }
     leaves.push({ frame, points });

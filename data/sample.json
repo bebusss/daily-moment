@@ -11,21 +11,21 @@
     { "id": "breathe", "label": "Three slow breaths", "detail": "In for four, out for six.", "guide": { "breaths": 3, "inhale": 4, "exhale": 6 } }
   ],
   "nights": [
-    { "date": "2026-11-01", "done": true, "weight": 2, "note": "First night. Felt strange, in a good way." },
+    { "date": "2026-11-01", "done": true, "weight": 2, "line": "progress", "note": "First night. Felt strange, in a good way." },
     { "date": "2026-11-02", "done": true, "weight": 1 },
-    { "date": "2026-11-03", "done": true, "weight": 2, "note": "Read instead of scrolling." },
-    { "date": "2026-11-04", "done": true, "weight": 3, "note": "Long day. Did it anyway." },
+    { "date": "2026-11-03", "done": true, "weight": 2, "line": "success", "note": "Read instead of scrolling." },
+    { "date": "2026-11-04", "done": true, "weight": 3, "line": "effort", "note": "Long day. Did it anyway." },
     { "date": "2026-11-05", "done": false },
     { "date": "2026-11-06", "done": true, "weight": 2 },
-    { "date": "2026-11-07", "done": true, "weight": 1, "note": "Slept like a rock." },
+    { "date": "2026-11-07", "done": true, "weight": 1, "line": "success", "note": "Slept like a rock." },
     { "date": "2026-11-08", "done": true, "weight": 2 },
     { "date": "2026-11-09", "done": false },
     { "date": "2026-11-10", "done": false },
-    { "date": "2026-11-11", "done": true, "weight": 3, "note": "Back." },
+    { "date": "2026-11-11", "done": true, "weight": 3, "line": "progress", "note": "Back after two nights off." },
     { "date": "2026-11-12", "done": true, "weight": 2 },
     { "date": "2026-11-13", "done": true, "weight": 1 },
-    { "date": "2026-11-14", "done": true, "weight": 2, "note": "Tea, no phone, early night." },
+    { "date": "2026-11-14", "done": true, "weight": 2, "line": "success", "note": "Tea, no phone, early night." },
     { "date": "2026-11-15", "done": false },
-    { "date": "2026-11-16", "done": true, "weight": 3, "note": "Hard one. Glad I kept it." }
+    { "date": "2026-11-16", "done": true, "weight": 3, "line": "effort", "note": "Hard one. Glad I kept it." }
   ]
 }

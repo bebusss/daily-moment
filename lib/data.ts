@@ -8,12 +8,25 @@ export type Weight = 1 | 2 | 3;
 
 export const WEIGHTS: Record<Weight, string> = { 1: "Light day", 2: "Normal day", 3: "Heavy day" };
 
+/**
+ * The night's line, after Nate Zinsser's E-S-P: one honest effort, one thing that went
+ * right, or one bit of progress. Small proof of what you can do, banked every night.
+ */
+export type LineKind = "effort" | "success" | "progress";
+
+export const LINES: Record<LineKind, { label: string; prompt: string; example: string }> = {
+  effort: { label: "Effort", prompt: "Where did you really try today?", example: "Finished the walk in the rain." },
+  success: { label: "Success", prompt: "What went right today?", example: "Read instead of scrolling." },
+  progress: { label: "Progress", prompt: "What did you handle better than before?", example: "Left early, no explaining." },
+};
+
 /** One night of the month. A night that isn't done stays clear glass. */
 export type Night = {
   date: string;
   done: boolean;
   weight?: Weight;
   note?: string;
+  line?: LineKind;
 };
 
 /** One step of tonight's wind-down. A step with a guide is paced on screen (the breaths). */

@@ -117,6 +117,11 @@ function crosses(a: Pt, b: Pt, c: Pt, d: Pt) {
 
 /** Do two polygons overlap (an edge crossing, or one inside the other)? */
 export function overlaps(p: Pt[], q: Pt[]) {
+  // Shapes whose boxes don't touch can't overlap: most pairs end here.
+  const box = (s: Pt[]) => s.reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
+  const [a0, a1, a2, a3] = box(p);
+  const [b0, b1, b2, b3] = box(q);
+  if (a2 < b0 || b2 < a0 || a3 < b1 || b3 < a1) return false;
   for (let i = 0; i < p.length; i++) {
     const a = p[i];
     const b = p[(i + 1) % p.length];

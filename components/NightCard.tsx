@@ -3,7 +3,7 @@
 // no wind-down and the night that mended it).
 
 import Glass from "@/components/Glass";
-import { dateOf, dayOf, shortDate, WEIGHTS, type DailyGoal } from "@/lib/data";
+import { dateOf, dayOf, LINES, shortDate, WEIGHTS, type DailyGoal } from "@/lib/data";
 
 type Props = { goal: DailyGoal; day: number; onBegin: () => void; onBack: () => void };
 
@@ -47,6 +47,9 @@ export default function NightCard({ goal, day, onBegin, onBack }: Props) {
         <p className="mt-3 flex items-center gap-2.5 text-sm text-ink">
           <Glass weight={night.weight ?? 2} />
           {WEIGHTS[night.weight ?? 2]}
+          {night.note && night.line && (
+            <span className="ml-auto text-[11px] tracking-[0.16em] text-gold uppercase">{LINES[night.line].label}</span>
+          )}
         </p>
         {night.note ? (
           <p className="mt-3 font-display text-xl leading-snug text-ink italic">{night.note}</p>

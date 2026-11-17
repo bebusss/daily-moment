@@ -10,8 +10,10 @@
 //   on the ledge, and through the air as shafts with dust drifting in them. All three
 //   read the same picture of the window, taken from the sun.
 // - Tonight's leaf breathes, waiting. When it's filled in, its color comes up slowly.
-// - A past night opened from the card: the rest of the glass steps back so its leaf stands out.
-// - The camera never moves. It frames the window between the text above and the card below.
+// - A night in the spotlight (a past night opened from the card, or tonight's leaf as it's set):
+//   the view moves in to its leaf, the rest of the glass steps back, and the leaf flares once as
+//   it arrives. Without one, the whole window again.
+// - Otherwise the camera holds still, framing the window between the text above and the card below.
 // - On phones it draws less: lower resolution, fewer light slices, 30 frames a second, and
 //   nothing at all while the wind-down covers it.
 
@@ -23,7 +25,7 @@ import * as THREE from "three";
 import type { DailyGoal } from "@/lib/data";
 import { len, seeded, sub, type Pt } from "@/lib/geometry";
 import { paintOutside, paintStone, paintWindow, STONE } from "@/lib/paint";
-import { archPath } from "@/lib/vine";
+import { archPath, leafMid } from "@/lib/vine";
 import { buildWindow, type WindowModel } from "@/lib/window-model";
 import FlatWindow from "./FlatWindow";
 
@@ -131,6 +133,7 @@ const glassFragment = /* glsl */ `
   uniform float selected;
   uniform float reveal;
   uniform float focus;
+  uniform float picked;
   varying vec2 vUv;
 
   void main() {
@@ -163,16 +166,18 @@ const glassFragment = /* glsl */ `
     float isSelected = 1.0 - step(0.5, abs(pid - selected));
     light *= 1.0 + isSelected * 0.22;
     // A past night opened: the rest of the glass steps back, and its leaf glows just inside its lead.
-    light *= mix(1.0, mix(0.72, 1.35, isSelected), focus);
+    light *= mix(1.0, mix(0.5, 1.35, isSelected), focus);
+    // It flares once when it's picked.
+    light += isSelected * focus * exp(-max(time - picked, 0.0) * 1.8) * vec3(1.0, 0.9, 0.72) * 1.3;
     if (isSelected > 0.5 && focus > 0.01) {
       float edge = 0.0;
       for (int i = 0; i < 8; i++) {
         float a = float(i) * 0.785398;
-        vec4 q = texture2D(idMap, vUv + vec2(cos(a), sin(a)) * texel * 15.0);
+        vec4 q = texture2D(idMap, vUv + vec2(cos(a), sin(a)) * texel * 10.0);
         float qid = floor(q.r * 255.0 + 0.5) + floor(q.g * 255.0 + 0.5) * 256.0;
         edge += step(0.5, abs(qid - pid));
       }
-      light += min(edge / 2.0, 1.0) * focus * vec3(1.0, 0.88, 0.62) * (2.0 + 0.6 * sin(time * 2.2));
+      light += min(edge / 2.0, 1.0) * focus * vec3(1.0, 0.86, 0.58) * (1.5 + 0.5 * sin(time * 2.2));
     }
 
     // The lead: a rounded came, dark, catching a little of the room's light on its crown.
@@ -221,6 +226,7 @@ function glassMaterial(t: Painted, model: WindowModel) {
       selected: { value: 0 },
       reveal: { value: 1 },
       focus: { value: 0 },
+      picked: { value: 0 },
     },
   });
 }
@@ -230,9 +236,11 @@ function Glass({
   textures,
   paneAt,
   selected,
+  spotlight,
   onSelect,
 }: {
   model: WindowModel;
+  spotlight: boolean;
   textures: Painted;
   paneAt: (u: number, v: number) => ReturnType<ReturnType<typeof paintWindow>["paneAt"]>;
   selected?: number;
@@ -245,6 +253,7 @@ function Glass({
   const selectedIndex = model.panes.findIndex((p) => p.day === shown);
   // The last window drawn and its waiting leaf, so a leaf just filled in can come up from it.
   const drawn = useRef<{ textures: Painted; today: number } | null>(null);
+  const lastPick = useRef(-1);
   const fill = useRef<{ from: Painted; index: number; start: number | null } | null>(null);
 
   useEffect(() => {
@@ -263,12 +272,17 @@ function Glass({
     u.time.value = t;
     u.selected.value = selectedIndex + 1;
     u.today.value = todayIndex + 1;
-    const focus = selectedIndex >= 0 && selectedIndex !== todayIndex ? 1 : 0;
+    if (lastPick.current !== selectedIndex) {
+      lastPick.current = selectedIndex;
+      u.picked.value = t + 0.35;
+    }
+    const focus = spotlight && selectedIndex >= 0 ? 1 : 0;
     u.focus.value += (focus - u.focus.value) * Math.min(1, delta * 5);
     const f = fill.current;
     if (f) {
-      if (f.start === null) f.start = t;
-      const k = Math.min(1, (t - f.start) / 2.6);
+      // It waits a moment for the view to arrive.
+      if (f.start === null) f.start = t + 0.9;
+      const k = Math.max(0, Math.min(1, (t - f.start) / 2.6));
       u.reveal.value = k * k * (3 - 2 * k);
       u.filling.value = f.index + 1;
       u.prevMap.value = f.from.glass;
@@ -649,10 +663,17 @@ function Bars({ model }: { model: WindowModel }) {
 
 export type Insets = { top: number; bottom: number };
 
-/** Framing: the window (arch to ledge) as big as fits between the text above and the card below. */
-function Rig({ model, insets }: { model: WindowModel; insets: Insets }) {
+/** How close the view comes to a past night's leaf. */
+const ZOOM = 2.1;
+
+/**
+ * Framing: the window (arch to ledge) as big as fits between the text above and the card below.
+ * With a past night open, the view glides in to its leaf and centers it there instead.
+ */
+function Rig({ model, insets, focus, still }: { model: WindowModel; insets: Insets; focus: Pt | null; still: boolean }) {
   const size = useThree((s) => s.size);
-  useFrame(({ camera }) => {
+  const view = useRef<{ x: number; y: number; zoom: number } | null>(null);
+  useFrame(({ camera }, delta) => {
     const cam = camera as THREE.PerspectiveCamera;
     const tan = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
     // The stone arch rises above the glass and the ledge sits below it.
@@ -663,15 +684,23 @@ function Rig({ model, insets }: { model: WindowModel; insets: Insets }) {
     const contentW = model.width * SPLAY + 0.9;
     const free = Math.max(size.height - insets.top - insets.bottom, size.height * 0.4);
     // Pixels per scene unit: fill the free band, unless the width runs out first.
-    const k = Math.min((free * 0.96) / contentH, (size.width * 0.94) / contentW);
+    const fit = Math.min((free * 0.96) / contentH, (size.width * 0.94) / contentW);
+    // Where to look and how close: the whole window, or the open night's leaf.
+    const target = focus ? { x: focus[0], y: focus[1], zoom: ZOOM } : { x: 0, y: (above - below) / 2, zoom: 1 };
+    const v = view.current ?? (view.current = { ...target });
+    const ease = still ? 1 : 1 - Math.exp(-delta * 3);
+    v.x += (target.x - v.x) * ease;
+    v.y += (target.y - v.y) * ease;
+    v.zoom += (target.zoom - v.zoom) * ease;
+    const k = fit * v.zoom;
     const distance = size.height / k / (2 * tan);
-    // Put the window's middle on the free band's middle.
+    // Put that point on the free band's middle.
     const offset = (size.height / 2 - (insets.top + free / 2)) / k;
-    const look = (above - below) / 2 - offset;
-    if (Math.abs(cam.position.z - distance) > 1e-3 || Math.abs(cam.position.y - (look - 0.5)) > 1e-3) {
-      cam.position.set(0, look - 0.5, distance);
-      cam.lookAt(0, look, 0);
-      cam.updateProjectionMatrix();
+    const look = v.y - offset;
+    const tilt = 0.5 / v.zoom;
+    if (Math.abs(cam.position.z - distance) > 1e-4 || Math.abs(cam.position.y - (look - tilt)) > 1e-4 || Math.abs(cam.position.x - v.x) > 1e-4) {
+      cam.position.set(v.x, look - tilt, distance);
+      cam.lookAt(v.x, look, 0);
     }
   });
   return null;
@@ -688,29 +717,44 @@ function Pace({ fps }: { fps: number }) {
   return null;
 }
 
-/** Phones and tablets (a finger, not a mouse) get the lighter scene. */
-function useLite() {
+function useMedia(query: string) {
   return useSyncExternalStore(
     (change) => {
-      const m = window.matchMedia("(pointer: coarse)");
+      const m = window.matchMedia(query);
       m.addEventListener("change", change);
       return () => m.removeEventListener("change", change);
     },
-    () => window.matchMedia("(pointer: coarse)").matches,
+    () => window.matchMedia(query).matches,
     () => false,
   );
 }
 
-type SceneProps = { goal: DailyGoal; selected?: number; onSelect?: (day: number) => void; insets: Insets; lite: boolean };
+/** Phones and tablets (a finger, not a mouse) get the lighter scene. */
+const useLite = () => useMedia("(pointer: coarse)");
 
-function Scene({ goal, selected, onSelect, insets, lite }: SceneProps) {
-  const model = useMemo(() => buildWindow(goal), [goal]);
+type SceneProps = {
+  model: WindowModel;
+  selected?: number;
+  spotlight?: number | null;
+  onSelect?: (day: number) => void;
+  insets: Insets;
+  lite: boolean;
+};
+
+function Scene({ model, selected, spotlight, onSelect, insets, lite }: SceneProps) {
   const { textures, paneAt } = useWindowTextures(model);
   const sun = useSun(model, textures);
+  const still = useMedia("(prefers-reduced-motion: reduce)");
+  // The night in the spotlight: the middle of its leaf, for the view to move in to.
+  const focus = useMemo(() => {
+    const pane = spotlight ? model.panes.find((p) => p.kind === "night" && p.day === spotlight) : undefined;
+    if (!pane) return null;
+    return pane.leaf ? leafMid(pane.leaf, 0.5) : pane.points[0];
+  }, [model, spotlight]);
   return (
     <>
       <color attach="background" args={["#0b0806"]} />
-      <Rig model={model} insets={insets} />
+      <Rig model={model} insets={insets} focus={focus} still={still} />
       <hemisphereLight args={["#6a4c38", "#0a0604", 0.5]} />
       {/* The glow of the glass, lighting the stone around it from inside the opening. */}
       {[
@@ -725,7 +769,7 @@ function Scene({ goal, selected, onSelect, insets, lite }: SceneProps) {
       <primitive object={sun.light} />
       <primitive object={sun.light.target} />
       <Wall model={model} />
-      <Glass model={model} textures={textures} paneAt={paneAt} selected={selected} onSelect={onSelect} />
+      <Glass model={model} textures={textures} paneAt={paneAt} selected={selected} spotlight={Boolean(spotlight)} onSelect={onSelect} />
       <Bars model={model} />
       <Air sun={sun} model={model} slices={lite ? 14 : 26} />
       <Dust sun={sun} model={model} />
@@ -742,6 +786,7 @@ export default function WindowScene({
   goal,
   label,
   selected,
+  spotlight = null,
   onSelect,
   insets = { top: 0, bottom: 0 },
   paused = false,
@@ -749,6 +794,8 @@ export default function WindowScene({
   goal: DailyGoal;
   label: string;
   selected?: number;
+  /** A night to bring forward: the view moves in to its leaf. */
+  spotlight?: number | null;
   onSelect?: (day: number) => void;
   /** Pixels covered by the UI above and below, so the window fits between them. */
   insets?: Insets;
@@ -770,7 +817,7 @@ export default function WindowScene({
           </div>
         }
       >
-        <Scene goal={goal} selected={selected} onSelect={onSelect} insets={insets} lite={lite} />
+        <Scene model={model} selected={selected} spotlight={spotlight} onSelect={onSelect} insets={insets} lite={lite} />
         {lite && !paused && <Pace fps={30} />}
       </Canvas>
     </div>

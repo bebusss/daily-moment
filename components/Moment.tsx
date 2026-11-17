@@ -11,7 +11,7 @@ import NightCard from "@/components/NightCard";
 import Ritual from "@/components/Ritual";
 import WindowScene from "@/components/WindowScene";
 import Windows from "@/components/Windows";
-import { dayOf, monthName, type DailyGoal, type Weight } from "@/lib/data";
+import { dayOf, monthName, type DailyGoal, type LineKind, type Weight } from "@/lib/data";
 import { useSunset } from "@/lib/sunset";
 import { nightLooks } from "@/lib/window-model";
 
@@ -44,6 +44,8 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   const [selected, setSelected] = useState(today);
   const [ritual, setRitual] = useState(false);
   const [windows, setWindows] = useState(false);
+  // Just after tonight's leaf is set, the window comes to it while it fills in, then steps back.
+  const [settling, setSettling] = useState(false);
   const sunset = useSunset();
   const { top, bottom, insets } = useInsets();
   const looks = useMemo(() => nightLooks(goal), [goal]);
@@ -53,17 +55,25 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   const select = (day: number) => day <= today && setSelected(day);
 
   /** Tonight's leaf is set: the window gets a new night and fills it in. */
-  function setTonight(weight: Weight, note: string) {
-    setGoal((g) => ({ ...g, nights: [...g.nights, { date: g.today, done: true, weight, ...(note ? { note } : {}) }] }));
+  function setTonight(weight: Weight, note: string, line: LineKind) {
+    setGoal((g) => ({ ...g, nights: [...g.nights, { date: g.today, done: true, weight, ...(note ? { note, line } : {}) }] }));
     setSelected(today);
     setRitual(false);
+    setSettling(true);
+    setTimeout(() => setSettling(false), 4200);
   }
+
+  /** The night the window brings forward: a past night that's open, or tonight's leaf as it's set. */
+  const spotlight = selected !== today ? selected : settling ? today : null;
 
   return (
     <main className="relative h-dvh w-full overflow-hidden">
-      <WindowScene goal={goal} label={label} selected={selected} onSelect={select} insets={insets} paused={ritual} />
+      <WindowScene goal={goal} label={label} selected={selected} spotlight={spotlight} onSelect={select} insets={insets} paused={ritual} />
 
-      <header ref={top} className="pointer-events-none absolute inset-x-0 top-0 px-6 pt-[max(1.25rem,env(safe-area-inset-top))] pb-3 text-center">
+      <header
+        ref={top}
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 px-6 pt-[max(1.25rem,env(safe-area-inset-top))] pb-3 text-center before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-[calc(100%+2.5rem)] before:bg-gradient-to-b before:from-night/90 before:via-night/60 before:to-transparent"
+      >
         <button
           onClick={() => setWindows(true)}
           className="eyebrow pointer-events-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors hover:text-ink"
