@@ -9,8 +9,8 @@ Everything you need is in this repo. Clone it, read this README, and build.
 
 ## In one sentence
 
-Design and build one small app that helps someone reach a daily goal, deploy it to
-a link we can open, and tell us why you made the choices you made.
+Design and build one small app that helps someone reach a daily goal, hand it to us
+runnable, and tell us why you made the choices you made.
 
 ## What we give you (this repo)
 
@@ -62,12 +62,13 @@ We're testing two different things at once. Please keep them straight.
    so it also looks good on desktop is welcome, but it's your call.
 3. Your app must read the **sample data file** (`data/sample.json`). Change the
    contents to fit your goal, but keep it a local file. **No backend.**
-4. **Deploy it** to a link we can open in a browser.
-5. Keep the project **runnable with one command**, because we build on it together
+4. Keep the project **runnable with one command**, because we build on it together
    later.
-6. Plan for **about 5 hours**. Please don't go over. If you want to do more, write
+5. Plan for **about 5 hours**. Please don't go over. If you want to do more, write
    it down instead of building it.
-7. Send everything in the ["What to send back"](#what-to-send-back) list below.
+6. **Send it the way we describe in ["How to submit"](#how-to-submit).** Please
+   don't push to this repo or open a pull request against it — it's read-only for
+   candidates. Work in your own copy.
 
 If anything here is unclear, email us before you start. Asking a good question is a
 point in your favor, not against you.
@@ -97,11 +98,27 @@ Then open <http://localhost:3000>. The page hot-reloads as you edit.
 > Node: use **Node 22** (there's an `.nvmrc`). Node 20 works locally too, but Vercel
 > builds on 22.
 
-## Deploy it (free)
+## How to submit
 
-Push your clone to your own GitHub, then import it at
-[vercel.com/new](https://vercel.com/new). No environment variables, no config — it
-deploys as-is. Send us the live link.
+Work in your **own copy** of this scaffold (clone it, or use the green **Use this
+template** button to make your own repo). Please don't push to this repo or open a
+pull request against it.
+
+When you're done, pick whichever is easier for you:
+
+- **Email a zip** of your project to **jamieson@chooseyourhorizon.com** (you can
+  leave out `node_modules`), **or**
+- **Push to your own GitHub repo** and send us the link — make it public, or add
+  **jamieson@chooseyourhorizon.com** as a collaborator.
+
+Either way, make sure it still **runs with one command**, since we build on it
+together in the live session.
+
+## Deploy it (optional)
+
+Not required. If you'd like to include a live link, the easiest way is to import
+your repo at [vercel.com/new](https://vercel.com/new) — no config, it deploys
+as-is. A live link is a nice bonus; we don't score it.
 
 ## What's inside this repo
 
@@ -118,16 +135,15 @@ lib/
 
 ## What to send back
 
-1. A **live link** to your deployed app. It must open on a phone-sized screen and
-   read the sample data.
-2. Your **project** (your clone of this scaffold), still runnable with one command.
-3. A short **README note, or a Loom video under 5 minutes**, that covers:
+1. Your **project** (your copy of this scaffold), still runnable with one command —
+   as a zip or a link to your own repo (see ["How to submit"](#how-to-submit)).
+2. A short **README note, or a Loom video under 5 minutes**, that covers:
    - what you **looked at** before you designed (apps, patterns, references)
    - what you **chose and why**: your goal, your design, and the one thing you're
      betting people get hooked on
    - what you'd **measure** to know it worked, one thing you'd **test**, and what
      moves (people staying, or money) if it works
-4. A quick note on **what tools you used, including AI**. Using AI well is a plus
+3. A quick note on **what tools you used, including AI**. Using AI well is a plus
    here. We hope you do.
 
 ## What you do NOT need to do
@@ -162,7 +178,8 @@ you like.
   above?
 - **Creativity.** Did you make an interesting choice and make a simple idea feel
   fresh?
-- **It ships.** Deployed, opens on a phone, reads the data, runs for us.
+- **It ships.** Runs for us with one command, opens on a phone, reads the data. (A
+  deployed link is a bonus, not required.)
 - **Clear communication.** Can we run it and understand your thinking from what you
   sent?
 - **Research instinct.** Did you look before you leaped?
