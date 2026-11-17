@@ -1,7 +1,3 @@
-"use client";
-
-import { getDailyGoal } from "@/lib/data";
-
 // ============================================================================
 // This is your canvas.
 //
@@ -9,15 +5,13 @@ import { getDailyGoal } from "@/lib/data";
 // the screen where a person does the thing each day, marks it done, and feels a
 // small, satisfying pull to come back tomorrow.
 //
-// What's here now is just a placeholder to show the scaffold runs and the
-// sample data is wired up. Delete it and build your own thing. Design
-// mobile-first; make it responsive if you like. Full brief is in the README.
+// What's here now is just a starter message. Delete it and build your own thing.
+// Design mobile-first; make it responsive if you like. Full brief is in the
+// README. A sample data file is ready for you at data/sample.json, with a small
+// typed loader in lib/data.ts (import { getDailyGoal } from "@/lib/data").
 // ============================================================================
 
 export default function Page() {
-  // Proof the data layer works. Reshape data/sample.json to fit your goal.
-  const goal = getDailyGoal();
-
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-6 px-6 text-center">
       <span className="rounded-full border border-neutral-200 px-3 py-1 text-xs font-medium uppercase tracking-wide text-neutral-500">
@@ -42,9 +36,9 @@ export default function Page() {
       </div>
 
       <p className="text-sm text-neutral-400">
-        Sample data is loaded and ready from{" "}
-        <code className="font-mono">data/sample.json</code> ({goal.items.length}{" "}
-        items).
+        There&apos;s a sample data file at{" "}
+        <code className="font-mono">data/sample.json</code> to build from. Reshape
+        it to fit your goal.
       </p>
     </main>
   );
