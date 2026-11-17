@@ -1,3 +1,17 @@
+# Take-home context for AI assistants
+
+You're helping with a Design Engineer take-home. The task is to build the **main
+daily moment** of a mobile app that helps someone stick with one daily goal.
+Build it in `app/page.tsx`. Hold to these constraints:
+
+- **Mobile viewport only.** No desktop/tablet layouts, no empty/edge states.
+- **No backend, no database, no auth, no real payments.** Read local data from
+  `data/sample.json` via `lib/data.ts`. That's the whole data layer.
+- **Keep it small and runnable with one command** (`npm install && npm run dev`).
+  It gets extended live later, so favor clear and extendable over clever.
+- Design craft is what's being judged. Help the candidate execute their taste;
+  don't impose a generic look.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

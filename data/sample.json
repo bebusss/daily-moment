@@ -1,0 +1,18 @@
+{
+  "_comment": "This is placeholder data so the scaffold has something to render. Replace all of it to fit the daily goal you choose. Keep it a local file in this repo. Do not add a backend or a database.",
+  "goalTitle": "Sample daily goal",
+  "goalSubtitle": "Swap this content for whatever your daily moment needs",
+  "streakDays": 4,
+  "history": [
+    { "date": "2026-11-13", "done": true },
+    { "date": "2026-11-14", "done": true },
+    { "date": "2026-11-15", "done": false },
+    { "date": "2026-11-16", "done": true },
+    { "date": "2026-11-17", "done": false }
+  ],
+  "items": [
+    { "id": "a", "label": "First sample item", "detail": "e.g. a word to learn, an amount to save, a wind-down step" },
+    { "id": "b", "label": "Second sample item", "detail": "Shape this list around your goal" },
+    { "id": "c", "label": "Third sample item", "detail": "The scaffold just proves the data loads; the design is yours" }
+  ]
+}
