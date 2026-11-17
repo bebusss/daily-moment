@@ -1,5 +1,6 @@
-// The card under the window for whichever pane is open: tonight (begin, or already
-// set), or a past night (how heavy it was and its line, or a night with no wind-down).
+// What the open night says, under the month row: tonight (what there is to do, or how
+// it went once it's set), or a past night (how heavy it was and its line, or a night with
+// no wind-down and the night that mended it).
 
 import Glass from "@/components/Glass";
 import { dateOf, dayOf, shortDate, WEIGHTS, type DailyGoal } from "@/lib/data";
@@ -23,8 +24,8 @@ export default function NightCard({ goal, day, onBegin, onBack }: Props) {
     ) : (
       <>
         <span>{shortDate(date)}</span>
-        <button onClick={onBack} className="-my-1 -mr-2 rounded-full px-2 py-1 tracking-normal text-ink normal-case">
-          Tonight
+        <button onClick={onBack} className="-my-2 -mr-2 rounded-full px-2 py-2 tracking-normal text-ink normal-case">
+          Back to tonight
         </button>
       </>
     );
@@ -32,14 +33,18 @@ export default function NightCard({ goal, day, onBegin, onBack }: Props) {
   let body;
   if (day === today && !night) {
     body = (
-      <button onClick={onBegin} className="btn-primary mt-4">
-        Begin the wind-down
-      </button>
+      <>
+        <h2 className="mt-2 font-display text-xl leading-snug text-ink">Set tonight&apos;s leaf</h2>
+        <p className="mt-1 text-sm text-mist">{goal.ritual.map((r, i) => (i ? r.label[0].toLowerCase() + r.label.slice(1) : r.label)).join(", ")}.</p>
+        <button onClick={onBegin} className="btn-primary mt-3.5">
+          Begin the wind-down
+        </button>
+      </>
     );
   } else if (night?.done) {
     body = (
-      <div className="mt-3">
-        <p className="flex items-center gap-2.5 text-sm text-ink">
+      <>
+        <p className="mt-3 flex items-center gap-2.5 text-sm text-ink">
           <Glass weight={night.weight ?? 2} />
           {WEIGHTS[night.weight ?? 2]}
         </p>
@@ -48,28 +53,29 @@ export default function NightCard({ goal, day, onBegin, onBack }: Props) {
         ) : (
           <p className="mt-3 text-sm text-mist">No line {day === today ? "tonight" : "that night"}.</p>
         )}
-      </div>
+      </>
     );
   } else {
     // A night with no wind-down stays clear glass. The first night after it set gold lead around it.
     const back = goal.nights.findIndex((n, i) => i >= day && n.done);
     body = (
-      <div className="mt-3">
-        <p className="text-sm text-ink">No wind-down that night.</p>
+      <>
+        <p className="mt-3 text-sm text-ink">No wind-down that night.</p>
         {back >= 0 && (
           <p className="mt-2 flex items-center gap-2 text-sm text-gold">
             <span aria-hidden className="h-0.5 w-4 rounded-full bg-gold shadow-[0_0_8px_var(--color-gold)]" />
             Mended {shortDate(goal.nights[back].date)}
           </p>
         )}
-      </div>
+      </>
     );
   }
 
   return (
-    <section className="card animate-rise" aria-live="polite">
+    // One height for every night, so the card (and the window above it) never jumps.
+    <div className="animate-rise min-h-[200px] px-5 pt-3.5 pb-4" aria-live="polite">
       <div className="eyebrow flex items-baseline justify-between">{head}</div>
       {body}
-    </section>
+    </div>
   );
 }

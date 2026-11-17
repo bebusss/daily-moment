@@ -38,7 +38,7 @@ export type PaneModel = {
 
 export type WindowModel = { width: number; height: number; outline: Pt[]; panes: PaneModel[]; bars: number[] };
 
-const daysIn = (month: string) => {
+export const daysIn = (month: string) => {
   const [y, m] = month.split("-").map(Number);
   return new Date(y, m, 0).getDate();
 };
@@ -54,11 +54,31 @@ const GROUND = ["#e2c690", "#d6c79f", "#e6cf9f", "#c3c8ad", "#dfbb83", "#cdbf98"
 const SKY = ["#203168", "#293c7a", "#1b2958", "#2f427e", "#24387a"];
 const STEM = ["#6b7433", "#77682f", "#5d6a2e"];
 
-export function buildWindow(goal: DailyGoal): WindowModel {
+/** What one night looks like in glass. The window's leaves and the month row under it both read this. */
+export type NightLook = { day: number; status: Exclude<PaneStatus, "decor">; mended: boolean; weight?: Weight; color: string };
+
+export function nightLooks(goal: DailyGoal): NightLook[] {
   const days = daysIn(goal.month);
   const today = Number(goal.today.slice(8, 10));
   const colors = paneColors(goal.palette, days, goal.month);
   const night = (day: number) => goal.nights[day - 1];
+  return Array.from({ length: days }, (_, i): NightLook => {
+    const day = i + 1;
+    const status = day > today ? "future" : night(day)?.done ? "done" : day === today ? "today" : "gap";
+    if (status === "done") {
+      const weight = (night(day)?.weight ?? 2) as Weight;
+      const { shade, sat } = DEPTH[weight];
+      return { day, status, mended: false, weight, color: mix(saturate(colors[day - 1], sat), shade) };
+    }
+    // A missed night is mended once any later night (before tonight) was done.
+    if (status === "gap") return { day, status, mended: goal.nights.slice(day).some((n) => n.done), color: "#f2efe6" };
+    return { day, status, mended: false, color: status === "today" ? "#f0d6a4" : "#cdd5bd" };
+  });
+}
+
+export function buildWindow(goal: DailyGoal): WindowModel {
+  const days = daysIn(goal.month);
+  const looks = nightLooks(goal);
   const design = vineWindow(days, goal.month);
   let border = 0;
 
@@ -66,17 +86,10 @@ export function buildWindow(goal: DailyGoal): WindowModel {
     const base = { key: p.key, kind: p.kind, points: p.points, tone: p.tone, grain: p.grain, leaf: p.leaf, mended: false };
     switch (p.kind) {
       case "night": {
-        const day = p.day!;
-        const status: PaneStatus = day > today ? "future" : night(day)?.done ? "done" : day === today ? "today" : "gap";
-        if (status === "done") {
-          const weight = (night(day)?.weight ?? 2) as Weight;
-          const { shade, sat } = DEPTH[weight];
-          return { ...base, day, status, weight, color: mix(saturate(colors[day - 1], sat), shade), glass: "cathedral", diffusion: 0.72 };
-        }
-        if (status === "gap")
-          // Mended once any later night (before tonight) was done.
-          return { ...base, day, status, mended: goal.nights.slice(day).some((n) => n.done), color: "#f2efe6", glass: "seedy", diffusion: 0.12 };
-        return { ...base, day, status, color: status === "today" ? "#f0d6a4" : "#cdd5bd", glass: "opal", diffusion: 0.95 };
+        const look = looks[p.day! - 1];
+        const glass: GlassType = look.status === "done" ? "cathedral" : look.status === "gap" ? "seedy" : "opal";
+        const diffusion = look.status === "done" ? 0.72 : look.status === "gap" ? 0.12 : 0.95;
+        return { ...base, ...look, glass, diffusion };
       }
       case "ground":
         return { ...base, status: "decor", color: pick(GROUND, p.tone), glass: "cathedral", diffusion: 0.82 };

@@ -4,14 +4,16 @@
 // Open-Meteo's geocoder turns that city into coordinates (we keep it only if its time zone
 // matches), and the forecast gives the sunset there, in local time.
 //
-// Slow or down: both calls share one 3-second budget. On any failure we return null and
-// the screen simply leaves the sunset line out. Nothing else depends on it.
+// Slow or down: nothing waits for it. The line fades in whenever the answer comes (within
+// 15 seconds), and on any failure the screen simply leaves it out. We ask as soon as this code
+// loads in the browser, before the window starts painting, and keep the answer for the rest of
+// the day on this device.
 
 import { useEffect, useState } from "react";
 
 export type Sunset = { time: string; place: string };
 
-const BUDGET_MS = 3000;
+const BUDGET_MS = 15000;
 
 type Geocoding = { results?: { name: string; latitude: number; longitude: number; timezone: string }[] };
 type Forecast = { daily: { sunset: string[] } };
@@ -51,12 +53,43 @@ export async function fetchSunset(timeZone = Intl.DateTimeFormat().resolvedOptio
   }
 }
 
-/** The sunset once it arrives; null while loading or if the API couldn't answer in time. */
+/** Today's answer for this time zone, if this device already asked. */
+function remembered(key: string): Sunset | null {
+  try {
+    return JSON.parse(localStorage.getItem(key) ?? "null");
+  } catch {
+    return null;
+  }
+}
+
+let asked: Promise<Sunset | null> | null = null;
+
+/** One question per page load: today's remembered answer, or the API. */
+function ask() {
+  if (!asked) {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const key = `sunset:${zone}:${new Date().toDateString()}`;
+    const known = remembered(key);
+    asked = known
+      ? Promise.resolve(known)
+      : fetchSunset(zone).then((s) => {
+          try {
+            if (s) localStorage.setItem(key, JSON.stringify(s));
+          } catch {}
+          return s;
+        });
+  }
+  return asked;
+}
+
+if (typeof window !== "undefined") ask();
+
+/** The sunset once it arrives; null while loading or if the API couldn't answer. */
 export function useSunset() {
   const [sunset, setSunset] = useState<Sunset | null>(null);
   useEffect(() => {
     let live = true;
-    fetchSunset().then((s) => live && setSunset(s));
+    ask().then((s) => live && setSunset(s));
     return () => {
       live = false;
     };

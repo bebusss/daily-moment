@@ -10,9 +10,12 @@
 //   on the ledge, and through the air as shafts with dust drifting in them. All three
 //   read the same picture of the window, taken from the sun.
 // - Tonight's leaf breathes, waiting. When it's filled in, its color comes up slowly.
-// - The camera never moves.
+// - A past night opened from the card: the rest of the glass steps back so its leaf stands out.
+// - The camera never moves. It frames the window between the text above and the card below.
+// - On phones it draws less: lower resolution, fewer light slices, 30 frames a second, and
+//   nothing at all while the wind-down covers it.
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
@@ -127,6 +130,7 @@ const glassFragment = /* glsl */ `
   uniform float filling;
   uniform float selected;
   uniform float reveal;
+  uniform float focus;
   varying vec2 vUv;
 
   void main() {
@@ -156,7 +160,20 @@ const glassFragment = /* glsl */ `
     light += isFill * (1.0 - reveal) * texture2D(prevMask, vUv).g * waiting;
     // As its color comes in, it flares once.
     light += isFill * sin(3.14159 * reveal) * light * 1.1;
-    light *= 1.0 + (1.0 - step(0.5, abs(pid - selected))) * 0.22;
+    float isSelected = 1.0 - step(0.5, abs(pid - selected));
+    light *= 1.0 + isSelected * 0.22;
+    // A past night opened: the rest of the glass steps back, and its leaf glows just inside its lead.
+    light *= mix(1.0, mix(0.72, 1.35, isSelected), focus);
+    if (isSelected > 0.5 && focus > 0.01) {
+      float edge = 0.0;
+      for (int i = 0; i < 8; i++) {
+        float a = float(i) * 0.785398;
+        vec4 q = texture2D(idMap, vUv + vec2(cos(a), sin(a)) * texel * 15.0);
+        float qid = floor(q.r * 255.0 + 0.5) + floor(q.g * 255.0 + 0.5) * 256.0;
+        edge += step(0.5, abs(qid - pid));
+      }
+      light += min(edge / 2.0, 1.0) * focus * vec3(1.0, 0.88, 0.62) * (2.0 + 0.6 * sin(time * 2.2));
+    }
 
     // The lead: a rounded came, dark, catching a little of the room's light on its crown.
     float h = texture2D(leadMap, vUv).r;
@@ -203,6 +220,7 @@ function glassMaterial(t: Painted, model: WindowModel) {
       filling: { value: 0 },
       selected: { value: 0 },
       reveal: { value: 1 },
+      focus: { value: 0 },
     },
   });
 }
@@ -238,13 +256,15 @@ function Glass({
     return () => material.dispose();
   }, [textures, material, model, todayIndex]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!mesh.current) return;
     const u = (mesh.current.material as THREE.ShaderMaterial).uniforms;
     const t = state.clock.elapsedTime;
     u.time.value = t;
     u.selected.value = selectedIndex + 1;
     u.today.value = todayIndex + 1;
+    const focus = selectedIndex >= 0 && selectedIndex !== todayIndex ? 1 : 0;
+    u.focus.value += (focus - u.focus.value) * Math.min(1, delta * 5);
     const f = fill.current;
     if (f) {
       if (f.start === null) f.start = t;
@@ -385,7 +405,7 @@ const airFragment = /* glsl */ `
   }
 `;
 
-function Air({ sun, model }: { sun: ReturnType<typeof useSun>; model: WindowModel }) {
+function Air({ sun, model, slices }: { sun: ReturnType<typeof useSun>; model: WindowModel; slices: number }) {
   const noise = useMemo(() => noiseTexture(), []);
   const material = useMemo(
     () =>
@@ -396,14 +416,14 @@ function Air({ sun, model }: { sun: ReturnType<typeof useSun>; model: WindowMode
           lightMap: { value: sun.target.texture },
           noiseMap: { value: noise },
           lightMatrix: { value: sun.light.shadow.matrix },
-          strength: { value: 0.045 },
+          strength: { value: 0.045 * (26 / slices) },
           time: { value: 0 },
         },
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
-    [sun, noise],
+    [sun, noise, slices],
   );
   const group = useRef<THREE.Group>(null);
   useFrame((state) => {
@@ -411,7 +431,6 @@ function Air({ sun, model }: { sun: ReturnType<typeof useSun>; model: WindowMode
     if (slice) (slice.material as THREE.ShaderMaterial).uniforms.time.value = state.clock.elapsedTime;
   });
   useEffect(() => () => material.dispose(), [material]);
-  const slices = 26;
   const reach = 3.4;
   return (
     <group ref={group}>
@@ -628,36 +647,70 @@ function Bars({ model }: { model: WindowModel }) {
   );
 }
 
-/** Framing: the window a little above the middle, as big as the screen allows. */
-function Rig({ model }: { model: WindowModel }) {
+export type Insets = { top: number; bottom: number };
+
+/** Framing: the window (arch to ledge) as big as fits between the text above and the card below. */
+function Rig({ model, insets }: { model: WindowModel; insets: Insets }) {
   const size = useThree((s) => s.size);
   useFrame(({ camera }) => {
     const cam = camera as THREE.PerspectiveCamera;
-    const aspect = size.width / size.height;
-    const portrait = aspect < 0.9;
     const tan = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
-    const needH = model.height / (portrait ? 0.56 : 0.6);
-    const needW = (model.width * SPLAY + 0.9) / 0.94;
-    const visibleH = Math.max(needH, needW / aspect);
-    const distance = visibleH / (2 * tan);
-    const lift = portrait ? -visibleH * 0.035 : -visibleH * 0.02;
-    if (Math.abs(cam.position.z - distance) > 1e-3 || Math.abs(cam.position.y - (lift - 0.5)) > 1e-3) {
-      cam.position.set(0, lift - 0.5, distance);
-      cam.lookAt(0, lift, 0);
+    // The stone arch rises above the glass and the ledge sits below it.
+    const above = model.height * 0.1;
+    // The ledge may slip under the card a little.
+    const below = model.height * 0.04;
+    const contentH = model.height + above + below;
+    const contentW = model.width * SPLAY + 0.9;
+    const free = Math.max(size.height - insets.top - insets.bottom, size.height * 0.4);
+    // Pixels per scene unit: fill the free band, unless the width runs out first.
+    const k = Math.min((free * 0.96) / contentH, (size.width * 0.94) / contentW);
+    const distance = size.height / k / (2 * tan);
+    // Put the window's middle on the free band's middle.
+    const offset = (size.height / 2 - (insets.top + free / 2)) / k;
+    const look = (above - below) / 2 - offset;
+    if (Math.abs(cam.position.z - distance) > 1e-3 || Math.abs(cam.position.y - (look - 0.5)) > 1e-3) {
+      cam.position.set(0, look - 0.5, distance);
+      cam.lookAt(0, look, 0);
       cam.updateProjectionMatrix();
     }
   });
   return null;
 }
 
-function Scene({ goal, selected, onSelect }: { goal: DailyGoal; selected?: number; onSelect?: (day: number) => void }) {
+/** On a phone, draw at 30 frames a second instead of every frame. */
+function Pace({ fps }: { fps: number }) {
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    invalidate();
+    const id = setInterval(() => invalidate(), 1000 / fps);
+    return () => clearInterval(id);
+  }, [fps, invalidate]);
+  return null;
+}
+
+/** Phones and tablets (a finger, not a mouse) get the lighter scene. */
+function useLite() {
+  return useSyncExternalStore(
+    (change) => {
+      const m = window.matchMedia("(pointer: coarse)");
+      m.addEventListener("change", change);
+      return () => m.removeEventListener("change", change);
+    },
+    () => window.matchMedia("(pointer: coarse)").matches,
+    () => false,
+  );
+}
+
+type SceneProps = { goal: DailyGoal; selected?: number; onSelect?: (day: number) => void; insets: Insets; lite: boolean };
+
+function Scene({ goal, selected, onSelect, insets, lite }: SceneProps) {
   const model = useMemo(() => buildWindow(goal), [goal]);
   const { textures, paneAt } = useWindowTextures(model);
   const sun = useSun(model, textures);
   return (
     <>
       <color attach="background" args={["#0b0806"]} />
-      <Rig model={model} />
+      <Rig model={model} insets={insets} />
       <hemisphereLight args={["#6a4c38", "#0a0604", 0.5]} />
       {/* The glow of the glass, lighting the stone around it from inside the opening. */}
       {[
@@ -674,9 +727,9 @@ function Scene({ goal, selected, onSelect }: { goal: DailyGoal; selected?: numbe
       <Wall model={model} />
       <Glass model={model} textures={textures} paneAt={paneAt} selected={selected} onSelect={onSelect} />
       <Bars model={model} />
-      <Air sun={sun} model={model} />
+      <Air sun={sun} model={model} slices={lite ? 14 : 26} />
       <Dust sun={sun} model={model} />
-      <EffectComposer multisampling={4}>
+      <EffectComposer multisampling={lite ? 0 : 4}>
         <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.3} intensity={0.85} radius={0.62} />
         <ToneMapping mode={ToneMappingMode.NEUTRAL} />
         <Vignette offset={0.28} darkness={0.72} />
@@ -690,17 +743,25 @@ export default function WindowScene({
   label,
   selected,
   onSelect,
+  insets = { top: 0, bottom: 0 },
+  paused = false,
 }: {
   goal: DailyGoal;
   label: string;
   selected?: number;
   onSelect?: (day: number) => void;
+  /** Pixels covered by the UI above and below, so the window fits between them. */
+  insets?: Insets;
+  /** Stop drawing (the last frame stays), e.g. while the wind-down covers the window. */
+  paused?: boolean;
 }) {
   const model = useMemo(() => buildWindow(goal), [goal]);
+  const lite = useLite();
   return (
     <div className="absolute inset-0" role="img" aria-label={label}>
       <Canvas
-        dpr={[1, 2]}
+        dpr={[1, lite ? 1.5 : 2]}
+        frameloop={paused ? "never" : lite ? "demand" : "always"}
         camera={{ position: [0, -0.5, 16], fov: 36, near: 0.1, far: 80 }}
         gl={{ antialias: false, powerPreference: "high-performance" }}
         fallback={
@@ -709,7 +770,8 @@ export default function WindowScene({
           </div>
         }
       >
-        <Scene goal={goal} selected={selected} onSelect={onSelect} />
+        <Scene goal={goal} selected={selected} onSelect={onSelect} insets={insets} lite={lite} />
+        {lite && !paused && <Pace fps={30} />}
       </Canvas>
     </div>
   );

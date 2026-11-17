@@ -17,6 +17,7 @@
 
   --animate-rise: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-fade: fade 0.8s ease-out both;
+  --animate-glow: glow 2.6s ease-in-out infinite;
 
   @keyframes rise {
     from {
@@ -27,6 +28,16 @@
   @keyframes fade {
     from {
       opacity: 0;
+    }
+  }
+  /* Tonight's leaf, waiting: the same slow breath as in the window. */
+  @keyframes glow {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 2px rgb(255 214 150 / 0.45));
+    }
+    50% {
+      filter: drop-shadow(0 0 7px rgb(255 214 150 / 0.95));
     }
   }
 }
