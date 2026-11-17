@@ -165,10 +165,6 @@ If we move forward, we'll do a short live session together where we **build on t
 same project**. That's why we ask you to keep it runnable and easy to extend.
 Something small and alive beats something large and fragile.
 
-Separately, we'll send you a short online **reasoning exercise (about 15 minutes)**.
-It's not part of the build and doesn't count toward your 5 hours, so do it whenever
-you like.
-
 ## How we'll judge it
 
 - **Design quality, UI and UX (the big one).** Is it clear, usable, and genuinely
