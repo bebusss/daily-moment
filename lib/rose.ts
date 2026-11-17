@@ -3,15 +3,15 @@
 // so the window grows from the middle as the month goes on. Each pane is cut
 // into a few shards, the way real stained glass is made of small pieces.
 
-import { inside, polar, seeded, toPath, voronoi, type Pt } from "@/lib/geometry";
+import { inside, polar, seeded, voronoi, type Pt } from "@/lib/geometry";
 
 export type Pane = {
   /** 1-based night of the month. */
   day: number;
   /** The pane's outline (its lead, or its gold mending lead). */
-  outline: string;
+  outline: Pt[];
   /** The pieces of glass inside it. */
-  shards: string[];
+  shards: Pt[][];
 };
 
 /** How many panes each ring holds, from the center out. The outer ring takes whatever the month has left. */
@@ -20,8 +20,9 @@ export const ringSizes = (days: number) => [1, 6, 10, days - 17];
 /** Ring edges as fractions of the radius: center disc, then three rings of roughly equal pane area. */
 export const RADII = [0, 0.21, 0.48, 0.74, 1];
 
-/** The pane as a polygon: a circle in the middle, ring segments around it. */
-function paneShape(ring: number, i: number, count: number, radius: number, c: number): Pt[] {
+/** The pane as a polygon: a circle in the middle, ring segments around it. Coordinates run 0..2·radius. */
+function paneShape(ring: number, i: number, count: number, radius: number): Pt[] {
+  const c = radius;
   const outer = RADII[ring + 1] * radius;
   if (ring === 0) return Array.from({ length: 48 }, (_, k) => polar(c, c, outer, (k / 48) * Math.PI * 2));
   const inner = RADII[ring] * radius;
@@ -47,15 +48,13 @@ function shatter(poly: Pt[], count: number, rand: () => number): Pt[][] {
 }
 
 export function roseWindow(days: number, radius: number, seed: string): Pane[] {
-  const c = radius;
   const rand = seeded(seed);
   const panes: Pane[] = [];
   let day = 1;
   ringSizes(days).forEach((count, ring) => {
     for (let i = 0; i < count; i++) {
-      const shape = paneShape(ring, i, count, radius, c);
-      const shards = shatter(shape, ring === 0 ? 6 : 3 + Math.floor(rand() * 2), rand);
-      panes.push({ day: day++, outline: toPath(shape), shards: shards.map(toPath) });
+      const outline = paneShape(ring, i, count, radius);
+      panes.push({ day: day++, outline, shards: shatter(outline, ring === 0 ? 6 : 3 + Math.floor(rand() * 2), rand) });
     }
   });
   return panes;

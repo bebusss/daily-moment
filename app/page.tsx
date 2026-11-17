@@ -1,7 +1,7 @@
 // The daily moment: this month's window, and tonight's wind-down.
-// Iteration 1: the window alone, static. Tonight's ritual comes next.
+// Iteration 1: the window alone. Tonight's ritual comes next.
 
-import RoseWindow from "@/components/RoseWindow";
+import GlassWindow from "@/components/GlassWindow";
 import { getDailyGoal } from "@/lib/data";
 
 export default function Page() {
@@ -17,11 +17,11 @@ export default function Page() {
         <h1 className="mt-2 font-display text-[28px] leading-tight text-ink">{goal.intention}</h1>
       </header>
 
-      <section className="mx-auto mt-6 w-full max-w-[380px]">
-        <RoseWindow goal={goal} />
+      <section className="-mx-6 mt-2">
+        <GlassWindow goal={goal} label={`${goal.intention}: this month's window, ${done} of ${goal.nights.length} nights`} />
       </section>
 
-      <p className="mt-5 text-center text-sm text-mist">
+      <p className="-mt-2 text-center text-sm text-mist">
         {done} of {goal.nights.length} nights
       </p>
 
