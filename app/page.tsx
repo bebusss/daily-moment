@@ -10,16 +10,21 @@ import { getDailyGoal } from "@/lib/data";
 // feels a small, satisfying pull to come back tomorrow.
 //
 // The placeholder below only exists to prove the scaffold runs and that the
-// sample data loads. Delete it and build your own thing. Keep it mobile-first.
+// sample data loads. Delete it and build your own thing. Design mobile-first;
+// make it responsive if you like.
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function Page() {
   const goal = getDailyGoal();
 
   return (
-    <main className="flex h-full flex-col gap-6 overflow-y-auto p-6">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 p-6">
       <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-500">
-        Scaffold is running. Build your daily moment here — edit{" "}
+        Scaffold is running. Your task is in the{" "}
+        <code className="rounded bg-neutral-200 px-1 py-0.5 font-mono text-[0.85em] text-neutral-700">
+          README
+        </code>
+        . Build your daily moment here — edit{" "}
         <code className="rounded bg-neutral-200 px-1 py-0.5 font-mono text-[0.85em] text-neutral-700">
           app/page.tsx
         </code>

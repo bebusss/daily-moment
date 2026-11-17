@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import PhoneFrame from "@/components/PhoneFrame";
 
 // Geist is just a neutral default. Swap the fonts if your design calls for it.
 const geistSans = Geist({
@@ -19,7 +18,6 @@ export const metadata: Metadata = {
   description: "Build the main daily moment of an app that helps someone stick with one daily goal.",
 };
 
-// Mobile-first: this take-home is judged on a phone viewport.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -31,9 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full">
-        <PhoneFrame>{children}</PhoneFrame>
-      </body>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

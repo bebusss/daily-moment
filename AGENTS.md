@@ -4,7 +4,8 @@ You're helping with a Design Engineer take-home. The task is to build the **main
 daily moment** of a mobile app that helps someone stick with one daily goal.
 Build it in `app/page.tsx`. Hold to these constraints:
 
-- **Mobile viewport only.** No desktop/tablet layouts, no empty/edge states.
+- **Mobile-first** (judged on a phone). Responsive for desktop is fine if the
+  candidate wants it. Skip empty/edge states.
 - **No backend, no database, no auth, no real payments.** Read local data from
   `data/sample.json` via `lib/data.ts`. That's the whole data layer.
 - **Keep it small and runnable with one command** (`npm install && npm run dev`).
