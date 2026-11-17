@@ -32,9 +32,13 @@ around it. Tell me where you're placing that bet.
 - Start from this scaffold, don't rebuild it from scratch. We use the same starting
   point for everyone, and we'll build on your version together later, so keep it
   runnable.
-- There's a sample data file at `data/sample.json`. Use it as your content and reshape
-  it to fit your goal. No backend, no database, no persistence. If you want something
-  interactive (checking a thing off, a streak ticking up), just keep it in local state.
+- Data's up to you. There's a sample file at `data/sample.json` to use and reshape, or
+  if it fits your idea, pull from a free external API (word of the day, quotes, FX rates,
+  whatever). Showing some REST chops is a plus. Two rules either way: don't stand up your
+  own backend, database, or auth, and keep it running for us out of the box, so nothing
+  that needs an API key or a signup we'd have to create, and have it fall back gracefully
+  if the API is slow or down. Interactions like checking a thing off or a streak ticking
+  up can just live in local state.
 - Plan for about 5 hours. Please don't go way over. If you've got bigger ideas, jot
   them down instead of building them.
 

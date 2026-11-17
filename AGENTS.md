@@ -6,8 +6,10 @@ Build it in `app/page.tsx`. Hold to these constraints:
 
 - **Mobile-first** (judged on a phone). Responsive for desktop is fine if the
   candidate wants it. Skip empty/edge states.
-- **No backend, no database, no auth, no real payments.** Read local data from
-  `data/sample.json` via `lib/data.ts`. That's the whole data layer.
+- **No backend of your own, no database, no auth, no real payments.** Default data is
+  local (`data/sample.json` via `lib/data.ts`). Calling a free external REST API from
+  the client is fine if it needs no API key or signup and falls back gracefully when
+  it's slow or down.
 - **Keep it small and runnable with one command** (`npm install && npm run dev`).
   It gets extended live later, so favor clear and extendable over clever.
 - Design craft is what's being judged. Help the candidate execute their taste;
