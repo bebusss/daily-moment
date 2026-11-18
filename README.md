@@ -134,7 +134,7 @@ Identity wording has strong lab results and mixed field replications, which is e
 - **The window comes to the night you open,** so the window and the row read as one thing.
 - **Tomorrow's leaf waits too,** once tonight's is set: a reason to come back, with no words.
 - **A wall, not a collection.** The month-three payoff made visible. Nothing is unlocked: every window is a record.
-- **A new design every month** (Rose, Sunburst, Vine, then Nouveau): a fresh start on the 1st.
+- **A new design every month** from the house rotation: a fresh start on the 1st.
 - **The paid feature is choosing your craft** (see Pricing). The ritual and your record are never behind the paywall: you pay for choice, never for your own evidence.
 - **Tonight is kept on the device,** so a reload shows it set. No backend, as the brief asks.
 

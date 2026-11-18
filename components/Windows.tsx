@@ -17,95 +17,25 @@
 // everyone knows. For some people it's poetic, so it's there to choose, but as the default it
 // would feel borrowed. The window is this app's own version of the same idea.
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
+import CraftPreview, { type Craft } from "@/components/CraftPreview";
 import FlatWindow from "@/components/FlatWindow";
 import { finishedMonth, monthName, type DailyGoal } from "@/lib/data";
 import { DESIGNS } from "@/lib/designs";
 import { buildWindow, nightLooks } from "@/lib/window-model";
 
-type Medium = { id: string; name: string; plus: boolean; how: string; art: ReactNode };
+type Medium = { id: "window" | Craft; name: string; plus: boolean; how: string };
 
-const C = { ruby: "#c9473f", amber: "#e39a35", emerald: "#3f9a5d", sapphire: "#3a78c0", amethyst: "#8457c2", rose: "#d0608c", gold: "#e7b24f", lead: "#1a120d" };
-const TONES = [C.ruby, C.amber, C.emerald, C.sapphire, C.amethyst, C.rose];
-
-/** Next month's piece: another window is free; another craft is Plus. Shown as you'd expect them, mends unspoiled. */
+/** Next month's piece: another window is free; another craft is Plus. Described as you'd expect, mends unspoiled. */
 const MEDIUMS: Medium[] = [
-  {
-    id: "window",
-    name: "Window",
-    plus: false,
-    how: "A piece of glass a night, until the window is full. December's house window is Nouveau.",
-    art: (
-      <>
-        <path d="M6 72V30Q6 6 24 4Q42 6 42 30V72Z" fill={C.lead} />
-        <path d="M9 30Q9 9 24 7Q39 9 39 30Z" fill={C.sapphire} />
-        {Array.from({ length: 9 }, (_, i) => {
-          const [x, y] = [9 + (i % 3) * 10.2, 32.5 + Math.floor(i / 3) * 13];
-          return <rect key={i} x={x} y={y} width="9.4" height="12" fill={TONES[(i * 4) % 6]} stroke={C.lead} strokeWidth="0.8" />;
-        })}
-      </>
-    ),
-  },
-  {
-    id: "mosaic",
-    name: "Mosaic",
-    plus: true,
-    how: "A tile a night, set into a mosaic that fills in over the month.",
-    art: (
-      <>
-        <rect x="4" y="6" width="40" height="66" rx="3" fill="#5c5146" />
-        {Array.from({ length: 6 * 10 }, (_, i) => {
-          const [col, row] = [i % 6, Math.floor(i / 6)];
-          return <rect key={i} x={6.2 + col * 6.1} y={8.2 + row * 6.3} width="5.2" height="5.4" rx="0.6" fill={TONES[(i * 7 + row) % 6]} opacity="0.92" />;
-        })}
-      </>
-    ),
-  },
-  {
-    id: "tapestry",
-    name: "Tapestry",
-    plus: true,
-    how: "A row of weave a night, until the tapestry hangs finished.",
-    art: (
-      <>
-        <path d="M5 6h38" stroke="#7a5a3a" strokeWidth="2" strokeLinecap="round" />
-        {Array.from({ length: 12 }, (_, i) => (
-          <rect key={i} x="8" y={8 + i * 4.9} width="32" height="4.9" fill={TONES[(i * 5) % 6]} />
-        ))}
-        {Array.from({ length: 16 }, (_, i) => (
-          <path key={i} d={`M${9 + i * 2} 8v58.8`} stroke="#fff" strokeOpacity="0.12" strokeWidth="0.6" />
-        ))}
-        {Array.from({ length: 9 }, (_, i) => (
-          <path key={i} d={`M${9.5 + i * 3.6} 67v5`} stroke="#c9b28c" strokeWidth="0.9" strokeLinecap="round" />
-        ))}
-      </>
-    ),
-  },
-  {
-    id: "vase",
-    name: "Vase",
-    plus: true,
-    how: "A vase you paint a little each night, a band at a time.",
-    art: (
-      <>
-        <clipPath id="vase-body">
-          <path d="M17 9h14v3c0 3 9 8 9 24 0 18-7 30-16 34-9-4-16-16-16-34 0-16 9-21 9-24Z" />
-        </clipPath>
-        <path d="M17 9h14v3c0 3 9 8 9 24 0 18-7 30-16 34-9-4-16-16-16-34 0-16 9-21 9-24Z" fill="#efe6d6" />
-        <g clipPath="url(#vase-body)">
-          {[C.sapphire, C.ruby, C.amber, C.emerald, C.amethyst, C.sapphire].map((c, i) => (
-            <rect key={i} x="0" y={20 + i * 8} width="48" height="4.2" fill={c} />
-          ))}
-          {Array.from({ length: 7 }, (_, i) => (
-            <circle key={i} cx={10 + i * 4.7} cy={18.2 + (i % 2) * 1.4} r="1.1" fill={C.sapphire} />
-          ))}
-        </g>
-        <path d="M17 9h14v3H17Z" fill="#c9b79c" />
-        <path d="M14 26c3-4 6-6 7-6" fill="none" stroke="#fff" strokeOpacity="0.5" strokeWidth="1.2" strokeLinecap="round" />
-      </>
-    ),
-  },
+  { id: "window", name: "Window", plus: false, how: "A piece of glass a night, until the window is full. December's house window is a rose." },
+  { id: "mosaic", name: "Mosaic", plus: true, how: "A tile a night, set into a mosaic that fills in over the month." },
+  { id: "tapestry", name: "Tapestry", plus: true, how: "A row of weave a night, until the tapestry hangs finished." },
+  { id: "vase", name: "Vase", plus: true, how: "A vase you paint a little each night, a band at a time." },
 ];
+
+/** December's palette for the previews: winter jewels. */
+const DECEMBER = ["#3a6fb8", "#2f8f7a", "#b8424a", "#7a5cc0", "#d6a23a", "#5b9bd5"];
 
 type Props = { goal: DailyGoal; shown: string; onOpen: (month: string) => void; onClose: () => void };
 
@@ -127,6 +57,10 @@ export default function Windows({ goal, shown: showing, onOpen, onClose }: Props
     [goal],
   );
   const [open, setOpen] = useState<string>(showing);
+  const december = useMemo(() => {
+    const nights = Array.from({ length: 31 }, (_, i) => ({ date: `2026-12-${String(i + 1).padStart(2, "0")}`, done: true, weight: ([2, 1, 3, 2] as const)[i % 4] }));
+    return buildWindow({ ...goal, month: "2026-12", design: "rose", palette: DECEMBER, nights, today: "2026-12-32" });
+  }, [goal]);
   const [picked, setPicked] = useState(MEDIUMS[0].id);
   const [asked, setAsked] = useState(false);
   const shown = wall.find((w) => w.goal.month === open);
@@ -190,7 +124,7 @@ export default function Windows({ goal, shown: showing, onOpen, onClose }: Props
             <p className="eyebrow">Next month</p>
             <h2 className="mt-1 font-display text-2xl">{next}&apos;s piece</h2>
             <p className="mt-1 text-sm text-mist">A new window every month, free. With Plus, choose the craft.</p>
-            <div className="mt-4 grid grid-cols-4 gap-2">
+            <div className="mt-4 grid grid-cols-2 gap-3">
               {MEDIUMS.map((d) => (
                 <button
                   key={d.id}
@@ -199,15 +133,22 @@ export default function Windows({ goal, shown: showing, onOpen, onClose }: Props
                     setAsked(false);
                   }}
                   aria-pressed={picked === d.id}
-                  className={`flex flex-col items-center gap-2 rounded-2xl pt-3 pb-2.5 ring-1 transition-colors duration-200 ${
-                    picked === d.id ? "bg-gold/10 ring-gold/50" : "bg-white/4 ring-white/8"
-                  }`}
+                  className={`rounded-2xl p-1.5 pb-2.5 ring-1 transition-colors duration-200 ${picked === d.id ? "bg-gold/10 ring-gold/60" : "bg-white/4 ring-white/8"}`}
                 >
-                  <svg viewBox="0 0 48 76" className="h-16 w-10" aria-hidden>
-                    {d.art}
-                  </svg>
-                  <span className="text-xs text-ink">{d.name}</span>
-                  <span className={`text-[10px] tracking-[0.14em] uppercase ${d.plus ? "text-gold" : "text-mist"}`}>{d.plus ? "Plus" : "Free"}</span>
+                  {d.id === "window" ? (
+                    // The real window engine, lit in the same room.
+                    <div className="flex aspect-[3/4] w-full items-center justify-center rounded-xl bg-[radial-gradient(ellipse_at_50%_30%,rgba(255,196,130,0.22),transparent_70%),#17110d]">
+                      <div className="w-[42%] drop-shadow-[0_0_18px_rgba(255,190,120,0.35)]">
+                        <FlatWindow model={december} label="December's window, a rose, finished" />
+                      </div>
+                    </div>
+                  ) : (
+                    <CraftPreview craft={d.id} palette={DECEMBER} label={`A ${d.name.toLowerCase()}, finished`} />
+                  )}
+                  <span className="mt-2 flex items-baseline justify-between px-1.5">
+                    <span className="text-sm text-ink">{d.name}</span>
+                    <span className={`text-[10px] tracking-[0.14em] uppercase ${d.plus ? "text-gold" : "text-mist"}`}>{d.plus ? "Plus" : "Free"}</span>
+                  </span>
                 </button>
               ))}
             </div>
