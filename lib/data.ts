@@ -19,7 +19,7 @@ export type LineKind = "effort" | "success" | "progress";
 
 export const LINES: Record<LineKind, { label: string; prompt: string; example: string }> = {
   success: { label: "Success", prompt: "What went right today?", example: "Lime soda at the party. Nobody asked." },
-  effort: { label: "Effort", prompt: "What did you try today, even a little?", example: "Left before the second round." },
+  effort: { label: "Effort", prompt: "What did you try today?", example: "Left before the second round." },
   progress: { label: "Progress", prompt: "What did you handle better than before?", example: "Said no without explaining." },
 };
 
@@ -29,7 +29,7 @@ const ORDER: LineKind[] = ["success", "effort", "progress"];
 export const nextQuestion = (kind: LineKind) => ORDER[(ORDER.indexOf(kind) + 1) % ORDER.length];
 
 /**
- * Tonight's question. After a drink: what you tried, even a little. On the first alcohol-free
+ * Tonight's question. After a drink: what you tried. On the first alcohol-free
  * night after one (the night that mends it): what you handled better than before. Otherwise:
  * what went right.
  */
