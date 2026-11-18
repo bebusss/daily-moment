@@ -31,8 +31,6 @@ The first five sections are the deck, slide by slide ([the slides](https://claud
 
 So the daily screen has one job: give people something they'd miss if it disappeared. Not by nagging them.
 
-Before thinking about screens, I read the brief as a business problem. The subscription only pays for itself if people stay past the third month, so retention is the whole game.
-
 ## 2. What brings people back, and how each one fails
 
 **Behavior first, product second.** I stripped the psychology from the product first: what actually brings people back, with the evidence and the way each one fails. Only then did I pick the daily goal.
@@ -107,19 +105,13 @@ Identity wording has strong lab results and mixed field replications, which is e
 ## The screen, step by step
 
 <p>
-<img src="docs/screens/1-tonight.jpg" width="190" alt="Tonight">
-<img src="docs/screens/2-wind-down.jpg" width="190" alt="The ritual">
 <img src="docs/screens/3-breathe.jpg" width="190" alt="Breathing, paced on screen">
-<img src="docs/screens/4-how-heavy.jpg" width="190" alt="How heavy was today">
-</p>
-<p>
 <img src="docs/screens/5-one-line.jpg" width="190" alt="One line: effort, success or progress">
-<img src="docs/screens/6-set.jpg" width="190" alt="Tonight's leaf set">
 <img src="docs/screens/7-a-past-night.jpg" width="190" alt="A past night, opened: the view moves in to its leaf">
-<img src="docs/screens/8-rain.jpg" width="190" alt="Raining where you are: drops on the glass">
+<img src="docs/screens/8-rain.jpg" width="190" alt="Raining in your city: drops on the glass">
 </p>
 
-1. **Tonight.** The month's window, tonight's leaf breathing in it. Below, the month as a row of leaves you can tap, and a card that says what tonight asks for.
+1. **Tonight.** The month's window, tonight's leaf breathing in it. Below, the month as a row you can tap, each night the same piece as in the window (a leaf this month, a petal in the rose, a ray in the sunburst), and a card that says what tonight asks for.
 2. **The wind-down.** Dim the lights, phone face down, three slow breaths. The breaths are paced on screen, because that's the step people skip when it's just a checkbox.
 3. **How heavy was today?** One tap. Heavier days set deeper glass.
 4. **One line, if you want.** An effort, a success or a bit of progress (Nate Zinsser's E-S-P), your pick.
@@ -139,16 +131,16 @@ Identity wording has strong lab results and mixed field replications, which is e
 - **Heavier days set deeper glass.** Hard days count more, with no points.
 - **No emotional copy.** The app never tells you who you are. It shows you what you did.
 - **The line is E-S-P.** A bank of proof of what you can do (Bandura's self-efficacy), in your own words instead of an app's quotes.
-- **The window comes to the night you open,** and to tonight's leaf as it's set, so the window and the row read as one thing.
-- **Tomorrow's leaf waits too,** once tonight's is set: a quiet reason to come back, with no words.
-- **A wall of your windows.** The month-three payoff made visible: three windows, each a month of your own evenings. It isn't a collection to complete. Nothing is unlocked, every window is a record.
-- **A new design every month,** from a house rotation (Rose, Sunburst, Vine, then Nouveau). A fresh start on the 1st, and a wall worth looking at.
-- **The paid feature is choosing your next window.** The house window is free. The ritual and your record are never behind the paywall: you pay for choice, never for your own evidence.
+- **The window comes to the night you open,** so the window and the row read as one thing.
+- **Tomorrow's leaf waits too,** once tonight's is set: a reason to come back, with no words.
+- **A wall, not a collection.** The month-three payoff made visible. Nothing is unlocked: every window is a record.
+- **A new design every month** (Rose, Sunburst, Vine, then Nouveau): a fresh start on the 1st.
+- **The paid feature is choosing your next window.** The house window is free, and the ritual and your record are never behind the paywall: you pay for choice, never for your own evidence.
 - **Tonight is kept on the device,** so a reload shows it set. No backend, as the brief asks.
 
 ## Tonight's sky: two public REST APIs
 
-The window shows tonight's real sky where you are, with no key, no signup and no location prompt.
+The window shows tonight's real sky in your city, with no key, no signup and no location prompt: the city comes from the phone's time zone.
 
 | API | What it gives | Kept on the device for | If it fails |
 |---|---|---|---|
@@ -156,12 +148,9 @@ The window shows tonight's real sky where you are, with no key, no signup and no
 | Open-Meteo forecast | Tonight's sunset, and the weather now | The day (sunset), 30 minutes (weather) | No sunset line, no weather on the glass |
 | US Naval Observatory | The moon's phase tonight | The day | The window keeps its drawn crescent |
 
-- **The moon in the window is tonight's moon.** Its piece is redrawn as the lit part of the disc.
-- **Rain leaves drops on the glass,** some still, some running down. **Clouds soften the light** and the shafts in the room.
-- The forecast and the moon run **in parallel**, under one time budget. The request starts as soon as the page loads, nothing waits for it, and the sunset line fades in when it arrives.
-- **For demos:** `?sky=rain`, `?sky=clear` and `?moon=0.9` (how much of the moon is lit) force them.
-
-The code is in `lib/sky.ts`.
+- **The moon in the window is tonight's moon,** redrawn as the lit part of its disc. **Rain leaves drops on the glass,** some still, some running down. **Clouds soften the light.**
+- The forecast and the moon run **in parallel** under one time budget, starting as the page loads. Nothing waits for them.
+- **For demos:** `?sky=rain`, `?sky=clear` and `?moon=0.9`. The code is in `lib/sky.ts`.
 
 ## Performance
 
@@ -174,10 +163,8 @@ Measured on the production build, as a mid-range phone (390×844 at 3×, the CPU
 | Longest freeze while loading | 1,550 ms | 700 to 900 ms, most of it the browser starting WebGL |
 | Longest freeze while loading, desktop | 520 ms | under 200 ms |
 
-- **Setting tonight's leaf repaints only the nights that changed.** The vine's geometry is cut once per month, unchanged canvases keep their textures, and the glass's shader is compiled once.
-- **Loading never freezes the screen.** The heavy work runs a step at a time with the browser free in between, shaders compile in the background before the first frame, and the window fades in. The 3D code loads on its own, after the screen already responds.
-- **Phones draw less:** lower resolution, fewer light slices, 30 frames a second, and nothing while the wind-down covers the window. A safety net lowers the resolution further if a device can't keep up.
-- **Without WebGL** the page still works, with a flat version of the window.
+- **Only what changed is redrawn.** Each window is cut and painted once, setting tonight repaints one leaf, and the shaders compile in the background before the first frame. The 3D code loads after the screen already responds.
+- **Phones draw less** (lower resolution, 30 frames a second, nothing while the wind-down covers the window), a safety net lowers it further if a device can't keep up, and without WebGL the page still works, with a flat window.
 
 ## Not built, written down
 
@@ -194,6 +181,9 @@ AI: Claude Code wrote most of the code with me. I set the direction and judged e
 
 ## Where things live
 
+<details>
+<summary>The code, for building on it together</summary>
+
 - `app/page.tsx` loads the month and renders `components/Moment.tsx`, which holds the screen's state.
 - `components/MonthStrip.tsx` is the row of nights, `components/NightCard.tsx` the card under it, `components/Ritual.tsx` tonight's three steps, `components/Windows.tsx` the wall of windows and where Plus goes.
 - `components/WindowScene.tsx` puts the 3D window together from `components/window/`: the glass (`Glass`), the sun through it (`sun`), the light shafts and dust (`Air`), the stone (`Wall`), the camera and pacing (`frame`), the textures (`textures`). Without WebGL, `components/FlatWindow.tsx` draws it flat.
@@ -202,6 +192,8 @@ AI: Claude Code wrote most of the code with me. I set the direction and judged e
 - `data/sample.json` is this month and the two before it. Colors and the UI's few shapes (`card`, `eyebrow`, `btn`) are tokens in `app/globals.css`.
 
 Handy in the live session: `?fresh` starts tonight over, `?sky=rain` and `?moon=0.15` change the sky, `?design=rose` or `?design=sunburst` shows this month in another design.
+
+</details>
 
 ---
 
