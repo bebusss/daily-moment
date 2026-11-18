@@ -64,7 +64,7 @@ The first missed night is where people leave, so that's the moment the design ha
 
 We learn who we are partly by watching what we do (Bem, self-perception theory). Relapse research calls the "I failed" spiral after a slip the abstinence violation effect (Marlatt and Gordon). The risks: identity is slow, so the first night already counts as evidence. It's abstract, so the evidence has to be visual. And it can get cheesy, so the app never tells you who you are. It shows you what you did.
 
-Why it fits the business: a streak gets more fragile the longer it runs. A window gets more valuable. By month three you have three of them, with your own lines in them. That's what I'd expect people to miss.
+Why it fits the business: a streak gets more fragile the longer it runs. A window gets more valuable. By month three you have three of them on a wall, with your own lines in them. That's what I'd expect people to miss.
 
 ## 4. The concept
 
@@ -75,11 +75,11 @@ Why it fits the business: a streak gets more fragile the longer it runs. A windo
 | **Done** | Colored glass, deeper on heavier days |
 | **Missed** | Stays clear glass. Light still passes |
 | **Back** | A gold mending lead around the gap |
-| **Monthly** | A new window, its palette set by your intention |
+| **Monthly** | A new window in a new design, its palette set by your intention. The finished ones hang together on a wall |
 
 Tonight's leaf is already waiting, so there are no choices at bedtime. Each night takes three light steps: the ritual, "how heavy was today?", and an optional line, which turns the window into a diary in your own words. No emotional copy anywhere: the glass says the kind part.
 
-This month's window happens to be a vine, but the plant isn't the mechanism. The record is. Next month can be a rose window.
+This month's window happens to be a vine, but the plant isn't the mechanism. The record is. September's was a rose and October's a sunburst. Each month's window stays exactly as you left it: the missed nights clear, mended in gold.
 
 **Inspiration.**
 
@@ -125,9 +125,13 @@ Identity wording has strong lab results and mixed field replications, which is e
 4. **One line, if you want.** An effort, a success or a bit of progress (Nate Zinsser's E-S-P), your pick.
 5. **Tonight's leaf is set.** The view moves in to it while it fills with color, then steps back to the whole month. Tomorrow's leaf starts to wait, faintly.
 6. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A missed night shows the night that mended it.
-7. **Next month's window** (tap the month at the top) is where Plus goes.
+7. **Your windows** (tap the month at the top). Every month's window on one wall, each in its own design, with its intention, its nights and how many were mended.
+8. **Next month's window** is where Plus goes: a new window every month is free, choosing your own is Plus.
 
-<img src="docs/screens/9-next-window.jpg" width="190" alt="Next month's window: the lancet is free, the other designs are Plus">
+<p>
+<img src="docs/screens/9-your-windows.jpg" width="190" alt="Your windows: September's rose, October's sunburst, November's vine, December still to choose">
+<img src="docs/screens/10-next-window.jpg" width="190" alt="December's window: Nouveau is free, choosing Rose, Sunburst or Vine is Plus">
+</p>
 
 ## Decisions
 
@@ -137,7 +141,9 @@ Identity wording has strong lab results and mixed field replications, which is e
 - **The line is E-S-P.** A bank of proof of what you can do (Bandura's self-efficacy), in your own words instead of an app's quotes.
 - **The window comes to the night you open,** and to tonight's leaf as it's set, so the window and the row read as one thing.
 - **Tomorrow's leaf waits too,** once tonight's is set: a quiet reason to come back, with no words.
-- **The paid feature is next month's window.** The lancet is free, the other designs are Plus. The ritual and your record are never behind the paywall: you pay for variety, never for your own evidence.
+- **A wall of your windows.** The month-three payoff made visible: three windows, each a month of your own evenings. It isn't a collection to complete. Nothing is unlocked, every window is a record.
+- **A new design every month,** from a house rotation (Rose, Sunburst, Vine, then Nouveau). A fresh start on the 1st, and a wall worth looking at.
+- **The paid feature is choosing your next window.** The house window is free. The ritual and your record are never behind the paywall: you pay for choice, never for your own evidence.
 - **Tonight is kept on the device,** so a reload shows it set. No backend, as the brief asks.
 
 ## Tonight's sky: two public REST APIs
@@ -176,8 +182,7 @@ Measured on the production build, as a mid-range phone (390×844 at 3×, the CPU
 ## Not built, written down
 
 - Your intention, or your favorite color, sets the month's palette.
-- A year view: twelve windows on one wall.
-- A print of a finished window.
+- The full year on the wall, and a print of a finished window.
 - Patterns from the heavy days ("heavy days cluster on Fridays"), as a gentle way to spot triggers.
 - On the night someone comes back after a miss, an optional "what got in the way?", a light version of how CBT looks at a lapse.
 
@@ -190,13 +195,13 @@ AI: Claude Code wrote most of the code with me. I set the direction and judged e
 ## Where things live
 
 - `app/page.tsx` loads the month and renders `components/Moment.tsx`, which holds the screen's state.
-- `components/MonthStrip.tsx` is the row of nights, `components/NightCard.tsx` the card under it, `components/Ritual.tsx` tonight's three steps, `components/Windows.tsx` where Plus goes.
+- `components/MonthStrip.tsx` is the row of nights, `components/NightCard.tsx` the card under it, `components/Ritual.tsx` tonight's three steps, `components/Windows.tsx` the wall of windows and where Plus goes.
 - `components/WindowScene.tsx` puts the 3D window together from `components/window/`: the glass (`Glass`), the sun through it (`sun`), the light shafts and dust (`Air`), the stone (`Wall`), the camera and pacing (`frame`), the textures (`textures`). Without WebGL, `components/FlatWindow.tsx` draws it flat.
-- `lib/window-model.ts` decides what each piece of glass means, `lib/vine.ts` cuts the window, `lib/paint.ts` paints it.
+- `lib/window-model.ts` decides what each piece of glass means. `lib/designs.ts` cuts the month's window in its design (Rose, Sunburst, or the Vine in `lib/vine.ts`, which also cuts the frame they share). `lib/paint.ts` paints it.
 - `lib/sky.ts` asks the APIs, `lib/tonight.ts` keeps tonight on the device, `lib/data.ts` types the month.
-- `data/sample.json` is the month. Colors and the UI's few shapes (`card`, `eyebrow`, `btn`) are tokens in `app/globals.css`.
+- `data/sample.json` is this month and the two before it. Colors and the UI's few shapes (`card`, `eyebrow`, `btn`) are tokens in `app/globals.css`.
 
-Handy in the live session: `?fresh` starts tonight over, `?sky=rain` and `?moon=0.15` change the sky.
+Handy in the live session: `?fresh` starts tonight over, `?sky=rain` and `?moon=0.15` change the sky, `?design=rose` or `?design=sunburst` shows this month in another design.
 
 ---
 
