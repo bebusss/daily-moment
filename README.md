@@ -113,7 +113,7 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 </p>
 
 1. **Tonight.** The month's window, tonight's leaf breathing in it. Below, the month as a row you can tap, each night the same piece as in the window (a leaf this month, a petal in the rose, a ray in the sunburst), and a card with tonight's wind-down.
-2. **Before tonight, if needed.** Nights from the last week with no check-in come first: "Fill in the ones you remember", with the same two answers for each, or "All alcohol-free" in one tap. Blanks stay as no check-in, and the step can be skipped. A single night can also be filled in later, from its card.
+2. **Before tonight, if needed.** Nights from the last week with no check-in come first: "Fill in the ones you remember", with the same two answers for each, and an "Every night" row with those same two answers to fill them all at once, either way (each can still be changed after). Blanks stay as no check-in, and the step can be skipped. A single night can also be filled in later, from its card.
 3. **Was today alcohol-free?** Two equal answers, "Yes" and "I had a drink", so the honest one is never the harder one to tap.
 4. **After "I had a drink",** the dimming lifts: the whole month, every leaf before tonight still in color, and "One night doesn't undo the others." Then the breaths, as on any night.
 5. **Three slow breaths,** paced on screen. They start by themselves, and "Skip" is always there.
@@ -186,18 +186,19 @@ Measured on the production build, as a mid-range phone (390×844 at 3×, the CPU
 
 ## Not built, written down
 
-- The other crafts, built for real (they're mocks for now).
-- The goal you set for the month, or your favorite color, picks the month's colors.
-- The full year on the wall, and a print of a finished window.
-- Patterns from the heavy days ("heavy days cluster on Fridays"), as a gentle way to spot triggers.
-- Drinking less, not only none: a nightly limit you choose (two drinks, say), with nights within it set in color.
-- On the night someone comes back after a drink, an optional "what got in the way?", a light version of how CBT looks at a lapse.
-- **Support for when it's more than a slip,** the first thing I'd build next. The rule: never scan what people write, always offer a way to a person.
-  - At sign-up, a short screening (AUDIT-C or similar) for heavy daily drinking, where stopping all at once can be medically dangerous. It points to a doctor, or to drinking less before stopping.
-  - On the night of a drink, a quiet "Need someone tonight?" under "One night doesn't undo the others", always in the same place, never a pop-up.
-  - When the pattern says so (several nights with a drink in a row, heavy days piling up, check-ins that stop after a drink), a gentle question the next evening, with "Not now" as easy to tap as yes.
-  - One tap to a person you chose ahead of time, to a coach if the service has one, or to the helplines for your country.
-  - No alerts to anyone without consent, the diary stays on the device, and no chatbot playing therapist. The copy and the thresholds would be reviewed by a clinician, and judged on whether the people who open it come back.
+**Next, in this order**
+
+1. **Support for when it's more than a slip.** Safety comes first. At sign-up, a short screening (AUDIT-C or similar) for heavy daily drinking, where stopping all at once can be medically dangerous: it points to a doctor, or to drinking less before stopping. On the night of a drink, a quiet "Need someone tonight?" under "One night doesn't undo the others", always in the same place, never a pop-up. When the pattern says so (several nights with a drink in a row, heavy days piling up, check-ins that stop after a drink), a gentle question the next evening, with "Not now" as easy to tap as yes. One tap to a person you chose ahead of time, to a coach if the service has one, or to the helplines for your country. The rule: never scan what people write, always offer a way to a person. No alerts to anyone without consent, the diary stays on the device, and no chatbot playing therapist. The copy and the thresholds would be reviewed by a clinician.
+2. **"Having a craving?"**, my proposal for the live session. The drink happens at 7 pm, not at the 11 pm check-in, so this is a quiet line on the home card, never a notification. It opens urge surfing, Marlatt's own technique and the core of mindfulness-based relapse prevention (Bowen, Chawla and Marlatt; in a 2014 trial it cut drug use and heavy drinking at 12 months more than standard relapse prevention or usual care): the craving watched as a wave that rises and passes, with the breaths and the month's window as the anchor, then "Did it pass?". "Still here" offers more time, or "Need someone tonight?". It closes the circle on the same model: before the drink (the craving), the slip (the mend), and the confidence (the nightly note). It reuses the breaths, the window and the camera.
+
+**Later**
+
+3. **Drinking less, not only none:** a nightly limit you choose (two drinks, say), with nights within it set in color.
+4. **"What got in the way?"** as an option on the night someone comes back after a drink: a light version of how CBT looks at a lapse.
+5. **Patterns,** from heavy days and from cravings ("heavy days cluster on Fridays", "the cravings come at 7 pm"), as a gentle way to spot triggers.
+6. **The Plus crafts built for real** (mosaic, tapestry, vase); they're mocks for now.
+7. **The month's colors** picked from the goal you set, or from your favorite color.
+8. **The full year on the wall,** and a print of a finished window.
 
 ## Tools, AI included
 

@@ -2,7 +2,7 @@
 
 // Tonight's check-in and wind-down, over the dimmed window. It asks as little as it can:
 //   before tonight: if some of the last week's nights got no check-in, fill in the ones you
-//      remember (each with the same two answers, or all alcohol-free in one tap). Skippable;
+//      remember (each with the same two answers, or every night at once, either way). Skippable;
 //   0. was today alcohol-free? Yes, or "I had a drink";
 //   1. three slow breaths, paced on screen. They start by themselves, and "Skip" is always there:
 //      nothing to tick off, the leaf comes from the answer, not from chores;
@@ -48,11 +48,11 @@ export default function Ritual({ goal, onClose, onLog, onPhase, onDone }: Props)
     setHeld(on);
     onPhase(on ? "held" : "ask");
   };
-  /** Logs the nights answered (or all of them, alcohol-free) and goes on to tonight. */
-  const fill = (all: boolean) => {
+  /** Logs the nights answered (the rest stay as no check-in) and goes on to tonight. */
+  const fill = () => {
     const nights = forgotten
-      .filter((date) => all || date in answers)
-      .map((date): Night => (!all && answers[date] ? { date, done: false, drank: true } : { date, done: true, weight: 2 }));
+      .filter((date) => date in answers)
+      .map((date): Night => (answers[date] ? { date, done: false, drank: true } : { date, done: true, weight: 2 }));
     if (nights.length) onLog(nights);
     setCatchUp(false);
   };
@@ -63,6 +63,23 @@ export default function Ritual({ goal, onClose, onLog, onPhase, onDone }: Props)
       else next[date] = drank;
       return next;
     });
+  // "Every night": the same two answers, for all of them at once (each can still be changed after).
+  const everyNight = (drank: boolean) => forgotten.every((date) => answers[date] === drank);
+  const answerAll = (drank: boolean) => setAnswers(everyNight(drank) ? {} : Object.fromEntries(forgotten.map((date) => [date, drank])));
+  const pills = (pressed: (drank: boolean) => boolean, pick: (drank: boolean) => void) => (
+    <span className="flex gap-1.5">
+      {[false, true].map((drank) => (
+        <button
+          key={String(drank)}
+          onClick={() => pick(drank)}
+          aria-pressed={pressed(drank)}
+          className={`rounded-full px-3.5 py-2 text-sm ring-1 transition-colors duration-200 ${pressed(drank) ? "bg-ink text-night ring-ink" : "text-mist ring-white/12"}`}
+        >
+          {drank ? "A drink" : "Alcohol-free"}
+        </button>
+      ))}
+    </span>
+  );
   const back = () => {
     if (catchUp) onClose();
     else if (held) hold(false);
@@ -129,31 +146,24 @@ export default function Ritual({ goal, onClose, onLog, onPhase, onDone }: Props)
           <section key="catch-up" className="flex flex-1 flex-col justify-end animate-rise">
             <h2 className="font-display text-[28px] leading-tight">Before tonight</h2>
             <p className="mt-2 text-sm text-mist">These nights didn&apos;t get a check-in. Fill in the ones you remember.</p>
-            <ul className="mt-6 space-y-2">
+            {forgotten.length > 1 && (
+              <div className="mt-6 flex items-center justify-between gap-3 py-1 pr-2.5 pl-4">
+                <span className="text-sm text-mist">Every night</span>
+                {pills(everyNight, answerAll)}
+              </div>
+            )}
+            <ul className={`space-y-2 ${forgotten.length > 1 ? "mt-2" : "mt-6"}`}>
               {forgotten.map((date) => (
                 <li key={date} className="flex items-center justify-between gap-3 rounded-2xl bg-white/4 py-2.5 pr-2.5 pl-4 ring-1 ring-white/8">
                   <span className="text-sm text-ink">{shortDate(date)}</span>
-                  <span className="flex gap-1.5">
-                    {[false, true].map((drank) => (
-                      <button
-                        key={String(drank)}
-                        onClick={() => answer(date, drank)}
-                        aria-pressed={answers[date] === drank}
-                        className={`rounded-full px-3.5 py-2 text-sm ring-1 transition-colors duration-200 ${
-                          answers[date] === drank ? "bg-ink text-night ring-ink" : "text-mist ring-white/12"
-                        }`}
-                      >
-                        {drank ? "A drink" : "Alcohol-free"}
-                      </button>
-                    ))}
-                  </span>
+                  {pills(
+                    (drank) => answers[date] === drank,
+                    (drank) => answer(date, drank),
+                  )}
                 </li>
               ))}
             </ul>
-            <button onClick={() => fill(true)} className="btn-quiet mt-5">
-              All alcohol-free
-            </button>
-            <button onClick={() => fill(false)} className="btn-primary mt-2.5">
+            <button onClick={fill} className="btn-primary mt-5">
               {Object.keys(answers).length ? "Continue" : "Skip"}
             </button>
           </section>
