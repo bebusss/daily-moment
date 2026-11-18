@@ -1,62 +1,31 @@
-// The nights logged on this device (tonight's check-in, and nights filled in afterwards), kept so a
-// reload doesn't lose them, and tonight's real date. Local only, as the brief asks: no backend, no
-// account, and nothing about anyone's drinking leaves the phone. (To start over, open with ?fresh.)
+// The nights logged in this visit (tonight's check-in, and nights filled in afterwards), and
+// tonight's real date. Kept in memory only: a reload starts the evening over, so the check-in can
+// be tried again down another path. (A real app would keep them on the device.) No backend, as
+// the brief asks, and nothing about anyone's drinking leaves the page.
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import type { Night } from "@/lib/data";
 
-const KEY = "leadlight:nights";
+let logged: Record<string, Night> = {};
+const none: Record<string, Night> = {};
 const listeners = new Set<() => void>();
-const changed = () => listeners.forEach((l) => l());
 
-function read(): string | null {
-  try {
-    return localStorage.getItem(KEY);
-  } catch {
-    return null;
-  }
-}
-
-function parse(raw: string | null): Record<string, Night> {
-  try {
-    return raw ? (JSON.parse(raw) as Record<string, Night>) : {};
-  } catch {
-    return {};
-  }
-}
-
-/** Keeps these nights (by date), over whatever was kept for them before. */
+/** Logs these nights (by date), over whatever was logged for them before. */
 export function saveNights(nights: Night[]) {
-  const all = parse(read());
-  for (const n of nights) all[n.date] = n;
-  try {
-    localStorage.setItem(KEY, JSON.stringify(all));
-  } catch {}
-  changed();
+  logged = { ...logged, ...Object.fromEntries(nights.map((n) => [n.date, n])) };
+  listeners.forEach((l) => l());
 }
 
-export function forgetNights() {
-  try {
-    localStorage.removeItem(KEY);
-  } catch {}
-  changed();
-}
-
-/** Every night logged on this device, by date. On the server (and while hydrating), none. */
+/** Every night logged in this visit, by date. On the server (and while hydrating), none. */
 export function useSavedNights(): Record<string, Night> {
-  const raw = useSyncExternalStore(
+  return useSyncExternalStore(
     (change) => {
       listeners.add(change);
-      window.addEventListener("storage", change);
-      return () => {
-        listeners.delete(change);
-        window.removeEventListener("storage", change);
-      };
+      return () => listeners.delete(change);
     },
-    read,
-    () => null,
+    () => logged,
+    () => none,
   );
-  return useMemo(() => parse(raw), [raw]);
 }
 
 /**

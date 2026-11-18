@@ -14,7 +14,7 @@ import Windows from "@/components/Windows";
 import { dayOf, finishedMonth, monthAsOf, monthName, withNights, type DailyGoal, type DesignName, type LineKind, type Night, type Weight } from "@/lib/data";
 import { DESIGNS } from "@/lib/designs";
 import { useSky } from "@/lib/sky";
-import { forgetNights, saveNights, useSavedNights, useTonight } from "@/lib/tonight";
+import { saveNights, useSavedNights, useTonight } from "@/lib/tonight";
 import { nightLooks } from "@/lib/window-model";
 
 type Phase = "ask" | "held" | "wind";
@@ -60,8 +60,8 @@ function useDesignOverride(): DesignName | null {
 }
 
 export default function Moment({ initial }: { initial: DailyGoal }) {
-  // The month as of tonight's real date: the nights in the data, the ones logged on this device
-  // (kept, so a reload shows them), and the ones in between, with no check-in.
+  // The month as of tonight's real date: the nights in the data, the ones logged in this visit
+  // (a reload starts over), and the ones in between, with no check-in.
   const logged = useSavedNights();
   const tonight = useTonight(initial.today);
   const design = useDesignOverride();
@@ -111,10 +111,6 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   );
   // When the screen first responds to taps (DevTools > Performance, or performance.getEntriesByName).
   useEffect(() => void performance.mark("ui:ready"), []);
-  // ?fresh forgets everything logged on this device (handy for showing the check-in again).
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("fresh")) forgetNights();
-  }, []);
 
   const done = shown.nights.filter((n) => n.done).length;
   const mended = looks.filter((l) => l.mended).length;

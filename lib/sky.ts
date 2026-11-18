@@ -1,12 +1,14 @@
-// Tonight's sky where the person is, from two public REST APIs (no key, no signup, no
-// location prompt), so the window can show it:
+// Tonight's sky where the person is, from public REST APIs (no key, no signup, no location
+// prompt), so the window can show it:
 //
-// - Open-Meteo. Its geocoder turns the device's time zone ("America/Mexico_City") into a place,
-//   kept only if its time zone matches. Its forecast gives tonight's sunset and the weather now.
+// - GeoJS: the city and its coordinates, from the connection, kept only if its time zone is the
+//   device's (a VPN abroad, say, isn't). If not, Open-Meteo's geocoder turns the device's time
+//   zone ("America/Mexico_City") into its city: right zone, maybe not the right city.
+// - Open-Meteo's forecast: tonight's sunset and the weather now.
 // - The US Naval Observatory: the moon's phase tonight at that place.
 //
-// The two run in parallel under one time budget. Each answer is kept on the device: the place
-// for good, the sunset and the moon for the day, the weather for half an hour. If an API is slow
+// The forecast and the moon run in parallel under one time budget. Each answer is kept on the
+// device: the place for half a day, the sunset and the moon for the day, the weather for half an hour. If an API is slow
 // or down, its part is simply missing and the window keeps its default evening and moon; nothing
 // else waits for it. We ask as soon as this code loads in the browser.
 //
@@ -27,6 +29,7 @@ const BUDGET_MS = 15000;
 const HOUR = 3600_000;
 
 type Place = { name: string; latitude: number; longitude: number };
+type GeoJs = { city?: string; latitude?: string; longitude?: string; timezone?: string };
 type Geocoding = { results?: (Place & { timezone: string })[] };
 type Forecast = {
   daily: { sunset: string[] };
@@ -80,7 +83,20 @@ function clock(hhmm: string) {
 /** WMO weather codes: drizzle, rain, showers, storms. */
 function weatherOf(code: number, clouds: number, precipitation: number) {
   const rain = precipitation > 0 || (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
-  const label = code >= 95 ? "Storm" : code >= 80 ? "Showers" : code >= 61 ? "Rain" : code >= 51 ? "Drizzle" : clouds > 70 ? "Cloudy" : clouds > 30 ? "Some clouds" : "Clear";
+  const label =
+    code >= 95
+      ? "Storm"
+      : code >= 80
+        ? "Showers"
+        : code >= 61
+          ? "Rain"
+          : code >= 51
+            ? "Drizzle"
+            : clouds > 70
+              ? "Cloudy"
+              : clouds > 30
+                ? "Some clouds"
+                : "Clear";
   return { rain, clouds: clouds / 100, label };
 }
 
@@ -88,9 +104,19 @@ export async function fetchSky(zone = Intl.DateTimeFormat().resolvedOptions().ti
   const signal = AbortSignal.timeout(BUDGET_MS);
   const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD, local
 
-  const place = await cached<Place>(`sky:place:${zone}`, Infinity, async () => {
+  const place = await cached<Place>(`sky:place:v2:${zone}`, 12 * HOUR, async () => {
+    // Where the connection is, if it's in the device's own time zone.
+    try {
+      const ip = await getJson<GeoJs>("https://get.geojs.io/v1/ip/geo.json", signal);
+      const [latitude, longitude] = [Number(ip.latitude), Number(ip.longitude)];
+      if (ip.city && ip.timezone === zone && Number.isFinite(latitude) && Number.isFinite(longitude)) return { name: ip.city, latitude, longitude };
+    } catch {}
+    // Otherwise the time zone's own city.
     const city = zone.split("/").pop()?.replaceAll("_", " ") ?? "";
-    const geo = await getJson<Geocoding>(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=10&language=en&format=json`, signal);
+    const geo = await getJson<Geocoding>(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=10&language=en&format=json`,
+      signal,
+    );
     const found = geo.results?.find((r) => r.timezone === zone);
     if (!found) throw new Error(`no place for ${zone}`);
     return { name: found.name, latitude: found.latitude, longitude: found.longitude };
@@ -100,7 +126,10 @@ export async function fetchSky(zone = Intl.DateTimeFormat().resolvedOptions().ti
 
   const [evening, weather, moon] = await Promise.all([
     cached(`sky:sunset:${at}:${today}`, 24 * HOUR, async () => {
-      const f = await getJson<Forecast>(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=sunset&timezone=auto&forecast_days=1`, signal);
+      const f = await getJson<Forecast>(
+        `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=sunset&timezone=auto&forecast_days=1`,
+        signal,
+      );
       return clock(f.daily.sunset[0].slice(11, 16));
     }),
     cached(`sky:weather:${at}`, HOUR / 2, async () => {

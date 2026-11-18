@@ -11,7 +11,7 @@ Each alcohol-free night of the month sets one leaf of a stained-glass window. A 
 <img src="docs/screens/4-the-mend.jpg" width="190" alt="The next alcohol-free night: last night's clear leaf soldered in gold">
 </p>
 
-**Contents:** [The brief, read as a business](#1-the-brief-read-as-a-business) · [What brings people back](#2-what-brings-people-back-and-how-each-one-fails) · [The bet](#3-the-bet) · [The concept](#4-the-concept) · [How I'd know it works](#5-how-id-know-it-works) · [The screen, step by step](#the-screen-step-by-step) · [Decisions](#decisions) · [Pricing](#pricing) · [Tonight's sky (REST)](#tonights-sky-two-public-rest-apis) · [Performance](#performance) · [Not built, written down](#not-built-written-down) · [Tools, AI included](#tools-ai-included) · [Where things live](#where-things-live) · [The original brief](#the-original-brief)
+**Contents:** [The brief, read as a business](#1-the-brief-read-as-a-business) · [What brings people back](#2-what-brings-people-back-and-how-each-one-fails) · [The bet](#3-the-bet) · [The concept](#4-the-concept) · [How I'd know it works](#5-how-id-know-it-works) · [The screen, step by step](#the-screen-step-by-step) · [Decisions](#decisions) · [Pricing](#pricing) · [Tonight's sky (REST)](#tonights-sky-three-public-rest-apis) · [Performance](#performance) · [Not built, written down](#not-built-written-down) · [Tools, AI included](#tools-ai-included) · [Where things live](#where-things-live) · [The original brief](#the-original-brief)
 
 **Short on time?** Sections 1 to 5 are the whole case. The same five sections also exist as [a short deck](https://claude.ai/artifact/7GmmF1yVZMWkXMUAfoFPeU), entirely optional: it says nothing that isn't here.
 
@@ -144,7 +144,7 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 - **Tomorrow's leaf starts to glow faintly** once tonight is checked in, whatever the answer: a reason to come back, without a notification.
 - **A wall, not a collection.** By month three you see three finished windows side by side, which is the point the business needs people to reach. Nothing is unlocked or earned: each window is just the record of its month.
 - **The paid feature is choosing your craft** (see Pricing). The nightly check-in and your record are never behind the paywall: you pay for choice, never for your own evidence.
-- **Every check-in is kept on the device,** so a reload shows it. No backend, as the brief asks, and nothing about anyone's drinking leaves the phone.
+- **A reload starts the evening over,** so the check-in can be tried again down another path. Nothing is stored; a real app would keep the nights on the device. No backend, as the brief asks, and nothing about anyone's drinking leaves the phone.
 
 ## Pricing
 
@@ -156,13 +156,13 @@ The month is the unit of everything. Each piece (a window, or with Plus a mosaic
 - **Why the window is the free default and the vase isn't:** the vase's mend is kintsugi, the metaphor everyone knows. For some people it's poetic, so it's there to choose, but as the default it would feel borrowed. The mending lead is this app's own version of it.
 - Prices would be a test, judged on month-3 retention, not a guess written here.
 
-## Tonight's sky: two public REST APIs
+## Tonight's sky: three public REST APIs
 
-The window shows tonight's real sky in your city, with no key, no signup and no location prompt: the city comes from the phone's time zone.
+The window shows tonight's real sky in your city, with no key, no signup and no location prompt: the city comes from the connection, checked against the phone's time zone.
 
 | API | What it gives | Kept on the device for | If it fails |
 |---|---|---|---|
-| Open-Meteo geocoding | The place, from the phone's time zone ("America/Mexico_City"), kept only if its time zone matches | For good | Nothing below runs, the window keeps its defaults |
+| GeoJS | The city and its coordinates, from the connection, kept only if its time zone is the phone's (a VPN abroad isn't) | Half a day | Open-Meteo's geocoder takes the time zone's own city ("America/Mexico_City" is Mexico City): the right zone, maybe not the right city. If that fails too, nothing below runs and the window keeps its defaults |
 | Open-Meteo forecast | Tonight's sunset, and the weather now | The day (sunset), 30 minutes (weather) | No sunset line, no weather on the glass |
 | US Naval Observatory | The moon's phase tonight | The day | The window keeps its drawn crescent |
 
@@ -214,10 +214,10 @@ AI: Claude Code wrote most of the code with me. I set the direction and judged e
 - `components/MonthStrip.tsx` is the row of nights, `components/NightCard.tsx` the card under it, `components/Ritual.tsx` tonight's check-in and wind-down, `components/Windows.tsx` the wall of windows and where Plus goes.
 - `components/WindowScene.tsx` puts the 3D window together from `components/window/`: the glass (`Glass`), the sun through it (`sun`), the light shafts and dust (`Air`), the stone (`Wall`), the camera and pacing (`frame`), the textures (`textures`). Without WebGL, `components/FlatWindow.tsx` draws it flat.
 - `lib/window-model.ts` decides what each piece of glass means. `lib/designs.ts` cuts the month's window in its design (Rose, Sunburst, or the Vine in `lib/vine.ts`, which also cuts the frame they share). `lib/paint.ts` paints it.
-- `lib/sky.ts` asks the APIs, `lib/tonight.ts` keeps the check-ins on the device and knows tonight's date, `lib/data.ts` types the month.
+- `lib/sky.ts` asks the APIs, `lib/tonight.ts` keeps this visit's check-ins and knows tonight's date, `lib/data.ts` types the month.
 - `data/sample.json` is this month and the two before it. Colors and the UI's few shapes (`card`, `eyebrow`, `btn`) are tokens in `app/globals.css`.
 
-Handy in the live session: `?fresh` forgets everything logged on this device, `?sky=rain` and `?moon=0.15` change the sky, `?design=rose` or `?design=sunburst` shows this month in another design.
+Handy in the live session: a reload starts the evening over, `?sky=rain` and `?moon=0.15` change the sky, `?design=rose` or `?design=sunburst` shows this month in another design.
 
 </details>
 
