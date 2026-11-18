@@ -85,7 +85,7 @@ function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled,
       <primitive object={sun.light} />
       <primitive object={sun.light.target} />
       <Wall model={model} stoneSize={lite ? STONE_LITE : STONE_FULL} />
-      <Glass model={model} textures={textures} paneAt={paneAt} selected={selected} spotlight={Boolean(spotlight)} weather={weather} onSelect={onSelect} />
+      <Glass model={model} textures={textures} paneAt={paneAt} selected={selected} spotlight={Boolean(spotlight)} still={still} weather={weather} onSelect={onSelect} />
       <Bars model={model} />
       <Air sun={sun} model={model} slices={lite ? 14 : 26} clouds={weather?.clouds ?? 0} />
       <Dust sun={sun} model={model} />

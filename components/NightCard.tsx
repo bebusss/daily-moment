@@ -66,7 +66,7 @@ export default function NightCard({ goal, day, onBegin, onBack }: Props) {
         <p className="mt-3 text-sm text-ink">No wind-down that night.</p>
         {back >= 0 && (
           <p className="mt-2 flex items-center gap-2 text-sm text-gold">
-            <span aria-hidden className="h-0.5 w-4 rounded-full bg-gold shadow-[0_0_8px_var(--color-gold)]" />
+            <span aria-hidden className="gold-came" />
             Mended {shortDate(goal.nights[back].date)}
           </p>
         )}

@@ -6,7 +6,7 @@
 // paintWindow() gives four canvases, all the same size, all in the window's own frame:
 // - glass: how much light each spot lets through, and in what color (paint included);
 // - lead:  where the lead cames are (a rounded profile, brightest along their middle);
-// - mask:  red = gold (mended) lead, green = tonight's glow, blue = how milky the glass is;
+// - mask:  red = gold (mended) lead, as its height; green = tonight's glow; blue = how milky the glass is;
 // - ids:   which piece each pixel belongs to (for picking, and for tonight's glow).
 // repaintWindow() redoes only the pieces that changed (tonight's leaf when it's set, a missed
 // night when it's mended), reusing the rest. paintOutside() paints the evening the window looks
@@ -366,11 +366,24 @@ function paintMilk(m: CanvasRenderingContext2D, pane: PaneModel, shape: Path2D) 
   m.stroke(shape);
 }
 
-/** A mended night: its whole lead, gold (red channel of the mask). */
+/**
+ * A mended night: its whole lead, gold (red channel of the mask). Drawn as a came of its own, a
+ * little wider than lead and half-round: the value is its height, highest along its crown, so the
+ * glass shader can light it as metal. Each step keeps the higher of the two values, so painting
+ * it twice, or two mended pieces sharing an edge, gives the same came.
+ */
 function paintGold(au: CanvasRenderingContext2D, pane: PaneModel, shape: Path2D) {
-  au.strokeStyle = "#fff";
-  au.lineWidth = leadWidth(pane) * PX * 1.8;
-  au.stroke(shape);
+  const width = leadWidth(pane) * PX * 1.8;
+  const steps = 12;
+  au.globalCompositeOperation = "lighten";
+  for (let k = 0; k < steps; k++) {
+    const x = 1 - (k + 0.5) / steps; // how far out from the crown, as a share of the half-width
+    const v = Math.round(Math.sqrt(1 - x * x) * 255);
+    au.strokeStyle = `rgb(${v},${v},${v})`;
+    au.lineWidth = width * (1 - k / steps);
+    au.stroke(shape);
+  }
+  au.globalCompositeOperation = "source-over";
 }
 
 /** Tonight's leaf: a glow just inside its lead, for the light that waits in it (green channel). Tomorrow's, fainter. */

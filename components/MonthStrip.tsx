@@ -54,6 +54,15 @@ export default function MonthStrip({ month, design, nights, selected, onSelect }
             <stop offset="0" stopColor="#fff" stopOpacity="0.45" />
             <stop offset="0.6" stopColor="#fff" stopOpacity="0" />
           </radialGradient>
+          {/* Gold came: bands of light and dark the way polished metal shows a room. */}
+          <linearGradient id="gold-came" x1="0" y1="0" x2="0.7" y2="1">
+            <stop offset="0" stopColor="#fff4cc" />
+            <stop offset="0.22" stopColor="#f2c95e" />
+            <stop offset="0.45" stopColor="#9e6716" />
+            <stop offset="0.62" stopColor="#f6d77f" />
+            <stop offset="0.8" stopColor="#c38d2c" />
+            <stop offset="1" stopColor="#6e4610" />
+          </linearGradient>
         </defs>
       </svg>
       {nights.map((n) => {
@@ -71,7 +80,9 @@ export default function MonthStrip({ month, design, nights, selected, onSelect }
               open ? "bg-white/8 ring-1 ring-white/12" : ""
             }`}
           >
-            <span className={`text-[11px] leading-none tabular-nums ${n.status === "today" ? "font-semibold text-gold" : open ? "text-ink" : future ? "text-mist/40" : "text-mist"}`}>
+            <span
+              className={`text-[11px] leading-none tabular-nums ${n.status === "today" ? "font-semibold text-gold" : open ? "text-ink" : future ? "text-mist/40" : "text-mist"}`}
+            >
               {n.day}
             </span>
             <svg viewBox="0 0 16 24" className={`h-6 w-4 ${n.status === "today" ? "animate-glow" : n.next ? "animate-glow opacity-70" : ""}`} aria-hidden>
@@ -82,7 +93,15 @@ export default function MonthStrip({ month, design, nights, selected, onSelect }
                   {vein && <path d={vein} stroke="#120d0a" strokeOpacity="0.35" strokeWidth="0.9" />}
                 </>
               )}
-              {n.status === "gap" && <path d={LEAF} fill="#f2efe6" fillOpacity="0.14" stroke={n.mended ? "var(--color-gold)" : "#ab9c8b"} strokeWidth={n.mended ? 1.6 : 1} />}
+              {n.status === "gap" && !n.mended && <path d={LEAF} fill="#f2efe6" fillOpacity="0.14" stroke="#ab9c8b" strokeWidth="1" />}
+              {n.status === "gap" && n.mended && (
+                <>
+                  {/* Clear glass in a gold came: a dark rim, the gold, a bright line along its crown. */}
+                  <path d={LEAF} fill="#f2efe6" fillOpacity="0.16" stroke="#2a1906" strokeWidth="2.7" />
+                  <path d={LEAF} fill="url(#leaf-shine)" stroke="url(#gold-came)" strokeWidth="1.9" />
+                  <path d={LEAF} fill="none" stroke="#fff6dc" strokeOpacity="0.5" strokeWidth="0.4" />
+                </>
+              )}
               {n.status === "today" && <path d={LEAF} fill={n.color} stroke="#fff3d6" strokeWidth="1" />}
               {future && (
                 <path d={LEAF} fill="#cdd5bd" fillOpacity={n.next ? 0.18 : 0.07} stroke="#f3eadc" strokeOpacity={n.next ? 0.55 : 0.16} strokeWidth="1" />

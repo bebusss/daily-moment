@@ -1,4 +1,4 @@
-# Daily Moment: an evening wind-down
+# Leadlight: an evening wind-down
 
 Each night of the month sets one leaf of a stained-glass window. Miss a night and its leaf stays clear glass. Come back and gold lead mends it.
 
@@ -116,7 +116,7 @@ Identity wording has strong lab results and mixed field replications, which is e
 3. **How heavy was today?** One tap. Heavier days set deeper glass.
 4. **One line, if you want.** An effort, a success or a bit of progress (Nate Zinsser's E-S-P), your pick.
 5. **Tonight's leaf is set.** The view moves in to it while it fills with color, then steps back to the whole month. Tomorrow's leaf starts to wait, faintly.
-6. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A missed night shows the night that mended it.
+6. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A missed night shows the night that mended it, and its gold is soldered again as you watch: a hot point runs round the leaf and the lead cools to gold behind it.
 7. **Your windows** (tap the month at the top). Every month's window on one wall, each in its own design, with its intention, its nights and how many were mended. Open one and the screen becomes that month, read-only: its window, its nights, its lines. "Back to tonight" returns.
 8. **Next month's piece** is where Plus goes: another window is free, and with Plus you choose the craft.
 
@@ -127,6 +127,7 @@ Identity wording has strong lab results and mixed field replications, which is e
 
 ## Decisions
 
+- **The name.** A leadlight is a window of small pieces of glass held in lead, and the lead is where the gold mend goes.
 - **Tonight is preselected.** No choices at bedtime.
 - **Heavier days set deeper glass.** Hard days count more, with no points.
 - **No emotional copy.** The app never tells you who you are. It shows you what you did.

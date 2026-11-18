@@ -66,6 +66,14 @@
 @utility btn-quiet {
   @apply btn bg-white/6 text-ink ring-1 ring-white/8 active:bg-white/10;
 }
+/* The mark for a mended night: a short piece of gold came, lit from above like the window's. */
+@utility gold-came {
+  @apply inline-block h-[3px] w-4 shrink-0 rounded-full;
+  background: linear-gradient(180deg, #fff3c8 0%, #f1c65a 35%, #a8701a 75%, #6b4410 100%);
+  box-shadow:
+    0 0 0 0.5px rgb(40 24 6 / 0.8),
+    0 0 8px rgb(231 178 79 / 0.45);
+}
 
 @media (prefers-reduced-motion: reduce) {
   * {

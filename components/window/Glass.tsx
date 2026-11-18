@@ -5,11 +5,13 @@
 // its color; a night in the spotlight comes forward; mended nights' lead shines gold. Tonight's
 // real weather (lib/sky) shows on it: clouds soften the light, rain leaves drops on the glass.
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
+import { centroid, type Pt } from "@/lib/geometry";
 import type { PaintedWindow } from "@/lib/paint";
-import type { WindowModel } from "@/lib/window-model";
+import { leafMid } from "@/lib/vine";
+import type { PaneModel, WindowModel } from "@/lib/window-model";
 import { rainTexture, type Painted } from "./textures";
 
 // The glass
@@ -45,6 +47,13 @@ export const glassFragment = /* glsl */ `
   uniform sampler2D rainMap;
   uniform float rain;
   uniform float clouds;
+  uniform float solder;
+  uniform float solderHeat;
+  uniform vec2 solderC;
+  uniform vec2 solderAx;
+  uniform vec2 solderHalf;
+  uniform float solderStart;
+  uniform vec2 solderAt;
   varying vec2 vUv;
 
   void main() {
@@ -122,12 +131,66 @@ export const glassFragment = /* glsl */ `
     float diff = max(dot(n, L), 0.0);
     float spec = pow(max(dot(n, normalize(L + vec3(0.0, 0.0, 1.0))), 0.0), 28.0);
     vec3 lead = vec3(0.02, 0.017, 0.014) * (0.35 + diff) + vec3(0.5, 0.4, 0.3) * spec * 0.09;
-    float gold = smoothstep(0.25, 0.65, mask.r);
-    // Gold mends the nights someone came back from: it's the one metal that shines.
-    vec3 goldColor = vec3(1.0, 0.5, 0.08) * (0.55 + 0.55 * diff) + vec3(1.0, 0.62, 0.2) * spec * 0.7;
-    goldColor *= 1.0 + 0.3 * sin(time * 0.8 - vUv.y * 12.0);
+
+    // Gold mends the nights someone came back from: a came of its own over the lead, half-round,
+    // and polished. Metal has no color of its own to show; it shows the room, tinted gold: the
+    // window's warm glow where its curve faces it, a hot highlight along that edge, dark where it
+    // turns away. Now and then a glint runs along it.
+    float gh = mask.r;
+    float gold = smoothstep(0.03, 0.28, gh);
+    vec3 goldColor = vec3(0.0);
+    vec2 p = (vUv - 0.5) * size;
+    if (gold > 0.001) {
+      vec2 o = texel * 1.5;
+      float gx = texture2D(maskMap, vUv + vec2(o.x, 0.0)).r - texture2D(maskMap, vUv - vec2(o.x, 0.0)).r;
+      float gy = texture2D(maskMap, vUv + vec2(0.0, o.y)).r - texture2D(maskMap, vUv - vec2(0.0, o.y)).r;
+      vec3 gn = normalize(vec3(-gx * 5.0, -gy * 5.0, 1.0));
+      vec3 R = reflect(vec3(0.0, 0.0, -1.0), gn);
+      vec3 Lw = normalize(vec3(-0.45, 0.55, 0.7));
+      float facing = dot(R, Lw);
+      vec3 room = vec3(0.03, 0.018, 0.008);
+      room += vec3(0.95, 0.66, 0.32) * smoothstep(0.3, 0.95, facing);
+      room += vec3(1.1, 1.0, 0.8) * pow(max(facing, 0.0), 24.0) * 2.2;
+      room += vec3(0.3, 0.14, 0.04) * smoothstep(0.0, -0.7, R.y);
+      vec3 F0 = vec3(1.0, 0.71, 0.29);
+      vec3 F = F0 + (1.0 - F0) * pow(1.0 - max(gn.z, 0.0), 5.0);
+      // Darker at its very edges, where it meets the glass.
+      goldColor = room * F * mix(0.3, 1.0, smoothstep(0.05, 0.45, gh));
+      float along = dot(p, vec2(0.8, 0.6));
+      float sweep = mod(time * 0.45, 9.0) - 3.0;
+      goldColor += F * vec3(1.0, 0.9, 0.7) * exp(-pow((along - sweep) / 0.07, 2.0)) * 1.6 * smoothstep(0.4, 1.0, gh);
+      // An opened mended night shines a little more.
+      goldColor *= 1.0 + isSelected * focus * 0.25;
+    }
+
+    // Soldering: a mended night just opened has its gold laid again. A hot point runs round its
+    // piece; ahead of it the lead is still plain, behind it the gold is molten, then cools.
+    vec3 glow = vec3(0.0);
+    if (solder >= 0.0) {
+      vec2 sp = p - solderC;
+      vec2 q = vec2(dot(sp, solderAx), dot(sp, vec2(-solderAx.y, solderAx.x))) / solderHalf;
+      float mine = 1.0 - smoothstep(0.5, 0.8, abs(length(q) - 1.0));
+      float at = fract((atan(q.y, q.x) - solderStart) / 6.28318);
+      float behind = solder - at;
+      float laid = step(0.0, behind);
+      gold *= mix(1.0, laid, mine);
+      // Right behind the iron it's white-hot; the rest of the new gold is a dull red-orange that
+      // cools back to gold.
+      float fresh = mine * laid * exp(-behind * 14.0);
+      float warm = mine * laid * solderHeat;
+      goldColor = mix(goldColor, goldColor * vec3(1.5, 0.62, 0.25) + vec3(0.35, 0.06, 0.0), warm * 0.75);
+      vec3 hot = mix(vec3(2.3, 1.3, 0.32), vec3(4.2, 3.4, 2.2), smoothstep(0.55, 1.0, fresh));
+      goldColor = mix(goldColor, hot, smoothstep(0.0, 0.5, fresh));
+      // The iron's own light, on the glass and the lead round it.
+      if (solder > 0.0 && solder < 1.0) {
+        float dd = length(p - solderAt);
+        float flicker = 0.85 + 0.15 * sin(time * 47.0) * sin(time * 31.0);
+        glow = (vec3(3.2, 2.2, 1.2) * exp(-dd * dd / 0.0009) + vec3(1.0, 0.5, 0.16) * exp(-dd * dd / 0.012) * 0.7) * flicker;
+      }
+    }
+
     float cover = max(smoothstep(0.1, 0.38, h), gold);
-    vec3 color = mix(light, mix(lead, goldColor, gold), cover);
+    vec3 color = mix(light, mix(lead, goldColor, gold), cover) + glow;
 
     gl_FragColor = vec4(color, 1.0);
     #include <colorspace_fragment>
@@ -166,8 +229,167 @@ export function glassMaterial() {
       rainMap: { value: rainTexture() },
       rain: { value: 0 },
       clouds: { value: 0 },
+      solder: { value: -1 },
+      solderHeat: { value: 0 },
+      solderC: { value: new THREE.Vector2() },
+      solderAx: { value: new THREE.Vector2(1, 0) },
+      solderHalf: { value: new THREE.Vector2(1, 1) },
+      solderStart: { value: 0 },
+      solderAt: { value: new THREE.Vector2() },
     },
   });
+}
+
+/** How long the iron takes to go round a piece, and how long the gold then takes to cool (seconds). */
+const RUN = 2.0;
+const COOL = 1.8;
+
+type Iron = { on: boolean; at: Pt };
+
+/**
+ * The path the iron takes round a piece: the piece's own frame (its middle, its long axis and how
+ * far it reaches each way), the angle it starts from (a leaf's base), and where the iron is when
+ * it has gone `s` of the way round. The shader measures "how far round" the same way.
+ */
+function ironPath(pane: PaneModel) {
+  const c = centroid(pane.points);
+  let [sxx, syy, sxy] = [0, 0, 0];
+  for (const [x, y] of pane.points) {
+    const [dx, dy] = [x - c[0], y - c[1]];
+    [sxx, syy, sxy] = [sxx + dx * dx, syy + dy * dy, sxy + dx * dy];
+  }
+  const angle = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+  const ax: Pt = [Math.cos(angle), Math.sin(angle)];
+  const local = ([x, y]: Pt): Pt => [(x - c[0]) * ax[0] + (y - c[1]) * ax[1], -(x - c[0]) * ax[1] + (y - c[1]) * ax[0]];
+  let [hx, hy] = [1e-3, 1e-3];
+  for (const pt of pane.points) {
+    const [a, b] = local(pt);
+    [hx, hy] = [Math.max(hx, Math.abs(a)), Math.max(hy, Math.abs(b))];
+  }
+  const turn = (pt: Pt) => {
+    const [a, b] = local(pt);
+    return Math.atan2(b / hy, a / hx);
+  };
+  const startAngle = pane.leaf ? turn(leafMid(pane.leaf, 0)) : Math.PI;
+  const round = (pt: Pt) => ((((turn(pt) - startAngle) / (2 * Math.PI)) % 1) + 1) % 1;
+  const ats = pane.points.map(round);
+  const at = (s: number): Pt => {
+    for (let i = 0; i < pane.points.length; i++) {
+      const j = (i + 1) % pane.points.length;
+      const a = ats[i];
+      let b = ats[j];
+      if (Math.abs(b - a) > 0.5) b += b < a ? 1 : -1;
+      const [lo, hi] = a < b ? [a, b] : [b, a];
+      for (const v of [s, s + 1, s - 1])
+        if (v >= lo && v <= hi && hi > lo) {
+          const k = (v - a) / (b - a);
+          const [p, q] = [pane.points[i], pane.points[j]];
+          return [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k];
+        }
+    }
+    return c;
+  };
+  return { c, ax, half: [hx, hy] as Pt, startAngle, at };
+}
+
+/**
+ * Sparks off the iron: a few dozen points thrown up and out, falling, going from white-hot to
+ * orange as they die. Always in the scene (so its shader compiles with the rest), drawing nothing
+ * while the iron is cold.
+ */
+const SPARKS = 96;
+
+function sparkMaterial() {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: { scale: { value: 2 } },
+    vertexShader: /* glsl */ `
+      attribute float life;
+      uniform float scale;
+      varying float vLife;
+      void main() {
+        vLife = life;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * mv;
+        gl_PointSize = life > 0.0 ? (1.5 + 3.5 * life) * scale / -mv.z : 0.0;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      varying float vLife;
+      void main() {
+        float a = smoothstep(0.5, 0.05, length(gl_PointCoord - 0.5)) * vLife;
+        vec3 color = mix(vec3(1.8, 0.55, 0.12), vec3(3.2, 2.6, 1.7), smoothstep(0.45, 1.0, vLife));
+        gl_FragColor = vec4(color * a, a);
+      }
+    `,
+  });
+}
+
+function Sparks({ iron }: { iron: RefObject<Iron> }) {
+  const points = useRef<THREE.Points>(null);
+  const material = useMemo(() => sparkMaterial(), []);
+  useEffect(() => () => material.dispose(), [material]);
+  const [buffers] = useState(() => ({ position: new Float32Array(SPARKS * 3), life: new Float32Array(SPARKS) }));
+  const sim = useRef({
+    vel: new Float32Array(SPARKS * 3),
+    age: new Float32Array(SPARKS).fill(9),
+    span: new Float32Array(SPARKS).fill(1),
+    next: 0,
+    carry: 0,
+    live: false,
+  });
+
+  useFrame((state, delta) => {
+    const pts = points.current;
+    if (!pts) return;
+    const s = sim.current;
+    const dt = Math.min(delta, 0.05);
+    const { on, at } = iron.current;
+    if (!on && !s.live) return;
+    const pos = pts.geometry.attributes.position as THREE.BufferAttribute;
+    const life = pts.geometry.attributes.life as THREE.BufferAttribute;
+    if (on) {
+      s.carry += dt * 110;
+      while (s.carry >= 1) {
+        s.carry -= 1;
+        const i = s.next;
+        s.next = (s.next + 1) % SPARKS;
+        const a = Math.random() * Math.PI * 1.25 - Math.PI * 0.12;
+        const speed = 0.35 + Math.random() * 0.9;
+        pos.setXYZ(i, at[0] + (Math.random() - 0.5) * 0.01, at[1] + (Math.random() - 0.5) * 0.01, 0.02);
+        s.vel.set([Math.cos(a) * speed, Math.sin(a) * speed * 1.1, 0.15 + Math.random() * 0.5], i * 3);
+        s.age[i] = 0;
+        s.span[i] = 0.25 + Math.random() * 0.55;
+      }
+    }
+    let any = false;
+    for (let i = 0; i < SPARKS; i++) {
+      if (s.age[i] >= s.span[i]) {
+        life.setX(i, 0);
+        continue;
+      }
+      any = true;
+      s.age[i] += dt;
+      s.vel[i * 3 + 1] -= 3.4 * dt;
+      pos.setXYZ(i, pos.getX(i) + s.vel[i * 3] * dt, pos.getY(i) + s.vel[i * 3 + 1] * dt, pos.getZ(i) + s.vel[i * 3 + 2] * dt);
+      life.setX(i, Math.max(0, 1 - s.age[i] / s.span[i]));
+    }
+    s.live = any;
+    pos.needsUpdate = true;
+    life.needsUpdate = true;
+    (pts.material as THREE.ShaderMaterial).uniforms.scale.value = 9 * state.gl.getPixelRatio();
+  });
+
+  return (
+    <points ref={points} material={material} frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[buffers.position, 3]} />
+        <bufferAttribute attach="attributes-life" args={[buffers.life, 1]} />
+      </bufferGeometry>
+    </points>
+  );
 }
 
 export function Glass({
@@ -176,11 +398,14 @@ export function Glass({
   paneAt,
   selected,
   spotlight,
+  still = false,
   weather,
   onSelect,
 }: {
   model: WindowModel;
   spotlight: boolean;
+  /** Reduced motion: no soldering, the gold is simply there. */
+  still?: boolean;
   weather?: { rain: boolean; clouds: number };
   textures: Painted;
   paneAt: (u: number, v: number) => ReturnType<PaintedWindow["paneAt"]>;
@@ -201,6 +426,9 @@ export function Glass({
     index: number;
     start: number | null;
   } | null>(null);
+  // The iron going round a mended night that was just opened, and where it is, for the sparks.
+  const solder = useRef<(ReturnType<typeof ironPath> & { start: number }) | null>(null);
+  const iron = useRef<Iron>({ on: false, at: [0, 0] });
 
   useEffect(() => {
     const before = drawn.current;
@@ -237,6 +465,26 @@ export function Glass({
     if (lastPick.current !== selectedIndex) {
       lastPick.current = selectedIndex;
       u.picked.value = t + 0.35;
+      // A mended night opened: once the view has arrived, its gold is soldered again.
+      const pane = model.panes[selectedIndex];
+      solder.current = spotlight && !still && pane?.mended ? { ...ironPath(pane), start: t + 0.8 } : null;
+    }
+    const s = solder.current;
+    if (s && t > s.start + RUN + COOL) solder.current = null;
+    if (solder.current && s) {
+      const run = Math.max(0, Math.min(1, (t - s.start) / RUN));
+      u.solder.value = run;
+      u.solderHeat.value = 1 - Math.max(0, Math.min(1, (t - s.start - RUN) / COOL));
+      u.solderC.value.set(...s.c);
+      u.solderAx.value.set(...s.ax);
+      u.solderHalf.value.set(...s.half);
+      u.solderStart.value = s.startAngle;
+      const at = s.at(run);
+      u.solderAt.value.set(...at);
+      iron.current = { on: run > 0 && run < 1, at };
+    } else {
+      u.solder.value = -1;
+      iron.current = { on: false, at: iron.current.at };
     }
     const focus = spotlight && selectedIndex >= 0 ? 1 : 0;
     u.focus.value += (focus - u.focus.value) * Math.min(1, delta * 5);
@@ -260,20 +508,23 @@ export function Glass({
 
   const pick = (e: ThreeEvent<PointerEvent | MouseEvent>) => (e.uv ? paneAt(e.uv.x, e.uv.y) : undefined);
   return (
-    <mesh
-      ref={mesh}
-      material={material}
-      onClick={(e) => {
-        const pane = pick(e);
-        if (pane?.day && pane.day <= (model.panes[todayIndex]?.day ?? 99)) onSelect?.(pane.day);
-      }}
-      onPointerMove={(e) => {
-        const pane = pick(e);
-        document.body.style.cursor = pane?.day && pane.status !== "future" ? "pointer" : "";
-      }}
-      onPointerOut={() => (document.body.style.cursor = "")}
-    >
-      <planeGeometry args={[model.width, model.height]} />
-    </mesh>
+    <>
+      <Sparks iron={iron} />
+      <mesh
+        ref={mesh}
+        material={material}
+        onClick={(e) => {
+          const pane = pick(e);
+          if (pane?.day && pane.day <= (model.panes[todayIndex]?.day ?? 99)) onSelect?.(pane.day);
+        }}
+        onPointerMove={(e) => {
+          const pane = pick(e);
+          document.body.style.cursor = pane?.day && pane.status !== "future" ? "pointer" : "";
+        }}
+        onPointerOut={() => (document.body.style.cursor = "")}
+      >
+        <planeGeometry args={[model.width, model.height]} />
+      </mesh>
+    </>
   );
 }

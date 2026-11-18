@@ -13,9 +13,17 @@ const dmSans = DM_Sans({
   subsets: ["latin"],
 });
 
+// Leadlight: a window of small pieces of glass held in lead. Here each night sets a piece, and
+// coming back after a missed night mends its lead in gold.
+const name = "Leadlight";
+const description = "An evening wind-down. Each night sets a piece of a stained-glass window. A missed night stays clear glass, and coming back mends it in gold.";
+
 export const metadata: Metadata = {
-  title: "Daily Moment take-home",
-  description: "Build the main daily moment of an app that helps someone stick with one daily goal.",
+  title: name,
+  description,
+  applicationName: name,
+  appleWebApp: { title: name },
+  openGraph: { title: name, description, type: "website" },
 };
 
 export const viewport: Viewport = {
