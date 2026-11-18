@@ -93,6 +93,9 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   const [mending, setMending] = useState<number[]>([]);
   // ...and until it is, the row of nights still shows them clear.
   const [unsoldered, setUnsoldered] = useState<number[]>([]);
+  // The mending, as a moment of its own: the card steps away, the line under the window, then the
+  // slow way back to the whole month.
+  const [mendMoment, setMendMoment] = useState<{ words: boolean; back: boolean; leaving?: boolean } | null>(null);
   // Which nights were already mended when the check-in opened, to tell which ones it mended.
   const mendedAtOpen = useRef<Set<number>>(new Set());
   const [windows, setWindows] = useState(false);
@@ -135,19 +138,36 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   /**
    * The nights just mended (in `next`, not in `before`) get their gold soldered as you watch, after
    * `wait` (tonight's leaf filling in first, or a breath). Never announced before: until then they
-   * stay plain, in the window and in the row. The view goes to the leaf if it's one, and shows the
-   * whole window if several. Returns when it's over (ms), 0 if nothing was mended.
+   * stay plain, in the window and in the row. It's a moment of its own: the card steps away and the
+   * view goes to each leaf in turn, oldest first, while its iron goes round (more than a few, all at
+   * once, on the whole window). Once the first gold is laid, one line. Then the slow way back to the
+   * whole month. Returns when it's over (ms), 0 if nothing was mended.
    */
   function solder(before: Set<number>, next: DailyGoal, wait: number) {
     const fresh = nightLooks(next)
       .filter((l) => l.mended && !before.has(l.day))
       .map((l) => l.day);
     if (!fresh.length) return 0;
+    const turns = fresh.length <= 4 ? fresh.map((d) => [d]) : [fresh];
+    // The view arrives (0.8 s), the iron goes round (2 s), a breath before the next.
+    const [arrive, laid, step] = [600, 800 + 2000, 3300];
     setUnsoldered(fresh);
-    setTimeout(() => setMending(fresh), wait);
-    setTimeout(() => setUnsoldered([]), wait + 2900);
-    setTimeout(() => setMending([]), wait + 4800);
-    return wait + 4800;
+    setTimeout(() => setMendMoment({ words: false, back: false }), wait);
+    turns.forEach((nights, i) => {
+      const at = wait + arrive + i * step;
+      setTimeout(() => setMending(nights), at);
+      setTimeout(() => setUnsoldered((u) => u.filter((d) => !nights.includes(d))), at + laid);
+    });
+    setTimeout(() => setMendMoment({ words: true, back: false }), wait + arrive + laid + 300);
+    const last = wait + arrive + (turns.length - 1) * step + laid;
+    setTimeout(() => {
+      setMending([]);
+      setMendMoment({ words: true, back: true });
+    }, last + 900);
+    const over = last + 900 + 4200;
+    setTimeout(() => setMendMoment({ words: true, back: true, leaving: true }), over - 700);
+    setTimeout(() => setMendMoment(null), over);
+    return over;
   }
 
   function begin() {
@@ -193,17 +213,21 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
       ? phase === "ask"
         ? today
         : null
-      : mending.length
-        ? mending.length === 1
-          ? mending[0]
-          : null
-        : selected !== today
-          ? selected
-          : settling
-            ? today
-            : null;
+      : mendMoment?.back
+        ? null
+        : mending.length
+          ? mending.length === 1
+            ? mending[0]
+            : null
+          : selected !== today
+            ? selected
+            : settling
+              ? today
+              : null;
   // After "I had a drink" the window takes the room the card leaves, above the words.
   const held = ritual && phase === "held";
+  // Either moment (after a drink, or the mending) gives the window the card's room, above the words.
+  const words = held || mendMoment !== null;
 
   return (
     <main className="relative h-dvh w-full overflow-hidden">
@@ -214,9 +238,9 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
         mending={mending}
         spotlight={spotlight}
         onSelect={select}
-        insets={held ? { top: insets.top, bottom: HELD_WORDS } : insets}
+        insets={words ? { top: insets.top, bottom: HELD_WORDS } : insets}
         paused={ritual && phase === "wind"}
-        slow={held}
+        slow={held || Boolean(mendMoment?.back)}
         // A past month keeps its own moon; the weather is tonight's, wherever you look.
         sky={viewing ? { weather: sky.weather } : sky}
       />
@@ -242,7 +266,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
       {/* During the check-in the card steps away: nothing shows through the wind-down, and when the window does, only it and the line remain. */}
       <div
         ref={bottom}
-        className={`absolute inset-x-0 bottom-0 mx-auto max-w-[430px] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-opacity duration-700 ${ritual ? "opacity-0" : ""}`}
+        className={`absolute inset-x-0 bottom-0 mx-auto max-w-[430px] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-opacity duration-700 ${ritual || mendMoment ? "pointer-events-none opacity-0" : ""}`}
       >
         <section className="card overflow-hidden p-0">
           <MonthStrip month={shown.month} design={shown.design} nights={looks} selected={selected} onSelect={select} />
@@ -283,6 +307,17 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
         </section>
       </div>
 
+      {mendMoment && (
+        // The mending: night under the window, and one line once the first gold is laid.
+        <div aria-live="polite" className={`pointer-events-none fixed inset-0 z-20 transition-opacity duration-700 ${mendMoment.leaving ? "opacity-0" : ""}`}>
+          <div className="absolute inset-0 animate-fade bg-[linear-gradient(to_top,var(--color-night)_0px,rgb(18_13_10/0.92)_230px,transparent_320px)] [animation-duration:1s]" />
+          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-[430px] px-5 pb-[max(3rem,env(safe-area-inset-bottom))]">
+            {mendMoment.words && (
+              <p className="animate-rise font-display text-[30px] leading-snug text-ink [animation-duration:1.4s]">The gold marks where you came back.</p>
+            )}
+          </div>
+        </div>
+      )}
       {ritual && <Ritual goal={goal} onClose={closeRitual} onLog={saveNights} onPhase={setPhase} onDone={checkIn} />}
       {windows && <Windows goal={goal} shown={shown.month} onOpen={open} onClose={() => setWindows(false)} />}
     </main>

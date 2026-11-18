@@ -48,9 +48,9 @@ export const glassFragment = /* glsl */ `
   uniform float rain;
   uniform float clouds;
   #define IRONS 8
-  uniform float solder;
-  uniform float solderHeat;
   uniform float solderCount;
+  uniform float solderRun[IRONS];
+  uniform float solderHeat[IRONS];
   uniform vec2 solderC[IRONS];
   uniform vec2 solderAx[IRONS];
   uniform vec2 solderHalf[IRONS];
@@ -169,7 +169,7 @@ export const glassFragment = /* glsl */ `
     // gold laid. A hot point runs round each piece; ahead of it the lead is still plain, behind it
     // the gold is molten, then cools.
     vec3 glow = vec3(0.0);
-    if (solder >= 0.0) {
+    if (solderCount > 0.5) {
       float flicker = 0.85 + 0.15 * sin(time * 47.0) * sin(time * 31.0);
       for (int i = 0; i < IRONS; i++) {
         if (float(i) >= solderCount) break;
@@ -178,18 +178,20 @@ export const glassFragment = /* glsl */ `
         vec2 q = vec2(dot(sp, ax), dot(sp, vec2(-ax.y, ax.x))) / solderHalf[i];
         float mine = 1.0 - smoothstep(0.5, 0.8, abs(length(q) - 1.0));
         float at = fract((atan(q.y, q.x) - solderStart[i]) / 6.28318);
-        float behind = solder - at;
+        // Each iron on its own clock: one can still be cooling while the next goes round.
+        float run = solderRun[i];
+        float behind = run - at;
         float laid = step(0.0, behind);
         gold *= mix(1.0, laid, mine);
         // Right behind the iron it's white-hot; the rest of the new gold is a dull red-orange that
         // cools back to gold.
         float fresh = mine * laid * exp(-behind * 14.0);
-        float warm = mine * laid * solderHeat;
+        float warm = mine * laid * solderHeat[i];
         goldColor = mix(goldColor, goldColor * vec3(1.5, 0.62, 0.25) + vec3(0.35, 0.06, 0.0), warm * 0.75);
         vec3 hot = mix(vec3(2.3, 1.3, 0.32), vec3(4.2, 3.4, 2.2), smoothstep(0.55, 1.0, fresh));
         goldColor = mix(goldColor, hot, smoothstep(0.0, 0.5, fresh));
         // The iron's own light, on the glass and the lead round it.
-        if (solder > 0.0 && solder < 1.0) {
+        if (run > 0.0 && run < 1.0) {
           float dd = length(p - solderAt[i]);
           glow += (vec3(3.2, 2.2, 1.2) * exp(-dd * dd / 0.0009) + vec3(1.0, 0.5, 0.16) * exp(-dd * dd / 0.012) * 0.7) * flicker;
         }
@@ -236,9 +238,9 @@ export function glassMaterial() {
       rainMap: { value: rainTexture() },
       rain: { value: 0 },
       clouds: { value: 0 },
-      solder: { value: -1 },
-      solderHeat: { value: 0 },
       solderCount: { value: 0 },
+      solderRun: { value: new Array<number>(IRONS).fill(0) },
+      solderHeat: { value: new Array<number>(IRONS).fill(0) },
       solderC: { value: Array.from({ length: IRONS }, () => new THREE.Vector2()) },
       solderAx: { value: Array.from({ length: IRONS }, () => new THREE.Vector2(1, 0)) },
       solderHalf: { value: Array.from({ length: IRONS }, () => new THREE.Vector2(1, 1)) },
@@ -256,6 +258,11 @@ const COOL = 1.8;
 const IRONS = 8;
 
 type Iron = { on: boolean; ats: Pt[] };
+
+/** A piece being soldered: its iron's path, which piece, and when its iron starts. */
+type Soldering = ReturnType<typeof ironPath> & { key: string; start: number };
+
+const irons = (panes: PaneModel[], start: number): Soldering[] => panes.map((p) => ({ ...ironPath(p), key: p.key, start }));
 
 /**
  * The path the iron takes round a piece: the piece's own frame (its middle, its long axis and how
@@ -441,8 +448,9 @@ export function Glass({
     index: number;
     start: number | null;
   } | null>(null);
-  // The irons going round the pieces being soldered, and where they are, for the sparks.
-  const solder = useRef<{ items: ReturnType<typeof ironPath>[]; start: number } | null>(null);
+  // The irons going round the pieces being soldered, each on its own clock (a start of Infinity:
+  // waiting, the lead still plain), and where they are, for the sparks.
+  const solder = useRef<Soldering[]>([]);
   const iron = useRef<Iron>({ on: false, ats: [] });
   const lastMending = useRef("");
 
@@ -454,7 +462,8 @@ export function Glass({
       if (filled >= 0) fill.current = { from: before.textures, index: filled, start: null };
       // Nights just mended keep their plain lead until their gold is soldered, when `mending` names them.
       const fresh = model.panes.filter((p, i) => p.mended && !before.mended[i]);
-      if (fresh.length && !still) solder.current = { items: fresh.slice(-IRONS).map(ironPath), start: Infinity };
+      if (fresh.length && !still)
+        solder.current = [...solder.current.filter((s) => !fresh.some((p) => p.key === s.key)), ...irons(fresh, Infinity)].slice(-IRONS);
     }
     drawn.current = { textures, id: model.id, mended: model.panes.map((p) => p.mended), status: model.panes.map((p) => p.status) };
   }, [textures, model, still]);
@@ -484,37 +493,36 @@ export function Glass({
       u.picked.value = t + 0.35;
       // A mended night opened: once the view has arrived, its gold is soldered again.
       const pane = model.panes[selectedIndex];
-      solder.current = spotlight && !still && pane?.mended ? { items: [ironPath(pane)], start: t + 0.8 } : null;
+      if (spotlight && !still && pane?.mended && !solder.current.some((s) => s.key === pane.key))
+        solder.current = [...solder.current, ...irons([pane], t + 0.8)].slice(-IRONS);
     }
-    // Nights a check-in mended: soldered now, all together, once the view has arrived.
+    // Nights a check-in mended, as the view arrives at them: their irons start.
     const key = (mending ?? []).join();
     if (lastMending.current !== key) {
       lastMending.current = key;
       const panes = model.panes.filter((p) => p.mended && p.day !== undefined && mending?.includes(p.day));
-      if (panes.length && !still) solder.current = { items: panes.slice(-IRONS).map(ironPath), start: t + 0.8 };
+      for (const p of still ? [] : panes) {
+        const waiting = solder.current.find((s) => s.key === p.key);
+        if (waiting) waiting.start = t + 0.8;
+        else solder.current = [...solder.current, ...irons([p], t + 0.8)].slice(-IRONS);
+      }
     }
-    const s = solder.current;
-    if (s && t > s.start + RUN + COOL) solder.current = null;
-    if (solder.current && s) {
+    solder.current = solder.current.filter((s) => t <= s.start + RUN + COOL);
+    const ats: Pt[] = [];
+    u.solderCount.value = solder.current.length;
+    solder.current.forEach((s, i) => {
       const run = Math.max(0, Math.min(1, (t - s.start) / RUN));
-      u.solder.value = run;
-      u.solderHeat.value = 1 - Math.max(0, Math.min(1, (t - s.start - RUN) / COOL));
-      u.solderCount.value = s.items.length;
-      const ats: Pt[] = [];
-      s.items.forEach((it, i) => {
-        u.solderC.value[i].set(...it.c);
-        u.solderAx.value[i].set(...it.ax);
-        u.solderHalf.value[i].set(...it.half);
-        u.solderStart.value[i] = it.startAngle;
-        const at = it.at(run);
-        u.solderAt.value[i].set(...at);
-        ats.push(at);
-      });
-      iron.current = { on: run > 0 && run < 1, ats };
-    } else {
-      u.solder.value = -1;
-      iron.current = { on: false, ats: [] };
-    }
+      u.solderRun.value[i] = run;
+      u.solderHeat.value[i] = 1 - Math.max(0, Math.min(1, (t - s.start - RUN) / COOL));
+      u.solderC.value[i].set(...s.c);
+      u.solderAx.value[i].set(...s.ax);
+      u.solderHalf.value[i].set(...s.half);
+      u.solderStart.value[i] = s.startAngle;
+      const at = s.at(run);
+      u.solderAt.value[i].set(...at);
+      if (run > 0 && run < 1) ats.push(at);
+    });
+    iron.current = { on: ats.length > 0, ats };
     const focus = spotlight && selectedIndex >= 0 ? 1 : 0;
     u.focus.value += (focus - u.focus.value) * Math.min(1, delta * 5);
     const f = fill.current;
