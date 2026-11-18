@@ -11,7 +11,7 @@ import MonthStrip from "@/components/MonthStrip";
 import NightCard from "@/components/NightCard";
 import Ritual from "@/components/Ritual";
 import Windows from "@/components/Windows";
-import { dayOf, monthName, type DailyGoal, type DesignName, type LineKind, type Weight } from "@/lib/data";
+import { dayOf, finishedMonth, monthName, type DailyGoal, type DesignName, type LineKind, type Weight } from "@/lib/data";
 import { DESIGNS } from "@/lib/designs";
 import { useSky } from "@/lib/sky";
 import { forgetNight, saveNight, useSavedNight } from "@/lib/tonight";
@@ -63,6 +63,12 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
     return design ? { ...withTonight, design } : withTonight;
   }, [initial, saved, design]);
   const today = dayOf(goal.today);
+  // A month before this one, opened from the wall: shown as it was, read-only. Null is this month.
+  const [viewing, setViewing] = useState<string | null>(null);
+  const past = viewing ? goal.past.find((p) => p.month === viewing) : undefined;
+  const shown = useMemo(() => (past ? finishedMonth(goal, past) : goal), [goal, past]);
+  const last = dayOf(shown.today); // tonight, or the day after a past month's last night
+  // The open night in the shown month; 0 is none (a past month just opened shows the whole window).
   const [selected, setSelected] = useState(today);
   const [ritual, setRitual] = useState(false);
   const [windows, setWindows] = useState(false);
@@ -72,7 +78,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   // What the sky APIs said, in a line: the sunset, rain if it's raining, and the place.
   const skyLine = [sky.sunset && `Sunset ${sky.sunset}`, sky.weather?.rain && sky.weather.label, sky.place].filter(Boolean).join(" · ");
   const { top, bottom, insets } = useInsets();
-  const looks = useMemo(() => nightLooks(goal), [goal]);
+  const looks = useMemo(() => nightLooks(shown), [shown]);
   // When the screen first responds to taps (DevTools > Performance, or performance.getEntriesByName).
   useEffect(() => void performance.mark("ui:ready"), []);
   // ?fresh starts tonight over (handy for showing the wind-down again).
@@ -80,9 +86,17 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
     if (new URLSearchParams(window.location.search).has("fresh")) forgetNight(initial.today);
   }, [initial.today]);
 
-  const done = goal.nights.filter((n) => n.done).length;
-  const label = `${goal.intention}: this month's window, ${done} of ${goal.nights.length} nights so far`;
-  const select = (day: number) => day <= today && setSelected(day);
+  const done = shown.nights.filter((n) => n.done).length;
+  const mended = looks.filter((l) => l.mended).length;
+  const label = `${shown.intention}: ${monthName(shown.month)}'s window, ${done} of ${viewing ? looks.length : shown.nights.length} nights`;
+  const select = (day: number) => day <= last && setSelected(day);
+
+  /** Opens a month from the wall: a past one as it was, or back to this one's tonight. */
+  function open(month: string) {
+    setWindows(false);
+    setViewing(month === goal.month ? null : month);
+    setSelected(month === goal.month ? today : 0);
+  }
 
   /** Tonight's leaf is set: the window gets a new night and fills it in. */
   function setTonight(weight: Weight, note: string, line: LineKind) {
@@ -94,11 +108,21 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   }
 
   /** The night the window brings forward: a past night that's open, or tonight's leaf as it's set. */
-  const spotlight = selected !== today ? selected : settling ? today : null;
+  const spotlight = viewing ? selected || null : selected !== today ? selected : settling ? today : null;
 
   return (
     <main className="relative h-dvh w-full overflow-hidden">
-      <WindowScene goal={goal} label={label} selected={selected} spotlight={spotlight} onSelect={select} insets={insets} paused={ritual} sky={sky} />
+      <WindowScene
+        goal={shown}
+        label={label}
+        selected={selected || undefined}
+        spotlight={spotlight}
+        onSelect={select}
+        insets={insets}
+        paused={ritual}
+        // A past month keeps its own moon; the weather is tonight's, wherever you look.
+        sky={viewing ? { weather: sky.weather } : sky}
+      />
 
       <header
         ref={top}
@@ -107,30 +131,52 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
         <button
           onClick={() => setWindows(true)}
           className="eyebrow pointer-events-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors hover:text-ink"
-          aria-label={`${monthName(goal.month)}: see next month's window`}
+          aria-label={`${monthName(shown.month)}: your windows, and next month's`}
         >
-          {monthName(goal.month)}
+          {monthName(shown.month)}
           <svg viewBox="0 0 10 10" className="size-2.5" aria-hidden>
             <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
           </svg>
         </button>
-        <h1 className="mt-0.5 font-display text-[26px] leading-tight text-ink">{goal.intention}</h1>
-        <p className="mt-1 h-4 text-xs text-mist">
-          {skyLine && <span className="animate-fade">{skyLine}</span>}
-        </p>
+        <h1 className="mt-0.5 font-display text-[26px] leading-tight text-ink">{shown.intention}</h1>
+        <p className="mt-1 h-4 text-xs text-mist">{!viewing && skyLine && <span className="animate-fade">{skyLine}</span>}</p>
       </header>
 
       <div ref={bottom} className="absolute inset-x-0 bottom-0 mx-auto max-w-[430px] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <section className="card overflow-hidden p-0">
-          <MonthStrip month={goal.month} nights={looks} selected={selected} onSelect={select} />
+          <MonthStrip month={shown.month} nights={looks} selected={selected} onSelect={select} />
           <div className="border-t border-white/6">
-            <NightCard key={`${selected}-${goal.nights.length}`} goal={goal} day={selected} onBegin={() => setRitual(true)} onBack={() => setSelected(today)} />
+            {selected ? (
+              <NightCard key={`${shown.month}-${selected}-${shown.nights.length}`} goal={shown} day={selected} onBegin={() => setRitual(true)} onBack={() => open(goal.month)} />
+            ) : (
+              // A past month, no night open yet: what the month was.
+              <div key={shown.month} className="min-h-[200px] animate-rise px-5 pt-3.5 pb-4">
+                <div className="eyebrow flex items-baseline justify-between">
+                  <span>
+                    {monthName(shown.month)} · {DESIGNS[shown.design].name}
+                  </span>
+                  <button onClick={() => open(goal.month)} className="-my-2 -mr-2 rounded-full px-2 py-2 tracking-normal text-ink normal-case">
+                    Back to tonight
+                  </button>
+                </div>
+                <p className="mt-3 text-sm text-ink">
+                  {done} of {looks.length} nights
+                </p>
+                {mended > 0 && (
+                  <p className="mt-1 flex items-center gap-2 text-sm text-gold">
+                    <span aria-hidden className="h-0.5 w-4 rounded-full bg-gold shadow-[0_0_8px_var(--color-gold)]" />
+                    {mended} mended
+                  </p>
+                )}
+                <p className="mt-3 text-sm text-mist">Tap a night to see it.</p>
+              </div>
+            )}
           </div>
         </section>
       </div>
 
       {ritual && <Ritual goal={goal} onClose={() => setRitual(false)} onDone={setTonight} />}
-      {windows && <Windows goal={goal} onClose={() => setWindows(false)} />}
+      {windows && <Windows goal={goal} shown={shown.month} onOpen={open} onClose={() => setWindows(false)} />}
     </main>
   );
 }

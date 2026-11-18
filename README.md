@@ -125,7 +125,7 @@ Identity wording has strong lab results and mixed field replications, which is e
 4. **One line, if you want.** An effort, a success or a bit of progress (Nate Zinsser's E-S-P), your pick.
 5. **Tonight's leaf is set.** The view moves in to it while it fills with color, then steps back to the whole month. Tomorrow's leaf starts to wait, faintly.
 6. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A missed night shows the night that mended it.
-7. **Your windows** (tap the month at the top). Every month's window on one wall, each in its own design, with its intention, its nights and how many were mended.
+7. **Your windows** (tap the month at the top). Every month's window on one wall, each in its own design, with its intention, its nights and how many were mended. Open one and the screen becomes that month, read-only: its window, its nights, its lines. "Back to tonight" returns.
 8. **Next month's window** is where Plus goes: a new window every month is free, choosing your own is Plus.
 
 <p>

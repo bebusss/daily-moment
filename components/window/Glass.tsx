@@ -194,7 +194,7 @@ export function Glass({
   const shown = selected ?? model.panes[todayIndex]?.day;
   const selectedIndex = model.panes.findIndex((p) => p.day === shown);
   // The last window drawn and its waiting leaf, so a leaf just filled in can come up from it.
-  const drawn = useRef<{ textures: Painted; today: number } | null>(null);
+  const drawn = useRef<{ textures: Painted; today: number; id: string } | null>(null);
   const lastPick = useRef(-1);
   const fill = useRef<{
     from: Painted;
@@ -204,14 +204,14 @@ export function Glass({
 
   useEffect(() => {
     const before = drawn.current;
-    if (before && before.textures !== textures && before.today >= 0 && model.panes[before.today]?.status === "done") {
+    if (before && before.id === model.id && before.textures !== textures && before.today >= 0 && model.panes[before.today]?.status === "done") {
       fill.current = {
         from: before.textures,
         index: before.today,
         start: null,
       };
     }
-    drawn.current = { textures, today: todayIndex };
+    drawn.current = { textures, today: todayIndex, id: model.id };
   }, [textures, model, todayIndex]);
 
   useFrame((state, delta) => {

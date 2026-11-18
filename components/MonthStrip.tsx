@@ -24,13 +24,14 @@ export default function MonthStrip({ month, nights, selected, onSelect }: Props)
   const row = useRef<HTMLDivElement>(null);
   const first = useRef(true);
 
-  // Keep the open night in the middle of the row.
+  // Keep the open night in the middle of the row (a month just opened, with none open, starts at its 1st).
   useEffect(() => {
-    const el = row.current?.querySelector<HTMLElement>(`[data-day="${selected}"]`);
-    if (!row.current || !el) return;
-    row.current.scrollTo({ left: el.offsetLeft - (row.current.clientWidth - el.offsetWidth) / 2, behavior: first.current ? "instant" : "smooth" });
+    const r = row.current;
+    if (!r) return;
+    const el = r.querySelector<HTMLElement>(`[data-day="${selected}"]`);
+    r.scrollTo({ left: el ? el.offsetLeft - (r.clientWidth - el.offsetWidth) / 2 : 0, behavior: first.current ? "instant" : "smooth" });
     first.current = false;
-  }, [selected]);
+  }, [selected, month]);
 
   return (
     <div

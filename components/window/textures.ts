@@ -24,7 +24,8 @@ export function canvasTexture(c: HTMLCanvasElement, color: boolean, nearest = fa
 
 // The window is painted once; after that only the nights that change are repainted, and a canvas
 // that didn't change keeps its texture (so it isn't sent to the graphics card again).
-let lastPainted: PaintedWindow | null = null;
+/** Each window painted so far (by month and design), so going back to one is instant. */
+const paintings = new Map<string, PaintedWindow>();
 
 let lastOutside: {
   outline: Pt[];
@@ -34,10 +35,12 @@ let lastOutside: {
 export const textureOf = new WeakMap<HTMLCanvasElement, THREE.CanvasTexture>();
 
 export function paintFor(model: WindowModel) {
-  if (lastPainted?.model === model) return lastPainted;
-  const again = lastPainted && timed("window:repaint", () => repaintWindow(lastPainted!, model));
-  lastPainted = again || timed("window:paint-glass", () => paintWindow(model));
-  return lastPainted;
+  const before = paintings.get(model.id);
+  if (before?.model === model) return before;
+  const again = before && timed("window:repaint", () => repaintWindow(before, model));
+  const painted = again || timed("window:paint-glass", () => paintWindow(model));
+  paintings.set(model.id, painted);
+  return painted;
 }
 
 export function outsideFor(model: WindowModel) {

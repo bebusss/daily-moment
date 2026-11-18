@@ -73,7 +73,9 @@ const CHOICES: Choice[] = [
   },
 ];
 
-export default function Windows({ goal, onClose }: { goal: DailyGoal; onClose: () => void }) {
+type Props = { goal: DailyGoal; shown: string; onOpen: (month: string) => void; onClose: () => void };
+
+export default function Windows({ goal, shown: showing, onOpen, onClose }: Props) {
   const next = monthName(goal.month, 1);
   // The wall: the months before, this month, and next month's (still to choose).
   const wall = useMemo(
@@ -90,7 +92,7 @@ export default function Windows({ goal, onClose }: { goal: DailyGoal; onClose: (
       }),
     [goal],
   );
-  const [open, setOpen] = useState<string>(goal.month);
+  const [open, setOpen] = useState<string>(showing);
   const [picked, setPicked] = useState(CHOICES[0].id);
   const [asked, setAsked] = useState(false);
   const shown = wall.find((w) => w.goal.month === open);
@@ -142,6 +144,11 @@ export default function Windows({ goal, onClose }: { goal: DailyGoal; onClose: (
                 <span aria-hidden className="h-0.5 w-4 rounded-full bg-gold shadow-[0_0_8px_var(--color-gold)]" />
                 {shown.mended} mended
               </p>
+            )}
+            {shown.goal.month !== showing && (
+              <button onClick={() => onOpen(shown.goal.month)} className="btn-quiet mt-5 mb-1">
+                {shown.goal.month === goal.month ? "Back to tonight" : `Open ${monthName(shown.goal.month)}`}
+              </button>
             )}
           </div>
         ) : (

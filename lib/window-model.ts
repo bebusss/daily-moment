@@ -39,7 +39,8 @@ export type PaneModel = {
   leaf?: LeafFrame;
 };
 
-export type WindowModel = { width: number; height: number; outline: Pt[]; panes: PaneModel[]; bars: number[] };
+/** `id` is the month and its design: one window, whatever state its nights are in. */
+export type WindowModel = { id: string; width: number; height: number; outline: Pt[]; panes: PaneModel[]; bars: number[] };
 
 export const daysIn = (month: string) => {
   const [y, m] = month.split("-").map(Number);
@@ -147,5 +148,5 @@ export function buildWindow(goal: DailyGoal, moon?: { lit: number; waxing: boole
     }
   });
 
-  return { width: design.width, height: design.height, outline: design.outline, panes, bars: design.bars };
+  return { id: `${goal.month}:${goal.design}`, width: design.width, height: design.height, outline: design.outline, panes, bars: design.bars };
 }
