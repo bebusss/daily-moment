@@ -11,7 +11,7 @@ Each night of the month sets one leaf of a stained-glass window. Miss a night an
 <img src="docs/screens/6-set.jpg" width="190" alt="Tonight's leaf set, with its line">
 </p>
 
-**Contents:** [The brief, read as a business](#1-the-brief-read-as-a-business) · [What brings people back](#2-what-brings-people-back-and-how-each-one-fails) · [The bet](#3-the-bet) · [The concept](#4-the-concept) · [How I'd know it works](#5-how-id-know-it-works) · [The screen, step by step](#the-screen-step-by-step) · [Decisions](#decisions) · [Tonight's sky (REST)](#tonights-sky-two-public-rest-apis) · [Performance](#performance) · [Not built, written down](#not-built-written-down) · [Tools, AI included](#tools-ai-included) · [Where things live](#where-things-live) · [The original brief](#the-original-brief)
+**Contents:** [The brief, read as a business](#1-the-brief-read-as-a-business) · [What brings people back](#2-what-brings-people-back-and-how-each-one-fails) · [The bet](#3-the-bet) · [The concept](#4-the-concept) · [How I'd know it works](#5-how-id-know-it-works) · [The screen, step by step](#the-screen-step-by-step) · [Decisions](#decisions) · [Pricing](#pricing) · [Tonight's sky (REST)](#tonights-sky-two-public-rest-apis) · [Performance](#performance) · [Not built, written down](#not-built-written-down) · [Tools, AI included](#tools-ai-included) · [Where things live](#where-things-live) · [The original brief](#the-original-brief)
 
 The first five sections are the deck, slide by slide ([the slides](https://claude.ai/artifact/7GmmF1yVZMWkXMUAfoFPeU)).
 
@@ -118,11 +118,11 @@ Identity wording has strong lab results and mixed field replications, which is e
 5. **Tonight's leaf is set.** The view moves in to it while it fills with color, then steps back to the whole month. Tomorrow's leaf starts to wait, faintly.
 6. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A missed night shows the night that mended it.
 7. **Your windows** (tap the month at the top). Every month's window on one wall, each in its own design, with its intention, its nights and how many were mended. Open one and the screen becomes that month, read-only: its window, its nights, its lines. "Back to tonight" returns.
-8. **Next month's window** is where Plus goes: a new window every month is free, choosing your own is Plus.
+8. **Next month's piece** is where Plus goes: another window is free, and with Plus you choose the craft.
 
 <p>
 <img src="docs/screens/9-your-windows.jpg" width="190" alt="Your windows: September's rose, October's sunburst, November's vine, December still to choose">
-<img src="docs/screens/10-next-window.jpg" width="190" alt="December's window: Nouveau is free, choosing Rose, Sunburst or Vine is Plus">
+<img src="docs/screens/10-next-window.jpg" width="190" alt="December's piece: the window is free, a mosaic, a tapestry or a kintsugi vase are Plus">
 </p>
 
 ## Decisions
@@ -135,8 +135,18 @@ Identity wording has strong lab results and mixed field replications, which is e
 - **Tomorrow's leaf waits too,** once tonight's is set: a reason to come back, with no words.
 - **A wall, not a collection.** The month-three payoff made visible. Nothing is unlocked: every window is a record.
 - **A new design every month** (Rose, Sunburst, Vine, then Nouveau): a fresh start on the 1st.
-- **The paid feature is choosing your next window.** The house window is free, and the ritual and your record are never behind the paywall: you pay for choice, never for your own evidence.
+- **The paid feature is choosing your craft** (see Pricing). The ritual and your record are never behind the paywall: you pay for choice, never for your own evidence.
 - **Tonight is kept on the device,** so a reload shows it set. No backend, as the brief asks.
+
+## Pricing
+
+The month is the unit of everything. Each piece takes a month, and each month is a billing cycle, so the three cycles the business needs are three pieces on your wall.
+
+- **Free:** the nightly ritual, a new window every month from the house rotation, and your whole record and wall, forever.
+- **Plus (the subscription, monthly or yearly):** choose next month's craft. Every craft keeps the same idea, a mark per night and a visible mend after a miss, in its own tradition: a **mosaic** (bare grout, then a gold tile), a **tapestry** (a gap darned in gold thread, like boro) or a **kintsugi** vase (shards joined with gold). These are mocks: only the window is built.
+- **When it's offered:** on the 1st, when a piece is finished and the next one starts. Never at night, never during the ritual.
+- **Why the window is the free default and kintsugi isn't:** kintsugi is the metaphor everyone knows. For some people it's poetic, so it's there to choose, but as the default it would feel borrowed. The mending lead is this app's own version of it.
+- Prices would be a test, judged on month-3 retention, not a guess written here.
 
 ## Tonight's sky: two public REST APIs
 
@@ -168,6 +178,7 @@ Measured on the production build, as a mid-range phone (390×844 at 3×, the CPU
 
 ## Not built, written down
 
+- The other crafts, built for real (they're mocks for now).
 - Your intention, or your favorite color, sets the month's palette.
 - The full year on the wall, and a print of a finished window.
 - Patterns from the heavy days ("heavy days cluster on Fridays"), as a gentle way to spot triggers.
