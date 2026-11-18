@@ -6,14 +6,14 @@ Each alcohol-free night of the month sets one leaf of a stained-glass window. A 
 
 <p>
 <img src="docs/screens/1-tonight.jpg" width="190" alt="Tonight: the month's window above, the row of nights and tonight's card below">
-<img src="docs/screens/2-wind-down.jpg" width="190" alt="The wind-down: three slow breaths, paced on screen">
-<img src="docs/screens/4-how-heavy.jpg" width="190" alt="How heavy was today: light, normal or heavy">
-<img src="docs/screens/6-set.jpg" width="190" alt="Tonight's leaf set, with its line">
+<img src="docs/screens/2-the-question.jpg" width="190" alt="Was today alcohol-free? Two equal answers">
+<img src="docs/screens/3-one-night.jpg" width="190" alt="After a drink: the whole month still in color, and one line">
+<img src="docs/screens/4-the-mend.jpg" width="190" alt="The next alcohol-free night: last night's clear leaf soldered in gold">
 </p>
 
 **Contents:** [The brief, read as a business](#1-the-brief-read-as-a-business) · [What brings people back](#2-what-brings-people-back-and-how-each-one-fails) · [The bet](#3-the-bet) · [The concept](#4-the-concept) · [How I'd know it works](#5-how-id-know-it-works) · [The screen, step by step](#the-screen-step-by-step) · [Decisions](#decisions) · [Pricing](#pricing) · [Tonight's sky (REST)](#tonights-sky-two-public-rest-apis) · [Performance](#performance) · [Not built, written down](#not-built-written-down) · [Tools, AI included](#tools-ai-included) · [Where things live](#where-things-live) · [The original brief](#the-original-brief)
 
-The first five sections are the deck, slide by slide ([the slides](https://claude.ai/artifact/7GmmF1yVZMWkXMUAfoFPeU)).
+**Short on time?** Sections 1 to 5 are the whole case. The same five sections also exist as [a short deck](https://claude.ai/artifact/7GmmF1yVZMWkXMUAfoFPeU), entirely optional: it says nothing that isn't here.
 
 ---
 
@@ -60,7 +60,7 @@ Sources I leaned on: loss aversion and commitment contracts (Giné, Karlan and Z
 
 The first drink after a run of alcohol-free nights is where people leave, so that's the moment the design has to handle best.
 
-We learn who we are partly by watching what we do (Bem, self-perception theory). Research on drinking relapse calls the "I've blown it" spiral after one drink the abstinence violation effect (Marlatt and Gordon): what hurts is less the drink than what the person decides it means. The same model says what protects: coping self-efficacy, the confidence that you can handle the next hard moment, which grows each time you do (Marlatt built it on Bandura's self-efficacy). The design uses both halves: the mend answers the slip, and the nightly line banks the confidence. The risks: identity is slow, so the first night already counts as evidence. It's abstract, so the evidence has to be visual. And it can get cheesy, so the app never tells you who you are. It shows you what you did.
+We learn who we are partly by watching what we do (Bem, self-perception theory). Research on drinking relapse calls the "I've blown it" spiral after one drink the abstinence violation effect (Marlatt and Gordon). The same model says what protects: the confidence that you can handle the next hard moment (coping self-efficacy, which Marlatt built on Bandura). The design uses both: the mend answers the slip, and the nightly line banks the confidence. The risks: identity is slow, so the first night already counts as evidence. It's abstract, so the evidence has to be visual. And it can get cheesy, so the app never tells you who you are. It shows you what you did.
 
 Why it fits the business: a streak gets more fragile the longer it runs. A window gets more valuable. By month three you have three of them on a wall, with your own lines in them. That's what I'd expect people to miss.
 
@@ -110,10 +110,8 @@ Identity wording has strong lab results and mixed field replications, which is e
 ## The screen, step by step
 
 <p>
-<img src="docs/screens/3-breathe.jpg" width="190" alt="Breathing, paced on screen">
-<img src="docs/screens/5-one-line.jpg" width="190" alt="One line: effort, success or progress">
-<img src="docs/screens/7-a-past-night.jpg" width="190" alt="A past night, opened: the view moves in to its leaf">
-<img src="docs/screens/8-rain.jpg" width="190" alt="Raining in your city: drops on the glass">
+<img src="docs/screens/5-breaths.jpg" width="190" alt="Three slow breaths, paced on screen, with Skip">
+<img src="docs/screens/6-a-past-night.jpg" width="190" alt="Last night, opened: a drink, its line, and the night that mended it">
 </p>
 
 1. **Tonight.** The month's window, tonight's leaf breathing in it. Below, the month as a row you can tap, each night the same piece as in the window (a leaf this month, a petal in the rose, a ray in the sunburst), and a card with tonight's wind-down.
@@ -128,28 +126,24 @@ Identity wording has strong lab results and mixed field replications, which is e
 10. **Next month's piece** is where Plus goes: another window is free, and with Plus you choose the craft.
 
 <p>
-<img src="docs/screens/9-your-windows.jpg" width="190" alt="Your windows: September's rose, October's sunburst, November's vine, December still to choose">
-<img src="docs/screens/10-next-window.jpg" width="190" alt="December's piece: the window is free, a mosaic, a tapestry or a vase are Plus">
+<img src="docs/screens/7-your-windows.jpg" width="190" alt="Your windows: September's rose, October's sunburst, November's vine, December still to choose">
+<img src="docs/screens/8-next-month.jpg" width="190" alt="December's piece: the window is free, a mosaic, a tapestry or a vase are Plus">
 </p>
 
 ## Decisions
 
 - **The name.** A leadlight is a window of small pieces of glass held in lead, and the lead is where the gold mend goes.
-- **Tonight is preselected.** No choices at bedtime.
 - **Nothing to tick off.** The leaf comes from the honest answer, not from finishing tasks. The wind-down is three breaths, and they can be skipped.
 - **Only an alcohol-free night mends,** and one is enough. The first day back is the hardest, so the reward can't be further away than that. A run of clear nights is mended together by that first night back.
 - **A night with a drink is clear glass,** not a hole and not a reset: light still passes through it, and it keeps its line.
 - **The mend is never announced.** It's found the next alcohol-free night. Promising it the night of a drink would turn comfort into a deal.
 - **Words it never uses:** relapse, sober, fail, streak.
-- **Heavier days set deeper glass.** Hard days count more, with no points.
-- **The app never tells you who you are.** It shows you what you did, and on the night of a drink, the rest of your month.
 - **One question a night, no categories.** The questions come from E-S-P, but the app never names the framework or asks you to sort your day: it picks the question that fits the night. Your answers are a bank of proof of what you can do, in your own words instead of an app's quotes.
 - **The window comes to the night you open,** so the window and the row read as one thing.
 - **Tomorrow's leaf waits too,** once tonight is checked in, whatever the answer: a reason to come back, with no words.
 - **A wall, not a collection.** The month-three payoff made visible. Nothing is unlocked: every window is a record.
-- **A new design every month** from the house rotation: a fresh start on the 1st.
 - **The paid feature is choosing your craft** (see Pricing). The ritual and your record are never behind the paywall: you pay for choice, never for your own evidence.
-- **Tonight is kept on the device,** so a reload shows it set. No backend, as the brief asks.
+- **Tonight is kept on the device,** so a reload shows it set. No backend, as the brief asks, and nothing about anyone's drinking leaves the phone.
 
 ## Pricing
 
