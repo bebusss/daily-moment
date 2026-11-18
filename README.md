@@ -71,7 +71,7 @@ Why it fits the business: a streak gets more fragile the longer it runs. A windo
 | | |
 |---|---|
 | **Alcohol-free** | Colored glass, darker on heavier days |
-| **A drink** | Stays clear glass. Light still passes |
+| **A drink, or no check-in** | Stays clear glass. Light still passes. A forgotten night can be filled in later |
 | **Back** | The next alcohol-free night mends it: gold lead, soldered as you watch |
 | **Monthly** | A new window every month, in a new design. The finished ones hang together on a wall |
 
@@ -113,15 +113,16 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 </p>
 
 1. **Tonight.** The month's window, tonight's leaf breathing in it. Below, the month as a row you can tap, each night the same piece as in the window (a leaf this month, a petal in the rose, a ray in the sunburst), and a card with tonight's wind-down.
-2. **Was today alcohol-free?** Two equal answers, "Yes" and "I had a drink", so the honest one is never the harder one to tap.
-3. **After "I had a drink",** the dimming lifts: the whole month, every leaf before tonight still in color, and "One night doesn't undo the others." Then the breaths, as on any night.
-4. **Three slow breaths,** paced on screen. They start by themselves, and "Skip" is always there.
-5. **How heavy was today?** One tap: light, normal or heavy. Heavier days set darker glass.
-6. **A one-line note, if you want,** answering one question chosen by the night: "What went right today?"; after a drink, "What did you try today?" ("Stopped at one."); and on the night you come back, "What did you handle better than before?". "Another question" if it doesn't fit.
-7. **Tonight's leaf is set.** The view moves in to it while it fills with color. If last night had a drink, the view then goes to that clear leaf and its gold is soldered as you watch: a hot point runs round it, sparks fly, and the lead cools to gold behind it. Then the whole month again, and tomorrow's leaf starts to wait, faintly. (The sample month is set up so this happens tonight.)
-8. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A night with a drink shows its note and the night that mended it, and its gold is soldered again.
-9. **Your windows** (tap the month at the top). Every month's window on one wall, each in its own design, with the goal set for that month, its nights and how many were mended. Open one and the screen becomes that month, read-only: its window, its nights, its notes. "Back to tonight" returns.
-10. **Next month's piece** is where the paid tier (Plus) goes: another window is free, and with Plus you choose the craft instead.
+2. **Before tonight, if needed.** Nights from the last week with no check-in come first: "Fill in the ones you remember", with the same two answers for each, or "All alcohol-free" in one tap. Blanks stay as no check-in, and the step can be skipped. A single night can also be filled in later, from its card.
+3. **Was today alcohol-free?** Two equal answers, "Yes" and "I had a drink", so the honest one is never the harder one to tap.
+4. **After "I had a drink",** the dimming lifts: the whole month, every leaf before tonight still in color, and "One night doesn't undo the others." Then the breaths, as on any night.
+5. **Three slow breaths,** paced on screen. They start by themselves, and "Skip" is always there.
+6. **How heavy was today?** One tap: light, normal or heavy. Heavier days set darker glass.
+7. **A one-line note, if you want,** answering one question chosen by the night: "What went right today?"; after a drink, "What did you try today?" ("Stopped at one."); and on the night you come back, "What did you handle better than before?". "Another question" if it doesn't fit.
+8. **Tonight's leaf is set.** The view moves in to it while it fills with color. Then every clear night this check-in mended gets its gold soldered as you watch: a hot point runs round each leaf, sparks fly, and the lead cools to gold behind it (the view goes to the leaf if it's one, and shows the whole window if several). Then the whole month again, and tomorrow's leaf starts to glow faintly.
+9. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A night with a drink shows its note and the night that mended it, and its gold is soldered again.
+10. **Your windows** (tap the month at the top). Every month's window on one wall, each in its own design, with the goal set for that month, its nights and how many were mended. Open one and the screen becomes that month, read-only: its window, its nights, its notes. "Back to tonight" returns.
+11. **Next month's piece** is where the paid tier (Plus) goes: another window is free, and with Plus you choose the craft instead.
 
 <p>
 <img src="docs/screens/7-your-windows.jpg" width="190" alt="Your windows: September's rose, October's sunburst, November's vine, December still to choose">
@@ -132,6 +133,8 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 
 - **The name.** A leadlight is a window of small pieces of glass held in lead, and the lead is where the gold mend goes.
 - **Nothing to tick off.** The leaf comes from the honest answer, not from finishing tasks. The wind-down is three breaths, and they can be skipped.
+- **Forgetting isn't drinking.** A night nobody checked in on stays clear, as "no check-in", until it's filled in, for up to a week back. Past a week, memory is a guess, and an honest clear leaf is better.
+- **It runs on the real date.** The night turns at 4 am, so a check-in at 1 am counts for the night before. The sample month ends on the 16th (a night with a drink), so the nights after it start with no check-in, and the first alcohol-free check-in shows the mend.
 - **Only an alcohol-free night mends,** and one is enough. The first day back is the hardest, so the reward can't be further away than that. A run of clear nights is mended together by that first night back.
 - **A night with a drink is clear glass,** not a hole and not a reset: light still passes through it, and it keeps its note.
 - **The mend is never announced.** It's found the next alcohol-free night. Promising it the night of a drink would turn comfort into a deal.
@@ -141,7 +144,7 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 - **Tomorrow's leaf starts to glow faintly** once tonight is checked in, whatever the answer: a reason to come back, without a notification.
 - **A wall, not a collection.** By month three you see three finished windows side by side, which is the point the business needs people to reach. Nothing is unlocked or earned: each window is just the record of its month.
 - **The paid feature is choosing your craft** (see Pricing). The nightly check-in and your record are never behind the paywall: you pay for choice, never for your own evidence.
-- **Tonight is kept on the device,** so a reload shows it set. No backend, as the brief asks, and nothing about anyone's drinking leaves the phone.
+- **Every check-in is kept on the device,** so a reload shows it. No backend, as the brief asks, and nothing about anyone's drinking leaves the phone.
 
 ## Pricing
 
@@ -211,10 +214,10 @@ AI: Claude Code wrote most of the code with me. I set the direction and judged e
 - `components/MonthStrip.tsx` is the row of nights, `components/NightCard.tsx` the card under it, `components/Ritual.tsx` tonight's check-in and wind-down, `components/Windows.tsx` the wall of windows and where Plus goes.
 - `components/WindowScene.tsx` puts the 3D window together from `components/window/`: the glass (`Glass`), the sun through it (`sun`), the light shafts and dust (`Air`), the stone (`Wall`), the camera and pacing (`frame`), the textures (`textures`). Without WebGL, `components/FlatWindow.tsx` draws it flat.
 - `lib/window-model.ts` decides what each piece of glass means. `lib/designs.ts` cuts the month's window in its design (Rose, Sunburst, or the Vine in `lib/vine.ts`, which also cuts the frame they share). `lib/paint.ts` paints it.
-- `lib/sky.ts` asks the APIs, `lib/tonight.ts` keeps tonight on the device, `lib/data.ts` types the month.
+- `lib/sky.ts` asks the APIs, `lib/tonight.ts` keeps the check-ins on the device and knows tonight's date, `lib/data.ts` types the month.
 - `data/sample.json` is this month and the two before it. Colors and the UI's few shapes (`card`, `eyebrow`, `btn`) are tokens in `app/globals.css`.
 
-Handy in the live session: `?fresh` starts tonight over, `?sky=rain` and `?moon=0.15` change the sky, `?design=rose` or `?design=sunburst` shows this month in another design.
+Handy in the live session: `?fresh` forgets everything logged on this device, `?sky=rain` and `?moon=0.15` change the sky, `?design=rose` or `?design=sunburst` shows this month in another design.
 
 </details>
 

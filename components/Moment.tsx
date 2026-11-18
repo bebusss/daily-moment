@@ -11,10 +11,10 @@ import MonthStrip from "@/components/MonthStrip";
 import NightCard from "@/components/NightCard";
 import Ritual from "@/components/Ritual";
 import Windows from "@/components/Windows";
-import { dayOf, finishedMonth, monthName, type DailyGoal, type DesignName, type LineKind, type Night, type Weight } from "@/lib/data";
+import { dayOf, finishedMonth, monthAsOf, monthName, withNights, type DailyGoal, type DesignName, type LineKind, type Night, type Weight } from "@/lib/data";
 import { DESIGNS } from "@/lib/designs";
 import { useSky } from "@/lib/sky";
-import { forgetNight, saveNight, useSavedNight } from "@/lib/tonight";
+import { forgetNights, saveNights, useSavedNights, useTonight } from "@/lib/tonight";
 import { nightLooks } from "@/lib/window-model";
 
 type Phase = "ask" | "held" | "wind";
@@ -60,13 +60,15 @@ function useDesignOverride(): DesignName | null {
 }
 
 export default function Moment({ initial }: { initial: DailyGoal }) {
-  // Tonight, once set, is kept on this device: a reload shows it set.
-  const saved = useSavedNight(initial.today);
+  // The month as of tonight's real date: the nights in the data, the ones logged on this device
+  // (kept, so a reload shows them), and the ones in between, with no check-in.
+  const logged = useSavedNights();
+  const tonight = useTonight(initial.today);
   const design = useDesignOverride();
   const goal = useMemo(() => {
-    const withTonight = saved && !initial.nights.some((n) => n.date === saved.date) ? { ...initial, nights: [...initial.nights, saved] } : initial;
-    return design ? { ...withTonight, design } : withTonight;
-  }, [initial, saved, design]);
+    const month = monthAsOf(initial, tonight, logged);
+    return design ? { ...month, design } : month;
+  }, [initial, tonight, logged, design]);
   const today = dayOf(goal.today);
   // A month before this one, opened from the wall: shown as it was, read-only. Null is this month.
   const [viewing, setViewing] = useState<string | null>(null);
@@ -75,15 +77,24 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   const last = dayOf(shown.today); // tonight, or the day after a past month's last night
   // The open night in the shown month; 0 is none (a past month just opened shows the whole window).
   const [selected, setSelected] = useState(today);
+  // Tonight's real date arrives after the page loads (and the night turns at 4 am): the open
+  // night follows it if it was tonight.
+  const [seenToday, setSeenToday] = useState(today);
+  if (seenToday !== today) {
+    setSeenToday(today);
+    if (selected === seenToday) setSelected(today);
+  }
   const [ritual, setRitual] = useState(false);
   // Where the check-in is, for the window behind it: the question (the view moves in to tonight's
   // leaf, under the dimming), after "I had a drink" (the dimming lifts and the view pulls back to the
   // whole month), or the wind-down itself (the window rests, not drawn).
   const [phase, setPhase] = useState<Phase>("ask");
-  // After an alcohol-free night is set: the clear night it mended, while the view goes to it.
-  const [mending, setMending] = useState<number | null>(null);
-  // ...and until its gold is soldered, the row of nights still shows it clear.
-  const [unsoldered, setUnsoldered] = useState<number | null>(null);
+  // The clear nights a check-in has just mended, while their gold is soldered...
+  const [mending, setMending] = useState<number[]>([]);
+  // ...and until it is, the row of nights still shows them clear.
+  const [unsoldered, setUnsoldered] = useState<number[]>([]);
+  // Which nights were already mended when the check-in opened, to tell which ones it mended.
+  const mendedAtOpen = useRef<Set<number>>(new Set());
   const [windows, setWindows] = useState(false);
   // Just after tonight's leaf is set, the window comes to it while it fills in, then steps back.
   const [settling, setSettling] = useState(false);
@@ -91,13 +102,16 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   // What the sky APIs said, in a line: the sunset, rain if it's raining, and the place.
   const skyLine = [sky.sunset && `Sunset ${sky.sunset}`, sky.weather?.rain && sky.weather.label, sky.place].filter(Boolean).join(" · ");
   const { top, bottom, insets } = useInsets();
-  const looks = useMemo(() => nightLooks(shown).map((l) => (!viewing && l.day === unsoldered ? { ...l, mended: false } : l)), [shown, viewing, unsoldered]);
+  const looks = useMemo(
+    () => nightLooks(shown).map((l) => (!viewing && unsoldered.includes(l.day) ? { ...l, mended: false } : l)),
+    [shown, viewing, unsoldered],
+  );
   // When the screen first responds to taps (DevTools > Performance, or performance.getEntriesByName).
   useEffect(() => void performance.mark("ui:ready"), []);
-  // ?fresh starts tonight over (handy for showing the wind-down again).
+  // ?fresh forgets everything logged on this device (handy for showing the check-in again).
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("fresh")) forgetNight(initial.today);
-  }, [initial.today]);
+    if (new URLSearchParams(window.location.search).has("fresh")) forgetNights();
+  }, []);
 
   const done = shown.nights.filter((n) => n.done).length;
   const mended = looks.filter((l) => l.mended).length;
@@ -111,31 +125,65 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
     setSelected(month === goal.month ? today : 0);
   }
 
+  const mendedNow = () =>
+    new Set(
+      nightLooks(goal)
+        .filter((l) => l.mended)
+        .map((l) => l.day),
+    );
+
   /**
-   * Tonight is checked in. Alcohol-free: tonight's leaf is set and fills in, and if it mends a
-   * clear night, the view then goes to that leaf while its gold is soldered (never announced
-   * before). With a drink: tonight stays clear glass, and the window simply stays as it is.
+   * The nights just mended (in `next`, not in `before`) get their gold soldered as you watch, after
+   * `wait` (tonight's leaf filling in first, or a breath). Never announced before: until then they
+   * stay plain, in the window and in the row. The view goes to the leaf if it's one, and shows the
+   * whole window if several. Returns when it's over (ms), 0 if nothing was mended.
+   */
+  function solder(before: Set<number>, next: DailyGoal, wait: number) {
+    const fresh = nightLooks(next)
+      .filter((l) => l.mended && !before.has(l.day))
+      .map((l) => l.day);
+    if (!fresh.length) return 0;
+    setUnsoldered(fresh);
+    setTimeout(() => setMending(fresh), wait);
+    setTimeout(() => setUnsoldered([]), wait + 2900);
+    setTimeout(() => setMending([]), wait + 4800);
+    return wait + 4800;
+  }
+
+  function begin() {
+    mendedAtOpen.current = mendedNow();
+    setPhase("ask");
+    setRitual(true);
+  }
+
+  /** The check-in closed without tonight's answer: nights filled in on the way may have mended others. */
+  function closeRitual() {
+    setRitual(false);
+    solder(mendedAtOpen.current, goal, 900);
+  }
+
+  /**
+   * Tonight is checked in. Alcohol-free: tonight's leaf is set and fills in, then whatever the
+   * check-in mended is soldered. With a drink: tonight stays clear glass, and the window stays as
+   * it is (unless a night filled in before tonight mended one).
    */
   function checkIn({ weight, note, line, drank }: { weight: Weight; note: string; line: LineKind; drank: boolean }) {
     const night: Night = { date: goal.today, done: !drank, weight, ...(drank ? { drank } : {}), ...(note ? { note, line } : {}) };
-    const mends = drank ? [] : looks.filter((l) => l.status === "gap" && !l.mended).map((l) => l.day);
-    saveNight(night);
+    saveNights([night]);
     setSelected(today);
     setRitual(false);
+    const over = solder(mendedAtOpen.current, withNights(goal, [night]), drank ? 900 : 3400);
     if (drank) return;
     setSettling(true);
-    const latest = mends.at(-1);
-    if (!latest) {
-      setTimeout(() => setSettling(false), 4200);
-      return;
-    }
-    setUnsoldered(latest);
-    setTimeout(() => setMending(latest), 3400);
-    setTimeout(() => setUnsoldered(null), 6300);
-    setTimeout(() => {
-      setMending(null);
-      setSettling(false);
-    }, 8400);
+    setTimeout(() => setSettling(false), Math.max(4200, over));
+  }
+
+  /** A forgotten night filled in from its card. Alcohol-free, its leaf fills in, and may mend the ones before. */
+  function logNight(date: string, drank: boolean) {
+    const night: Night = drank ? { date, done: false, drank: true } : { date, done: true, weight: 2 };
+    const before = mendedNow();
+    saveNights([night]);
+    solder(before, withNights(goal, [night]), drank ? 900 : 3400);
   }
 
   /** The night the window brings forward: a past night that's open, tonight's leaf as it's set, or the night it mended. */
@@ -145,7 +193,15 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
       ? phase === "ask"
         ? today
         : null
-      : (mending ?? (selected !== today ? selected : settling ? today : null));
+      : mending.length
+        ? mending.length === 1
+          ? mending[0]
+          : null
+        : selected !== today
+          ? selected
+          : settling
+            ? today
+            : null;
   // After "I had a drink" the window takes the room the card leaves, above the words.
   const held = ritual && phase === "held";
 
@@ -154,7 +210,8 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
       <WindowScene
         goal={shown}
         label={label}
-        selected={(mending ?? selected) || undefined}
+        selected={selected || undefined}
+        mending={mending}
         spotlight={spotlight}
         onSelect={select}
         insets={held ? { top: insets.top, bottom: HELD_WORDS } : insets}
@@ -195,10 +252,8 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
                 key={`${shown.month}-${selected}-${shown.nights.length}`}
                 goal={shown}
                 day={selected}
-                onBegin={() => {
-                  setPhase("ask");
-                  setRitual(true);
-                }}
+                onBegin={begin}
+                onLog={viewing ? undefined : logNight}
                 onBack={() => open(goal.month)}
               />
             ) : (
@@ -228,7 +283,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
         </section>
       </div>
 
-      {ritual && <Ritual goal={goal} onClose={() => setRitual(false)} onPhase={setPhase} onDone={checkIn} />}
+      {ritual && <Ritual goal={goal} onClose={closeRitual} onLog={saveNights} onPhase={setPhase} onDone={checkIn} />}
       {windows && <Windows goal={goal} shown={shown.month} onOpen={open} onClose={() => setWindows(false)} />}
     </main>
   );

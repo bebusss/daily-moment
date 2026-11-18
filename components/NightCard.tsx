@@ -3,11 +3,11 @@
 // drink, also the night that mended it).
 
 import Glass from "@/components/Glass";
-import { dateOf, dayOf, shortDate, WEIGHTS, type DailyGoal } from "@/lib/data";
+import { CATCH_UP_DAYS, dateOf, dayOf, noCheckIn, shortDate, WEIGHTS, type DailyGoal } from "@/lib/data";
 
-type Props = { goal: DailyGoal; day: number; onBegin: () => void; onBack: () => void };
+type Props = { goal: DailyGoal; day: number; onBegin: () => void; onBack: () => void; onLog?: (date: string, drank: boolean) => void };
 
-export default function NightCard({ goal, day, onBegin, onBack }: Props) {
+export default function NightCard({ goal, day, onBegin, onBack, onLog }: Props) {
   const today = dayOf(goal.today);
   const night = goal.nights[day - 1];
   const date = dateOf(goal.month, day);
@@ -63,12 +63,28 @@ export default function NightCard({ goal, day, onBegin, onBack }: Props) {
       </>
     );
   } else {
-    // A clear night. The first alcohol-free night after it set gold lead around it.
+    // A clear night. The first alcohol-free night after it set gold lead around it. A night with
+    // no check-in from the last week can still be filled in: forgetting isn't drinking.
     const back = goal.nights.findIndex((n, i) => i >= day && n.done);
+    const fillable = onLog && night && noCheckIn(night) && day >= today - CATCH_UP_DAYS;
     body = (
       <>
         <p className="mt-3 text-sm text-ink">{night?.drank ? "A drink that night." : "No check-in that night."}</p>
         {said}
+        {fillable && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="mr-1 text-sm text-mist">Remember it?</span>
+            {[false, true].map((drank) => (
+              <button
+                key={String(drank)}
+                onClick={() => onLog(night.date, drank)}
+                className="rounded-full px-3.5 py-2 text-sm text-ink ring-1 ring-white/12 transition-colors active:bg-white/10"
+              >
+                {drank ? "A drink" : "Alcohol-free"}
+              </button>
+            ))}
+          </div>
+        )}
         {back >= 0 && (
           <p className="mt-3 flex items-center gap-2 text-sm text-gold">
             <span aria-hidden className="gold-came" />

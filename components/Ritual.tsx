@@ -1,6 +1,8 @@
 "use client";
 
 // Tonight's check-in and wind-down, over the dimmed window. It asks as little as it can:
+//   before tonight: if some of the last week's nights got no check-in, fill in the ones you
+//      remember (each with the same two answers, or all alcohol-free in one tap). Skippable;
 //   0. was today alcohol-free? Yes, or "I had a drink";
 //   1. three slow breaths, paced on screen. They start by themselves, and "Skip" is always there:
 //      nothing to tick off, the leaf comes from the answer, not from chores;
@@ -13,12 +15,14 @@
 
 import { useEffect, useState } from "react";
 import Glass from "@/components/Glass";
-import { firstQuestion, LINES, nextQuestion, WEIGHTS, type DailyGoal, type LineKind, type Weight } from "@/lib/data";
+import { firstQuestion, LINES, nextQuestion, shortDate, unlogged, WEIGHTS, type DailyGoal, type LineKind, type Night, type Weight } from "@/lib/data";
 
 type Step = 0 | 1 | 2 | 3;
 type Props = {
   goal: DailyGoal;
   onClose: () => void;
+  /** Forgotten nights, filled in before tonight. */
+  onLog: (nights: Night[]) => void;
   /** Where the check-in is, for the window behind it: the question, after a drink, or the wind-down. */
   onPhase: (phase: "ask" | "held" | "wind") => void;
   onDone: (night: { weight: Weight; note: string; line: LineKind; drank: boolean }) => void;
@@ -26,7 +30,12 @@ type Props = {
 
 const BREATHS = { breaths: 3, inhale: 4, exhale: 6 };
 
-export default function Ritual({ goal, onClose, onPhase, onDone }: Props) {
+export default function Ritual({ goal, onClose, onLog, onPhase, onDone }: Props) {
+  // The last week's nights with no check-in, as the check-in opened.
+  const [forgotten] = useState(() => unlogged(goal));
+  const [catchUp, setCatchUp] = useState(forgotten.length > 0);
+  // date -> had a drink; a night left out stays as no check-in.
+  const [answers, setAnswers] = useState<Record<string, boolean>>({});
   const [step, setStep] = useState<Step>(0);
   const [drank, setDrank] = useState(false);
   const [held, setHeld] = useState(false);
@@ -39,15 +48,31 @@ export default function Ritual({ goal, onClose, onPhase, onDone }: Props) {
     setHeld(on);
     onPhase(on ? "held" : "ask");
   };
+  /** Logs the nights answered (or all of them, alcohol-free) and goes on to tonight. */
+  const fill = (all: boolean) => {
+    const nights = forgotten
+      .filter((date) => all || date in answers)
+      .map((date): Night => (!all && answers[date] ? { date, done: false, drank: true } : { date, done: true, weight: 2 }));
+    if (nights.length) onLog(nights);
+    setCatchUp(false);
+  };
+  const answer = (date: string, drank: boolean) =>
+    setAnswers((a) => {
+      const next = { ...a };
+      if (next[date] === drank) delete next[date];
+      else next[date] = drank;
+      return next;
+    });
   const back = () => {
-    if (held) hold(false);
+    if (catchUp) onClose();
+    else if (held) hold(false);
     else if (step === 0) onClose();
     else {
       if (step === 1) onPhase("ask");
       setStep((s) => (s - 1) as Step);
     }
   };
-  const first = step === 0 && !held;
+  const first = (step === 0 && !held) || catchUp;
 
   return (
     <div
@@ -74,7 +99,7 @@ export default function Ritual({ goal, onClose, onPhase, onDone }: Props) {
               )}
             </svg>
           </button>
-          <div className={`flex gap-1.5 transition-opacity duration-500 ${held ? "opacity-0" : ""}`} aria-label={`Step ${step + 1} of 4`}>
+          <div className={`flex gap-1.5 transition-opacity duration-500 ${held || catchUp ? "opacity-0" : ""}`} aria-label={`Step ${step + 1} of 4`}>
             {[0, 1, 2, 3].map((i) => (
               <span key={i} className={`h-1 w-6 rounded-full transition-colors duration-500 ${i <= step ? "bg-gold" : "bg-white/12"}`} />
             ))}
@@ -97,6 +122,39 @@ export default function Ritual({ goal, onClose, onPhase, onDone }: Props) {
               className="btn-primary mt-8 animate-fade [animation-delay:3.5s] [animation-duration:0.8s] [animation-fill-mode:both]"
             >
               Wind down
+            </button>
+          </section>
+        ) : catchUp ? (
+          // Nights that got no check-in: forgetting isn't drinking, so they can be filled in.
+          <section key="catch-up" className="flex flex-1 flex-col justify-end animate-rise">
+            <h2 className="font-display text-[28px] leading-tight">Before tonight</h2>
+            <p className="mt-2 text-sm text-mist">These nights didn&apos;t get a check-in. Fill in the ones you remember.</p>
+            <ul className="mt-6 space-y-2">
+              {forgotten.map((date) => (
+                <li key={date} className="flex items-center justify-between gap-3 rounded-2xl bg-white/4 py-2.5 pr-2.5 pl-4 ring-1 ring-white/8">
+                  <span className="text-sm text-ink">{shortDate(date)}</span>
+                  <span className="flex gap-1.5">
+                    {[false, true].map((drank) => (
+                      <button
+                        key={String(drank)}
+                        onClick={() => answer(date, drank)}
+                        aria-pressed={answers[date] === drank}
+                        className={`rounded-full px-3.5 py-2 text-sm ring-1 transition-colors duration-200 ${
+                          answers[date] === drank ? "bg-ink text-night ring-ink" : "text-mist ring-white/12"
+                        }`}
+                      >
+                        {drank ? "A drink" : "Alcohol-free"}
+                      </button>
+                    ))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <button onClick={() => fill(true)} className="btn-quiet mt-5">
+              All alcohol-free
+            </button>
+            <button onClick={() => fill(false)} className="btn-primary mt-2.5">
+              {Object.keys(answers).length ? "Continue" : "Skip"}
             </button>
           </section>
         ) : step === 0 ? (

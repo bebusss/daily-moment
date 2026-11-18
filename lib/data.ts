@@ -97,6 +97,37 @@ export function getDailyGoal(): DailyGoal {
   return sample as DailyGoal;
 }
 
+/**
+ * The month as of tonight: every night from the 1st, in order. A night that's neither in the data
+ * nor logged on this device (and isn't tonight) had no check-in: clear glass, until it's filled in.
+ */
+export function monthAsOf(goal: DailyGoal, today: string, logged: Record<string, Night>): DailyGoal {
+  const byDate = new Map(goal.nights.map((n) => [n.date, n]));
+  const nights: Night[] = [];
+  for (let d = 1; d <= dayOf(today); d++) {
+    const date = dateOf(goal.month, d);
+    const n = logged[date] ?? byDate.get(date);
+    if (n) nights.push(n);
+    else if (d < dayOf(today)) nights.push({ date, done: false });
+  }
+  return { ...goal, today, nights };
+}
+
+/** The same month with these nights logged too. */
+export const withNights = (goal: DailyGoal, logged: Night[]) => monthAsOf(goal, goal.today, Object.fromEntries(logged.map((n) => [n.date, n])));
+
+/** A night nobody checked in on (not a night with a drink: nothing is known about it). */
+export const noCheckIn = (n: Night) => !n.done && !n.drank && n.weight === undefined;
+
+/** How far back a forgotten night can still be filled in: past a week, memory is a guess. */
+export const CATCH_UP_DAYS = 7;
+
+/** The nights before tonight, within the last week, that got no check-in. */
+export function unlogged(goal: DailyGoal): string[] {
+  const today = dayOf(goal.today);
+  return goal.nights.filter((n) => noCheckIn(n) && dayOf(n.date) < today && dayOf(n.date) >= today - CATCH_UP_DAYS).map((n) => n.date);
+}
+
 /** A past month as a finished month: every night is behind it. */
 export function finishedMonth(goal: DailyGoal, past: PastMonth): DailyGoal {
   const [y, m] = past.month.split("-").map(Number);

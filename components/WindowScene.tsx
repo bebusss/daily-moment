@@ -55,9 +55,10 @@ type SceneProps = {
   lite: boolean;
   weather?: Sky["weather"];
   slow?: boolean;
+  mending?: number[];
 };
 
-function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled, weather, slow }: SceneProps) {
+function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled, weather, slow, mending }: SceneProps) {
   const { textures, paneAt } = useWindowTextures(model);
   const sun = useSun(model, textures);
   const still = useMedia("(prefers-reduced-motion: reduce)");
@@ -93,6 +94,7 @@ function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled,
         selected={selected}
         spotlight={Boolean(spotlight)}
         still={still}
+        mending={mending}
         weather={weather}
         onSelect={onSelect}
       />
@@ -170,6 +172,7 @@ export default function WindowScene({
   paused = false,
   sky = {},
   slow = false,
+  mending,
 }: {
   goal: DailyGoal;
   label: string;
@@ -185,6 +188,8 @@ export default function WindowScene({
   sky?: Sky;
   /** Move the view slowly (the pull back to the whole month after a drink). */
   slow?: boolean;
+  /** Nights a check-in just mended, whose gold is soldered now. */
+  mending?: number[];
 }) {
   const lite = useLite();
   const [model, setModel] = useState<WindowModel | null>(null);
@@ -228,6 +233,7 @@ export default function WindowScene({
               onCompiled={reveal}
               weather={sky.weather}
               slow={slow}
+              mending={mending}
             />
             {lite && drawing && <Pace fps={30} />}
             {drawing && <Adapt frameMs={lite ? 1000 / 30 : 1000 / 60} />}
