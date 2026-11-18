@@ -65,7 +65,7 @@ export default function MonthStrip({ month, nights, selected, onSelect }: Props)
             <span className={`text-[11px] leading-none tabular-nums ${n.status === "today" ? "font-semibold text-gold" : open ? "text-ink" : future ? "text-mist/40" : "text-mist"}`}>
               {n.day}
             </span>
-            <svg viewBox="0 0 16 24" className={`h-6 w-4 ${n.status === "today" ? "animate-glow" : ""}`} aria-hidden>
+            <svg viewBox="0 0 16 24" className={`h-6 w-4 ${n.status === "today" ? "animate-glow" : n.next ? "animate-glow opacity-70" : ""}`} aria-hidden>
               {n.status === "done" && (
                 <>
                   <path d={LEAF} fill={n.color} stroke="#120d0a" strokeWidth="1.3" />
@@ -75,7 +75,9 @@ export default function MonthStrip({ month, nights, selected, onSelect }: Props)
               )}
               {n.status === "gap" && <path d={LEAF} fill="#f2efe6" fillOpacity="0.14" stroke={n.mended ? "var(--color-gold)" : "#ab9c8b"} strokeWidth={n.mended ? 1.6 : 1} />}
               {n.status === "today" && <path d={LEAF} fill={n.color} stroke="#fff3d6" strokeWidth="1" />}
-              {future && <path d={LEAF} fill="#cdd5bd" fillOpacity="0.07" stroke="#f3eadc" strokeOpacity="0.16" strokeWidth="1" />}
+              {future && (
+                <path d={LEAF} fill="#cdd5bd" fillOpacity={n.next ? 0.18 : 0.07} stroke="#f3eadc" strokeOpacity={n.next ? 0.55 : 0.16} strokeWidth="1" />
+              )}
             </svg>
           </button>
         );

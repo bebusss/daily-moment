@@ -1,7 +1,7 @@
 "use client";
 
-// The daily moment's state: the month's nights, which night is open, and whether
-// tonight's wind-down is running. The window (WindowScene) only draws what it's given;
+// The daily moment's state: the month's nights (tonight's kept on this device), which night is
+// open, and whether tonight's wind-down is running. The window (WindowScene) only draws what it's given;
 // everything the person reads and touches sits on top of it: the month and intention
 // above, and one card below with the month's row of nights and the open night.
 
@@ -13,6 +13,7 @@ import Ritual from "@/components/Ritual";
 import Windows from "@/components/Windows";
 import { dayOf, monthName, type DailyGoal, type LineKind, type Weight } from "@/lib/data";
 import { useSunset } from "@/lib/sunset";
+import { forgetNight, saveNight, useSavedNight } from "@/lib/tonight";
 import { nightLooks } from "@/lib/window-model";
 
 // The 3D window (three.js and its effects, most of the page's code) loads on its own, after the
@@ -43,7 +44,12 @@ function useInsets() {
 }
 
 export default function Moment({ initial }: { initial: DailyGoal }) {
-  const [goal, setGoal] = useState(initial);
+  // Tonight, once set, is kept on this device: a reload shows it set.
+  const saved = useSavedNight(initial.today);
+  const goal = useMemo(
+    () => (saved && !initial.nights.some((n) => n.date === saved.date) ? { ...initial, nights: [...initial.nights, saved] } : initial),
+    [initial, saved],
+  );
   const today = dayOf(goal.today);
   const [selected, setSelected] = useState(today);
   const [ritual, setRitual] = useState(false);
@@ -55,6 +61,10 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   const looks = useMemo(() => nightLooks(goal), [goal]);
   // When the screen first responds to taps (DevTools > Performance, or performance.getEntriesByName).
   useEffect(() => void performance.mark("ui:ready"), []);
+  // ?fresh starts tonight over (handy for showing the wind-down again).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("fresh")) forgetNight(initial.today);
+  }, [initial.today]);
 
   const done = goal.nights.filter((n) => n.done).length;
   const label = `${goal.intention}: this month's window, ${done} of ${goal.nights.length} nights so far`;
@@ -62,7 +72,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
 
   /** Tonight's leaf is set: the window gets a new night and fills it in. */
   function setTonight(weight: Weight, note: string, line: LineKind) {
-    setGoal((g) => ({ ...g, nights: [...g.nights, { date: g.today, done: true, weight, ...(note ? { note, line } : {}) }] }));
+    saveNight({ date: goal.today, done: true, weight, ...(note ? { note, line } : {}) });
     setSelected(today);
     setRitual(false);
     setSettling(true);

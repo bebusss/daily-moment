@@ -3,7 +3,7 @@
   "goal": "Wind down before bed",
   "month": "2026-11",
   "intention": "Slower evenings",
-  "palette": ["#e3a857", "#d9837a", "#93ae84", "#9d93c9", "#edb48c", "#87afc8"],
+  "palette": ["#d9534f", "#e8952f", "#4a9e63", "#8a5cc7", "#3d86c6", "#d6618f"],
   "today": "2026-11-17",
   "ritual": [
     { "id": "lights", "label": "Dim the lights", "detail": "Lamps on, overhead off." },

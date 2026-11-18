@@ -6,7 +6,8 @@
 // - a night done is a leaf of colored glass, deeper the heavier the day was;
 // - a night missed is a leaf of clear glass: it stays, you can see through it;
 // - coming back after a miss mends it: its lead turns gold;
-// - tonight's leaf waits, lit from within; the nights to come are pale, uncolored glass.
+// - tonight's leaf waits, lit from within; the nights to come are pale, uncolored glass;
+// - once tonight is set, tomorrow's leaf waits too, faintly.
 
 import type { DailyGoal, Weight } from "@/lib/data";
 import type { Pt } from "@/lib/geometry";
@@ -25,6 +26,7 @@ export type PaneModel = {
   status: PaneStatus;
   /** A missed night someone came back from: its lead is gold. */
   mended: boolean;
+  next?: boolean;
   weight?: Weight;
   points: Pt[];
   color: string;
@@ -45,17 +47,25 @@ export const daysIn = (month: string) => {
 
 /** Heavy days are deep, rich glass; light days are paler. */
 const DEPTH: Record<Weight, { shade: number; sat: number }> = {
-  3: { shade: -0.26, sat: 1.45 },
-  2: { shade: -0.08, sat: 1.3 },
-  1: { shade: 0.1, sat: 1.1 },
+  3: { shade: -0.24, sat: 1.25 },
+  2: { shade: -0.06, sat: 1.15 },
+  1: { shade: 0.14, sat: 1.0 },
 };
 
-const GROUND = ["#e2c690", "#d6c79f", "#e6cf9f", "#c3c8ad", "#dfbb83", "#cdbf98", "#d9cfae", "#e8c88e", "#bfc6b4", "#d8b57e"];
+const GROUND = ["#ecdcbc", "#e4d9be", "#eedfbf", "#dfdcc0", "#e9d6b2", "#e2d3b4", "#ecdfc4", "#ebd7b4", "#dcdcc4", "#e6d3b0"];
 const SKY = ["#203168", "#293c7a", "#1b2958", "#2f427e", "#24387a"];
 const STEM = ["#6b7433", "#77682f", "#5d6a2e"];
 
 /** What one night looks like in glass. The window's leaves and the month row under it both read this. */
-export type NightLook = { day: number; status: Exclude<PaneStatus, "decor">; mended: boolean; weight?: Weight; color: string };
+export type NightLook = {
+  day: number;
+  status: Exclude<PaneStatus, "decor">;
+  mended: boolean;
+  /** Tomorrow's leaf, once tonight's is set: it waits too, faintly. */
+  next?: boolean;
+  weight?: Weight;
+  color: string;
+};
 
 export function nightLooks(goal: DailyGoal): NightLook[] {
   const days = daysIn(goal.month);
@@ -72,7 +82,8 @@ export function nightLooks(goal: DailyGoal): NightLook[] {
     }
     // A missed night is mended once any later night (before tonight) was done.
     if (status === "gap") return { day, status, mended: goal.nights.slice(day).some((n) => n.done), color: "#f2efe6" };
-    return { day, status, mended: false, color: status === "today" ? "#f0d6a4" : "#cdd5bd" };
+    const next = status === "future" && day === today + 1 && Boolean(night(today)?.done);
+    return { day, status, mended: false, next, color: status === "today" ? "#f0d6a4" : next ? "#d2dcc0" : "#b9c4a5" };
   });
 }
 

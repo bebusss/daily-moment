@@ -152,7 +152,7 @@ export type PaintedWindow = {
 };
 
 /** Lead widths, in scene units. */
-const LEAD = { outline: 0.042, border: 0.026, jewel: 0.018, star: 0.016, night: 0.021, other: 0.02 };
+const LEAD = { outline: 0.042, border: 0.026, jewel: 0.018, star: 0.016, night: 0.025, other: 0.02 };
 const leadWidth = (p: PaneModel) =>
   p.kind === "border" || p.kind === "fillet" ? LEAD.border : p.kind === "jewel" ? LEAD.jewel : p.kind === "star" ? LEAD.star : p.kind === "night" ? LEAD.night : LEAD.other;
 
@@ -225,6 +225,7 @@ export function paintWindow(model: WindowModel): PaintedWindow {
   for (const pane of model.panes) {
     if (pane.mended) paintGold(au, pane, path(pane.points));
     if (pane.status === "today") paintWaiting(ri, path(pane.points));
+    else if (pane.next) paintWaiting(ri, path(pane.points), 0.4);
   }
 
   // The outer lead, heavier, all the way round.
@@ -260,7 +261,7 @@ export function repaintWindow(before: PaintedWindow, model: WindowModel): Painte
   if (was.outline !== model.outline || was.panes.length !== model.panes.length) return null;
   const changed = model.panes.filter((p, i) => {
     const q = was.panes[i];
-    return q.color !== p.color || q.status !== p.status || q.mended !== p.mended || q.diffusion !== p.diffusion || q.glass !== p.glass;
+    return q.color !== p.color || q.status !== p.status || q.mended !== p.mended || q.next !== p.next || q.diffusion !== p.diffusion || q.glass !== p.glass;
   });
   if (!changed.length) return { ...before, model, paneAt: picker(model, before.idPx, before.glass.width, before.glass.height) };
 
@@ -298,6 +299,7 @@ export function repaintWindow(before: PaintedWindow, model: WindowModel): Painte
     ri.fillRect(0, 0, w, h);
     ri.restore();
     if (pane.status === "today") paintWaiting(ri, shape);
+    else if (pane.next) paintWaiting(ri, shape, 0.4);
     if (pane.mended) paintGold(au, pane, shape);
     for (const p of pane.points) {
       const [x, y] = px(p);
@@ -369,11 +371,12 @@ function paintGold(au: CanvasRenderingContext2D, pane: PaneModel, shape: Path2D)
   au.stroke(shape);
 }
 
-/** Tonight's leaf: a glow just inside its lead, for the light that waits in it (green channel). */
-function paintWaiting(ri: CanvasRenderingContext2D, shape: Path2D) {
+/** Tonight's leaf: a glow just inside its lead, for the light that waits in it (green channel). Tomorrow's, fainter. */
+function paintWaiting(ri: CanvasRenderingContext2D, shape: Path2D, strength = 1) {
   ri.save();
   ri.clip(shape);
   ri.globalCompositeOperation = "lighter";
+  ri.globalAlpha = strength;
   for (const [k, a] of [
     [0.16, 0.22],
     [0.09, 0.3],
@@ -569,10 +572,10 @@ export function paintOutside(model: WindowModel): { sharp: HTMLCanvasElement; so
   const rand = seeded("outside");
   const sky = g.createLinearGradient(0, 0, 0, h);
   sky.addColorStop(0, "#9fb2c9");
-  sky.addColorStop(0.22, "#e6d3b4");
-  sky.addColorStop(0.5, "#f7c98d");
-  sky.addColorStop(0.72, "#f2a466");
-  sky.addColorStop(1, "#c9764a");
+  sky.addColorStop(0.22, "#ecdcc0");
+  sky.addColorStop(0.5, "#f9dfb6");
+  sky.addColorStop(0.75, "#f5c68c");
+  sky.addColorStop(1, "#d98d5a");
   g.fillStyle = sky;
   g.fillRect(0, 0, w, h);
   // A few long clouds catching the light.
