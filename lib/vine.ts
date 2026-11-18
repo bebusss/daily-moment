@@ -60,7 +60,31 @@ export type Design = {
   pieces: Piece[];
   /** Where the iron saddle bars cross the window (y values). */
   bars: number[];
+  /** The moon's disc (its piece is drawn on top of the sky, so its shape can follow the real phase). */
+  moon: { c: Pt; r: number };
 };
+
+/**
+ * The moon as tonight's phase: the lit part of its disc. `lit` is 0 (new) to 1 (full); while it
+ * grows the right side is lit. Never less than a sliver, so the window always has its moon.
+ */
+export function moonShape(c: Pt, r: number, lit: number, waxing: boolean, steps = 48): Pt[] {
+  const f = Math.min(0.97, Math.max(0.07, lit));
+  // The line between light and dark is half an ellipse: toward the lit side while it's a
+  // crescent (under half lit), away from it once it's gibbous.
+  const a = r * (1 - 2 * f);
+  const side = waxing ? 1 : -1;
+  const pts: Pt[] = [];
+  for (let k = 0; k <= steps; k++) {
+    const t = Math.PI / 2 - (Math.PI * k) / steps;
+    pts.push([c[0] + side * r * Math.cos(t), c[1] + r * Math.sin(t)]);
+  }
+  for (let k = 1; k < steps; k++) {
+    const t = -Math.PI / 2 + (Math.PI * k) / steps;
+    pts.push([c[0] + side * a * Math.cos(t), c[1] + r * Math.sin(t)]);
+  }
+  return pts;
+}
 
 const W = 2.4;
 const H = 6.2;
@@ -328,5 +352,5 @@ export function vineWindow(days: number, seed: string): Design {
   pieces.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
 
   const bars = [0.2, 0.42, 0.64].map((f) => BOTTOM + (SPRING - BOTTOM) * f);
-  return { width: W, height: H, outline: lancetOutline(0, 200), pieces, bars };
+  return { width: W, height: H, outline: lancetOutline(0, 200), pieces, bars, moon: { c: moonC, r: moonR } };
 }

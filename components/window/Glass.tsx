@@ -2,14 +2,15 @@
 
 // The glass itself: one plane, drawn by a shader from the painted window. Each piece passes
 // the evening's light in its own color; tonight's leaf breathes; a leaf just set fills in with
-// its color; a night in the spotlight comes forward; mended nights' lead shines gold.
+// its color; a night in the spotlight comes forward; mended nights' lead shines gold. Tonight's
+// real weather (lib/sky) shows on it: clouds soften the light, rain leaves drops on the glass.
 
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import type { PaintedWindow } from "@/lib/paint";
 import type { WindowModel } from "@/lib/window-model";
-import type { Painted } from "./textures";
+import { rainTexture, type Painted } from "./textures";
 
 // The glass
 
@@ -41,6 +42,9 @@ export const glassFragment = /* glsl */ `
   uniform float reveal;
   uniform float focus;
   uniform float picked;
+  uniform sampler2D rainMap;
+  uniform float rain;
+  uniform float clouds;
   varying vec2 vUv;
 
   void main() {
@@ -86,6 +90,27 @@ export const glassFragment = /* glsl */ `
         edge += step(0.5, abs(qid - pid));
       }
       light += min(edge / 2.0, 1.0) * focus * vec3(1.0, 0.86, 0.58) * (1.5 + 0.5 * sin(time * 2.2));
+    }
+
+    // Tonight's weather: a cloudy evening is softer; rain leaves drops on the glass, some still,
+    // some running down, each one a little lens that shows the outside and catches a highlight.
+    light *= 1.0 - clouds * 0.22;
+    if (rain > 0.001) {
+      vec2 ruv = vUv * size * 0.65;
+      // Drops sitting on the glass, and others running down it, drawn out into trails.
+      vec4 still = texture2D(rainMap, ruv);
+      vec4 run = texture2D(rainMap, vec2(ruv.x * 1.4 + 0.31, ruv.y * 0.3 + time * 0.07));
+      vec4 drop = still.a > run.a ? still : run;
+      float a = drop.a;
+      // Backlit, a drop is a dark rim (the light bends away at its edge) round a bright core
+      // that shows the outside, bent.
+      float rim = smoothstep(0.12, 0.45, a) * (1.0 - smoothstep(0.5, 0.9, a));
+      float core = smoothstep(0.65, 0.95, a);
+      vec2 bend = (drop.rg - 0.5) * 0.03;
+      vec3 through = mix(texture2D(outSharp, vUv + bend).rgb, texture2D(outSoft, vUv + bend).rgb, milk * 0.7) * exposure;
+      light *= 1.0 - rim * 0.5 * rain;
+      light = mix(light, through * mix(glass, vec3(1.0), 0.35), core * 0.5 * rain);
+      light += vec3(1.0, 0.95, 0.86) * drop.b * rain * 0.45;
     }
 
     // The lead: a rounded came, dark, catching a little of the room's light on its crown.
@@ -138,6 +163,9 @@ export function glassMaterial() {
       reveal: { value: 1 },
       focus: { value: 0 },
       picked: { value: 0 },
+      rainMap: { value: rainTexture() },
+      rain: { value: 0 },
+      clouds: { value: 0 },
     },
   });
 }
@@ -148,10 +176,12 @@ export function Glass({
   paneAt,
   selected,
   spotlight,
+  weather,
   onSelect,
 }: {
   model: WindowModel;
   spotlight: boolean;
+  weather?: { rain: boolean; clouds: number };
   textures: Painted;
   paneAt: (u: number, v: number) => ReturnType<PaintedWindow["paneAt"]>;
   selected?: number;
@@ -198,6 +228,10 @@ export function Glass({
     u.texel.value.set(1 / textures.lead.image.width, 1 / textures.lead.image.height);
     u.size.value.set(model.width, model.height);
     u.time.value = t;
+    // The weather comes in gently when it arrives.
+    const ease = Math.min(1, delta * 0.8);
+    u.rain.value += ((weather?.rain ? 1 : 0) - u.rain.value) * ease;
+    u.clouds.value += ((weather?.clouds ?? 0) - u.clouds.value) * ease;
     u.selected.value = selectedIndex + 1;
     u.today.value = todayIndex + 1;
     if (lastPick.current !== selectedIndex) {

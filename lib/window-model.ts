@@ -12,7 +12,7 @@
 import type { DailyGoal, Weight } from "@/lib/data";
 import type { Pt } from "@/lib/geometry";
 import { mix, paneColors, pick, saturate } from "@/lib/glass";
-import { vineWindow, type Design, type LeafFrame, type PieceKind } from "@/lib/vine";
+import { moonShape, vineWindow, type Design, type LeafFrame, type PieceKind } from "@/lib/vine";
 
 export type PaneStatus = "done" | "gap" | "today" | "future" | "decor";
 
@@ -95,7 +95,17 @@ function designFor(month: string): Design {
   return design;
 }
 
-export function buildWindow(goal: DailyGoal): WindowModel {
+/** Tonight's moon, as the window's piece: kept per phase, so the same phase is the same shape. */
+const moons = new Map<string, Pt[]>();
+function moonFor(design: Design, moon: { lit: number; waxing: boolean }) {
+  const key = `${design.moon.c.join()}:${moon.lit.toFixed(2)}:${moon.waxing}`;
+  let shape = moons.get(key);
+  if (!shape) moons.set(key, (shape = moonShape(design.moon.c, design.moon.r, moon.lit, moon.waxing)));
+  return shape;
+}
+
+/** The month's window. With `moon` (from the sky API), its moon is tonight's phase; without, the drawn crescent. */
+export function buildWindow(goal: DailyGoal, moon?: { lit: number; waxing: boolean }): WindowModel {
   const looks = nightLooks(goal);
   const design = designFor(goal.month);
   let border = 0;
@@ -118,7 +128,7 @@ export function buildWindow(goal: DailyGoal): WindowModel {
       case "bud":
         return { ...base, status: "decor", color: "#e2a23a", glass: "cathedral", diffusion: 0.8 };
       case "moon":
-        return { ...base, status: "decor", color: "#f2dc9c", glass: "opal", diffusion: 0.97 };
+        return { ...base, points: moon ? moonFor(design, moon) : base.points, status: "decor", color: "#f2dc9c", glass: "opal", diffusion: 0.97 };
       case "star":
         return { ...base, status: "decor", color: "#ffe6a2", glass: "jewel", diffusion: 0.6 };
       case "fillet":

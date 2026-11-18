@@ -12,7 +12,7 @@ import NightCard from "@/components/NightCard";
 import Ritual from "@/components/Ritual";
 import Windows from "@/components/Windows";
 import { dayOf, monthName, type DailyGoal, type LineKind, type Weight } from "@/lib/data";
-import { useSunset } from "@/lib/sunset";
+import { useSky } from "@/lib/sky";
 import { forgetNight, saveNight, useSavedNight } from "@/lib/tonight";
 import { nightLooks } from "@/lib/window-model";
 
@@ -56,7 +56,9 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   const [windows, setWindows] = useState(false);
   // Just after tonight's leaf is set, the window comes to it while it fills in, then steps back.
   const [settling, setSettling] = useState(false);
-  const sunset = useSunset();
+  const sky = useSky();
+  // What the sky APIs said, in a line: the sunset, rain if it's raining, and the place.
+  const skyLine = [sky.sunset && `Sunset ${sky.sunset}`, sky.weather?.rain && sky.weather.label, sky.place].filter(Boolean).join(" · ");
   const { top, bottom, insets } = useInsets();
   const looks = useMemo(() => nightLooks(goal), [goal]);
   // When the screen first responds to taps (DevTools > Performance, or performance.getEntriesByName).
@@ -84,7 +86,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
 
   return (
     <main className="relative h-dvh w-full overflow-hidden">
-      <WindowScene goal={goal} label={label} selected={selected} spotlight={spotlight} onSelect={select} insets={insets} paused={ritual} />
+      <WindowScene goal={goal} label={label} selected={selected} spotlight={spotlight} onSelect={select} insets={insets} paused={ritual} sky={sky} />
 
       <header
         ref={top}
@@ -102,11 +104,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
         </button>
         <h1 className="mt-0.5 font-display text-[26px] leading-tight text-ink">{goal.intention}</h1>
         <p className="mt-1 h-4 text-xs text-mist">
-          {sunset && (
-            <span className="animate-fade">
-              Sunset {sunset.time} · {sunset.place}
-            </span>
-          )}
+          {skyLine && <span className="animate-fade">{skyLine}</span>}
         </p>
       </header>
 

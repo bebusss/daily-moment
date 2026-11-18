@@ -29,6 +29,7 @@ import { Canvas } from "@react-three/fiber";
 import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import type { DailyGoal } from "@/lib/data";
+import type { Sky } from "@/lib/sky";
 import { timed } from "@/lib/perf";
 import { leafMid } from "@/lib/vine";
 import { buildWindow, type WindowModel } from "@/lib/window-model";
@@ -51,9 +52,10 @@ type SceneProps = {
   onSelect?: (day: number) => void;
   insets: Insets;
   lite: boolean;
+  weather?: Sky["weather"];
 };
 
-function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled }: SceneProps) {
+function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled, weather }: SceneProps) {
   const { textures, paneAt } = useWindowTextures(model);
   const sun = useSun(model, textures);
   const still = useMedia("(prefers-reduced-motion: reduce)");
@@ -82,9 +84,9 @@ function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled 
       <primitive object={sun.light} />
       <primitive object={sun.light.target} />
       <Wall model={model} stoneSize={lite ? STONE_LITE : STONE_FULL} />
-      <Glass model={model} textures={textures} paneAt={paneAt} selected={selected} spotlight={Boolean(spotlight)} onSelect={onSelect} />
+      <Glass model={model} textures={textures} paneAt={paneAt} selected={selected} spotlight={Boolean(spotlight)} weather={weather} onSelect={onSelect} />
       <Bars model={model} />
-      <Air sun={sun} model={model} slices={lite ? 14 : 26} />
+      <Air sun={sun} model={model} slices={lite ? 14 : 26} clouds={weather?.clouds ?? 0} />
       <Dust sun={sun} model={model} />
       <EffectComposer multisampling={lite ? 0 : 4}>
         <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.3} intensity={0.85} radius={0.62} />
@@ -135,10 +137,10 @@ const breathe = () => new Promise<void>((done) => setTimeout(done, 0));
  * Everything the scene needs before its first frame, a step at a time. Each step's result is
  * kept, so the scene finds it ready, and setting tonight's leaf only redoes what changed.
  */
-async function prepare(goal: DailyGoal, lite: boolean, alive: () => boolean) {
+async function prepare(goal: DailyGoal, lite: boolean, moon: Sky["moon"], alive: () => boolean) {
   await breathe();
   if (!alive()) return null;
-  const model = timed("window:build", () => buildWindow(goal));
+  const model = timed("window:build", () => buildWindow(goal, moon));
   for (const step of [() => paintFor(model), () => outsideFor(model), () => stoneFor(lite ? STONE_LITE : STONE_FULL)]) {
     await breathe();
     if (!alive()) return null;
@@ -155,6 +157,7 @@ export default function WindowScene({
   onSelect,
   insets = { top: 0, bottom: 0 },
   paused = false,
+  sky = {},
 }: {
   goal: DailyGoal;
   label: string;
@@ -166,20 +169,25 @@ export default function WindowScene({
   insets?: Insets;
   /** Stop drawing (the last frame stays), e.g. while the wind-down covers the window. */
   paused?: boolean;
+  /** Tonight's real sky (lib/sky): the moon's phase, and the weather on the glass. */
+  sky?: Sky;
 }) {
   const lite = useLite();
   const [model, setModel] = useState<WindowModel | null>(null);
   const [compiled, setCompiled] = useState(false);
   const reveal = useCallback(() => setCompiled(true), []);
+  // Tonight's moon, by value, so the window is only rebuilt when the phase itself changes.
+  const [lit, waxing] = [sky.moon?.lit, sky.moon?.waxing];
   useEffect(() => {
     let live = true;
-    prepare(goal, lite, () => live).then((m) => {
+    const moon = lit === undefined ? undefined : { lit, waxing: Boolean(waxing), phase: "" };
+    prepare(goal, lite, moon, () => live).then((m) => {
       if (live && m) setModel(m);
     });
     return () => {
       live = false;
     };
-  }, [goal, lite]);
+  }, [goal, lite, lit, waxing]);
   const drawing = compiled && !paused;
   return (
     <div className="absolute inset-0 transition-opacity duration-1000 ease-out" style={{ opacity: compiled ? 1 : 0 }} role="img" aria-label={label}>
@@ -196,7 +204,7 @@ export default function WindowScene({
               gl.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
             }}
           >
-            <Scene model={model} selected={selected} spotlight={spotlight} onSelect={onSelect} insets={insets} lite={lite} onCompiled={reveal} />
+            <Scene model={model} selected={selected} spotlight={spotlight} onSelect={onSelect} insets={insets} lite={lite} onCompiled={reveal} weather={sky.weather} />
             {lite && drawing && <Pace fps={30} />}
             {drawing && <Adapt frameMs={lite ? 1000 / 30 : 1000 / 60} />}
           </Canvas>

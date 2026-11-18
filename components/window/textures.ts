@@ -84,6 +84,41 @@ export function useWindowTextures(model: WindowModel) {
 }
 
 /** A small tiling noise for the dust in the air. */
+/**
+ * Raindrops on glass, as a tiling texture: rg is which way each drop bends the light, b its
+ * highlight, a how much of the spot is water.
+ */
+let rain: THREE.DataTexture | null = null;
+export function rainTexture() {
+  if (rain) return rain;
+  const size = 256;
+  const data = new Uint8ClampedArray(size * size * 4);
+  for (let i = 0; i < size * size; i++) [data[i * 4], data[i * 4 + 1]] = [128, 128];
+  const rand = seeded("rain");
+  const wrap = (v: number) => ((Math.round(v) % size) + size) % size;
+  for (let n = 0; n < 55; n++) {
+    const [cx, cy] = [rand() * size, rand() * size];
+    const r = 3 + rand() * rand() * 11;
+    const tall = 1.15 + rand() * 0.35;
+    for (let y = -r * tall; y <= r * tall; y++)
+      for (let x = -r; x <= r; x++) {
+        const [dx, dy] = [x / r, y / (r * tall)];
+        const d2 = dx * dx + dy * dy;
+        if (d2 > 1) continue;
+        const k = (wrap(cy + y) * size + wrap(cx + x)) * 4;
+        data[k] = 128 + dx * 110;
+        data[k + 1] = 128 - dy * 110;
+        data[k + 2] = Math.max(data[k + 2], Math.max(0, 1 - ((dx + 0.35) ** 2 + (dy + 0.4) ** 2) * 7) * 255);
+        data[k + 3] = Math.max(data[k + 3], (1 - d2 * d2) * 235);
+      }
+  }
+  rain = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+  rain.wrapS = rain.wrapT = THREE.RepeatWrapping;
+  rain.magFilter = rain.minFilter = THREE.LinearFilter;
+  rain.needsUpdate = true;
+  return rain;
+}
+
 export function noiseTexture() {
   const size = 256;
   const c = document.createElement("canvas");

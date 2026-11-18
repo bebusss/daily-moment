@@ -46,7 +46,7 @@ export const airFragment = /* glsl */ `
   }
 `;
 
-export function Air({ sun, model, slices }: { sun: ReturnType<typeof useSun>; model: WindowModel; slices: number }) {
+export function Air({ sun, model, slices, clouds = 0 }: { sun: ReturnType<typeof useSun>; model: WindowModel; slices: number; clouds?: number }) {
   const noise = useMemo(() => timed("window:paint-air", noiseTexture), []);
   const material = useMemo(
     () =>
@@ -67,9 +67,14 @@ export function Air({ sun, model, slices }: { sun: ReturnType<typeof useSun>; mo
     [sun, noise, slices],
   );
   const group = useRef<THREE.Group>(null);
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const slice = group.current?.children[0] as THREE.Mesh | undefined;
-    if (slice) (slice.material as THREE.ShaderMaterial).uniforms.time.value = state.clock.elapsedTime;
+    if (!slice) return;
+    const u = (slice.material as THREE.ShaderMaterial).uniforms;
+    u.time.value = state.clock.elapsedTime;
+    // Under clouds the shafts fade (gently, as the weather arrives).
+    const target = 0.045 * (26 / slices) * (1 - clouds * 0.65);
+    u.strength.value += (target - u.strength.value) * Math.min(1, delta * 0.8);
   });
   useEffect(() => () => material.dispose(), [material]);
   const reach = 3.4;

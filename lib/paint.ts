@@ -259,6 +259,8 @@ export function paintWindow(model: WindowModel): PaintedWindow {
 export function repaintWindow(before: PaintedWindow, model: WindowModel): PaintedWindow | null {
   const was = before.model;
   if (was.outline !== model.outline || was.panes.length !== model.panes.length) return null;
+  // A piece that changed shape (tonight's moon arriving) changes the lead and the piece map too.
+  if (model.panes.some((p, i) => p.points !== was.panes[i].points)) return null;
   const changed = model.panes.filter((p, i) => {
     const q = was.panes[i];
     return q.color !== p.color || q.status !== p.status || q.mended !== p.mended || q.next !== p.next || q.diffusion !== p.diffusion || q.glass !== p.glass;
