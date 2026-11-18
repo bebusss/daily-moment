@@ -60,7 +60,7 @@ Sources I leaned on: loss aversion and commitment contracts (Giné, Karlan and Z
 
 The first drink after a run of alcohol-free nights is where people leave, so that's the moment the design has to handle best.
 
-We learn who we are partly by watching what we do (Bem, self-perception theory). Research on drinking relapse calls the "I've blown it" spiral after one drink the abstinence violation effect (Marlatt and Gordon): what hurts is less the drink than what the person decides it means. The risks: identity is slow, so the first night already counts as evidence. It's abstract, so the evidence has to be visual. And it can get cheesy, so the app never tells you who you are. It shows you what you did.
+We learn who we are partly by watching what we do (Bem, self-perception theory). Research on drinking relapse calls the "I've blown it" spiral after one drink the abstinence violation effect (Marlatt and Gordon): what hurts is less the drink than what the person decides it means. The same model says what protects: coping self-efficacy, the confidence that you can handle the next hard moment, which grows each time you do (Marlatt built it on Bandura's self-efficacy). The design uses both halves: the mend answers the slip, and the nightly line banks the confidence. The risks: identity is slow, so the first night already counts as evidence. It's abstract, so the evidence has to be visual. And it can get cheesy, so the app never tells you who you are. It shows you what you did.
 
 Why it fits the business: a streak gets more fragile the longer it runs. A window gets more valuable. By month three you have three of them on a wall, with your own lines in them. That's what I'd expect people to miss.
 
@@ -88,7 +88,7 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 - **Kintsugi** was the spark, and I'd rather say so. The version native to glass is the mending lead: old cathedral windows still show the extra strips of lead that held cracked panes.
 - **Cathedral glass at dusk** for the look: warm, uneven, lit from behind. I wanted it to feel like sitting in a dim room, not like reading a chart.
 - **Forest, Pikmin Bloom and Duolingo** as the safe answers I expected most entries to land near. They work, but they reward the app's artifact, and they break when the streak breaks.
-- **A psychologist friend** pressure-tested the idea, confirmed the core (a lapse should leave a mark you can recover from, never a reset) and pointed me to Nate Zinsser's E-S-P, which became the nightly line.
+- **A psychologist friend** pressure-tested the idea, confirmed the core (a lapse should leave a mark you can recover from, never a reset) and pointed me to Nate Zinsser's E-S-P (a nightly note of one effort, one success and one bit of progress, from his work with West Point cadets), which became the three questions behind the nightly line.
 
 ## 5. How I'd know it works
 
@@ -101,7 +101,7 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 | **Early hook** | Day 7 and day 30 return | Are people still checking in after the first week and month? |
 | **Business** | Month-3 retention | Still subscribed at break-even, by signup cohort. |
 | **A/B tests** | The mechanic and the framing | A gold mend against a plain gap, and the line after a drink against no line at all, both judged on lapse recovery. |
-| **On this screen** | Where people drop off | Each step, how many leave a line (on alcohol-free nights and on nights with a drink), and which of E, S or P they pick. Writing a line is a stronger sign of ownership than a tap. |
+| **On this screen** | Where people drop off | Each step, how many leave a line (on alcohol-free nights and on nights with a drink), and how often they ask for another question. Writing a line is a stronger sign of ownership than a tap. |
 
 Identity wording has strong lab results and mixed field replications, which is exactly why I'd test it instead of assuming it.
 
@@ -121,7 +121,7 @@ Identity wording has strong lab results and mixed field replications, which is e
 3. **After "I had a drink",** the dimming lifts: the whole month, every leaf before tonight still in color, and "One night doesn't undo the others." Then the breaths, as on any night.
 4. **Three slow breaths,** paced on screen. They start by themselves, and "Skip" is always there.
 5. **How heavy was today?** One tap. Heavier days set deeper glass.
-6. **One line, if you want.** An effort, a success or a bit of progress (Nate Zinsser's E-S-P), your pick. It's there on a night with a drink too ("Stopped at one.").
+6. **One line, if you want,** answering one question chosen by the night: "What went right today?"; after a drink, "What did you try today, even a little?" ("Stopped at one."); and on the night you come back, "What did you handle better than before?". "Another question" if it doesn't fit.
 7. **Tonight's leaf is set.** The view moves in to it while it fills with color. If last night had a drink, the view then goes to that clear leaf and its gold is soldered as you watch: a hot point runs round it, sparks fly, and the lead cools to gold behind it. Then the whole month again, and tomorrow's leaf starts to wait, faintly. (The sample month is set up so this happens tonight.)
 8. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A night with a drink shows its line and the night that mended it, and its gold is soldered again.
 9. **Your windows** (tap the month at the top). Every month's window on one wall, each in its own design, with its intention, its nights and how many were mended. Open one and the screen becomes that month, read-only: its window, its nights, its lines. "Back to tonight" returns.
@@ -143,7 +143,7 @@ Identity wording has strong lab results and mixed field replications, which is e
 - **Words it never uses:** relapse, sober, fail, streak.
 - **Heavier days set deeper glass.** Hard days count more, with no points.
 - **The app never tells you who you are.** It shows you what you did, and on the night of a drink, the rest of your month.
-- **The line is E-S-P.** A bank of proof of what you can do (Bandura's self-efficacy), in your own words instead of an app's quotes.
+- **One question a night, no categories.** The questions come from E-S-P, but the app never names the framework or asks you to sort your day: it picks the question that fits the night. Your answers are a bank of proof of what you can do, in your own words instead of an app's quotes.
 - **The window comes to the night you open,** so the window and the row read as one thing.
 - **Tomorrow's leaf waits too,** once tonight is checked in, whatever the answer: a reason to come back, with no words.
 - **A wall, not a collection.** The month-three payoff made visible. Nothing is unlocked: every window is a record.

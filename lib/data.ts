@@ -9,16 +9,36 @@ export type Weight = 1 | 2 | 3;
 export const WEIGHTS: Record<Weight, string> = { 1: "Light day", 2: "Normal day", 3: "Heavy day" };
 
 /**
- * The night's line, after Nate Zinsser's E-S-P: one honest effort, one thing that went
- * right, or one bit of progress. Small proof of what you can do, banked every night.
+ * The night's one line: small proof of what you can do, banked every night. In Marlatt's
+ * relapse-prevention model, coping well with a hard moment builds self-efficacy (the confidence
+ * that you can handle the next one), and that is what protects against a relapse. The three kinds
+ * of question are Nate Zinsser's E-S-P (effort, success, progress). The app never names them:
+ * each night gets one question, chosen by the night (firstQuestion), and another if it doesn't fit.
  */
 export type LineKind = "effort" | "success" | "progress";
 
 export const LINES: Record<LineKind, { label: string; prompt: string; example: string }> = {
-  effort: { label: "Effort", prompt: "Where did you really try today?", example: "Finished the walk in the rain." },
-  success: { label: "Success", prompt: "What went right today?", example: "Read instead of scrolling." },
-  progress: { label: "Progress", prompt: "What did you handle better than before?", example: "Left early, no explaining." },
+  success: { label: "Success", prompt: "What went right today?", example: "Lime soda at the party. Nobody asked." },
+  effort: { label: "Effort", prompt: "What did you try today, even a little?", example: "Left before the second round." },
+  progress: { label: "Progress", prompt: "What did you handle better than before?", example: "Said no without explaining." },
 };
+
+/** The order "Another question" goes through. */
+const ORDER: LineKind[] = ["success", "effort", "progress"];
+
+export const nextQuestion = (kind: LineKind) => ORDER[(ORDER.indexOf(kind) + 1) % ORDER.length];
+
+/**
+ * Tonight's question. After a drink: what you tried, even a little. On the first alcohol-free
+ * night after one (the night that mends it): what you handled better than before. Otherwise:
+ * what went right.
+ */
+export function firstQuestion(goal: DailyGoal, drank: boolean): LineKind {
+  if (drank) return "effort";
+  const today = dayOf(goal.today);
+  const lastFree = goal.nights.reduce((last, n) => (n.done && dayOf(n.date) < today ? Math.max(last, dayOf(n.date)) : last), 0);
+  return lastFree < today - 1 ? "progress" : "success";
+}
 
 /**
  * One night of the month. Done means it was alcohol-free: its leaf is set in color. A night that

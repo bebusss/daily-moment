@@ -5,14 +5,15 @@
 //   1. three slow breaths, paced on screen. They start by themselves, and "Skip" is always there:
 //      nothing to tick off, the leaf comes from the answer, not from chores;
 //   2. how heavy today was (one tap: it sets how deep tonight's glass is),
-//   3. one optional line: an effort, a success or progress (Zinsser's E-S-P), the person picks.
+//   3. one optional line, answering one question chosen by the night (lib/data: firstQuestion),
+//      with "Another question" if it doesn't fit. No categories to pick from.
 // After "I had a drink" the dimming lifts: the whole month's window, every leaf before tonight
 // still in color, and one line. Then the breaths, as on any night. Nothing is said about what
 // comes next. An alcohol-free night sets tonight's leaf; a night with a drink stays clear.
 
 import { useEffect, useState } from "react";
 import Glass from "@/components/Glass";
-import { LINES, WEIGHTS, type DailyGoal, type LineKind, type Weight } from "@/lib/data";
+import { firstQuestion, LINES, nextQuestion, WEIGHTS, type DailyGoal, type LineKind, type Weight } from "@/lib/data";
 
 type Step = 0 | 1 | 2 | 3;
 type Props = {
@@ -102,6 +103,7 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
               <button
                 onClick={() => {
                   setDrank(false);
+                  setLine(firstQuestion(goal, false));
                   setStep(1);
                 }}
                 className="btn-quiet"
@@ -111,6 +113,7 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
               <button
                 onClick={() => {
                   setDrank(true);
+                  setLine(firstQuestion(goal, true));
                   hold(true);
                 }}
                 className="btn-quiet"
@@ -150,30 +153,27 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
               onDone({ weight, note: note.trim(), line, drank });
             }}
           >
-            <h2 className="font-display text-[28px] leading-tight">{LINES[line].prompt}</h2>
+            <h2 key={line} className="animate-fade font-display text-[28px] leading-tight">
+              {LINES[line].prompt}
+            </h2>
             <p className="mt-2 text-sm text-mist">Optional. One line.</p>
-            <div role="radiogroup" aria-label="Kind of line" className="mt-6 grid grid-cols-3 gap-1 rounded-2xl bg-white/4 p-1 ring-1 ring-white/8">
-              {(Object.keys(LINES) as LineKind[]).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  role="radio"
-                  aria-checked={line === k}
-                  onClick={() => setLine(k)}
-                  className={`rounded-xl py-2.5 text-sm transition-colors duration-200 ${line === k ? "bg-ink text-night" : "text-mist"}`}
-                >
-                  {LINES[k].label}
-                </button>
-              ))}
-            </div>
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
               maxLength={120}
+              aria-label={LINES[line].prompt}
               placeholder={LINES[line].example}
-              className="mt-3 w-full rounded-2xl bg-white/4 px-4 py-4 text-base text-ink ring-1 ring-white/8 outline-none placeholder:text-mist/60 focus:ring-gold/50"
+              className="mt-6 w-full rounded-2xl bg-white/4 px-4 py-4 text-base text-ink ring-1 ring-white/8 outline-none placeholder:text-mist/60 focus:ring-gold/50"
             />
-            <button type="submit" className="btn-primary mt-6">
+            {/* If tonight's question doesn't fit, another one, quietly. */}
+            <button
+              type="button"
+              onClick={() => setLine(nextQuestion(line))}
+              className="mt-1 self-start rounded-full py-2 text-sm text-mist transition-colors hover:text-ink"
+            >
+              Another question
+            </button>
+            <button type="submit" className="btn-primary mt-4">
               {drank ? "Done for tonight" : "Set tonight's leaf"}
             </button>
           </form>

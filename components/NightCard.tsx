@@ -3,7 +3,7 @@
 // drink, also the night that mended it).
 
 import Glass from "@/components/Glass";
-import { dateOf, dayOf, LINES, shortDate, WEIGHTS, type DailyGoal } from "@/lib/data";
+import { dateOf, dayOf, shortDate, WEIGHTS, type DailyGoal } from "@/lib/data";
 
 type Props = { goal: DailyGoal; day: number; onBegin: () => void; onBack: () => void };
 
@@ -30,15 +30,8 @@ export default function NightCard({ goal, day, onBegin, onBack }: Props) {
     </>
   );
 
-  // The night's own line, as the person wrote it.
-  const said = night?.note && (
-    <p className="mt-3 font-display text-xl leading-snug text-ink italic">
-      {night.note}
-      {night.line && (
-        <span className="ml-2 align-middle font-sans text-[11px] tracking-[0.16em] text-gold not-italic uppercase">{LINES[night.line].label}</span>
-      )}
-    </p>
-  );
+  // The night's own line, as the person wrote it, and nothing else.
+  const said = night?.note && <p className="mt-3 font-display text-xl leading-snug text-ink italic">{night.note}</p>;
 
   let body;
   if (tonight && !night) {
