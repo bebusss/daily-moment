@@ -1,16 +1,23 @@
 "use client";
 
-// The month as a row you can read and tap: one leaf per night, the same glass as its
-// leaf in the window (colored, clear with gold lead, tonight lit, the rest still pale).
+// The month as a row you can read and tap: one piece per night (a leaf, a petal or a ray, as in
+// that month's window), the same glass as its piece in the window (colored, clear with gold lead,
+// tonight lit, the rest still pale).
 // The window is the picture; this row is how you find a night in it.
 
 import { useEffect, useRef } from "react";
 import { WEIGHTS, dateOf, shortDate } from "@/lib/data";
+import type { DesignName } from "@/lib/data";
 import type { NightLook } from "@/lib/window-model";
 
-type Props = { month: string; nights: NightLook[]; selected: number; onSelect: (day: number) => void };
+type Props = { month: string; design: DesignName; nights: NightLook[]; selected: number; onSelect: (day: number) => void };
 
-const LEAF = "M8 1.2C14.2 6.6 14.4 16.6 8 22.8 1.6 16.6 1.8 6.6 8 1.2Z";
+/** Each night in the row is the same piece as in the month's window: a leaf, a petal or a ray. */
+const PIECE: Record<DesignName, { d: string; vein?: string }> = {
+  vine: { d: "M8 1.2C14.2 6.6 14.4 16.6 8 22.8 1.6 16.6 1.8 6.6 8 1.2Z", vein: "M8 4.5v15" },
+  rose: { d: "M8 1.6C11.6 4.6 14 9.4 14 14.4 14 19.4 11.4 22.8 8 22.8 4.6 22.8 2 19.4 2 14.4 2 9.4 4.4 4.6 8 1.6Z" },
+  sunburst: { d: "M8 23 3 2.8Q8 1 13 2.8Z" },
+};
 
 function describe(n: NightLook, month: string) {
   const date = shortDate(dateOf(month, n.day));
@@ -20,7 +27,8 @@ function describe(n: NightLook, month: string) {
   return `${date}, no wind-down${n.mended ? ", mended" : ""}`;
 }
 
-export default function MonthStrip({ month, nights, selected, onSelect }: Props) {
+export default function MonthStrip({ month, design, nights, selected, onSelect }: Props) {
+  const { d: LEAF, vein } = PIECE[design];
   const row = useRef<HTMLDivElement>(null);
   const first = useRef(true);
 
@@ -71,7 +79,7 @@ export default function MonthStrip({ month, nights, selected, onSelect }: Props)
                 <>
                   <path d={LEAF} fill={n.color} stroke="#120d0a" strokeWidth="1.3" />
                   <path d={LEAF} fill="url(#leaf-shine)" />
-                  <path d="M8 4.5v15" stroke="#120d0a" strokeOpacity="0.35" strokeWidth="0.9" />
+                  {vein && <path d={vein} stroke="#120d0a" strokeOpacity="0.35" strokeWidth="0.9" />}
                 </>
               )}
               {n.status === "gap" && <path d={LEAF} fill="#f2efe6" fillOpacity="0.14" stroke={n.mended ? "var(--color-gold)" : "#ab9c8b"} strokeWidth={n.mended ? 1.6 : 1} />}

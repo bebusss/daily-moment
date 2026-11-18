@@ -144,7 +144,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
 
       <div ref={bottom} className="absolute inset-x-0 bottom-0 mx-auto max-w-[430px] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <section className="card overflow-hidden p-0">
-          <MonthStrip month={shown.month} nights={looks} selected={selected} onSelect={select} />
+          <MonthStrip month={shown.month} design={shown.design} nights={looks} selected={selected} onSelect={select} />
           <div className="border-t border-white/6">
             {selected ? (
               <NightCard key={`${shown.month}-${selected}-${shown.nights.length}`} goal={shown} day={selected} onBegin={() => setRitual(true)} onBack={() => open(goal.month)} />
