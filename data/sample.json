@@ -7,8 +7,6 @@
   "palette": ["#d9534f", "#e8952f", "#4a9e63", "#8a5cc7", "#3d86c6", "#d6618f"],
   "today": "2026-11-17",
   "ritual": [
-    { "id": "warm", "label": "Pour something warm", "detail": "Tea, cocoa, anything in a mug." },
-    { "id": "lights", "label": "Dim the lights", "detail": "Lamps on, overhead off." },
     { "id": "breathe", "label": "Three slow breaths", "detail": "In for four, out for six.", "guide": { "breaths": 3, "inhale": 4, "exhale": 6 } }
   ],
   "nights": [

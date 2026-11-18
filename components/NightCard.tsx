@@ -45,7 +45,7 @@ export default function NightCard({ goal, day, onBegin, onBack }: Props) {
     body = (
       <>
         <h2 className="mt-2 font-display text-xl leading-snug text-ink">Tonight&apos;s wind-down</h2>
-        <p className="mt-1 text-sm text-mist">{goal.ritual.map((r, i) => (i ? r.label[0].toLowerCase() + r.label.slice(1) : r.label)).join(", ")}.</p>
+        <p className="mt-1 text-sm text-mist">One question, three slow breaths, a line if you like.</p>
         <button onClick={onBegin} className="btn-primary mt-3.5">
           Begin
         </button>

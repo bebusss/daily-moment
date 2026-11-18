@@ -167,10 +167,10 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
         <p className="mt-1 h-4 text-xs text-mist">{!viewing && skyLine && <span className="animate-fade">{skyLine}</span>}</p>
       </header>
 
-      {/* While the window shows through the check-in, the card steps away so only the window and the line remain. */}
+      {/* During the check-in the card steps away: nothing shows through the wind-down, and when the window does, only it and the line remain. */}
       <div
         ref={bottom}
-        className={`absolute inset-x-0 bottom-0 mx-auto max-w-[430px] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-opacity duration-700 ${revealed ? "opacity-0" : ""}`}
+        className={`absolute inset-x-0 bottom-0 mx-auto max-w-[430px] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-opacity duration-700 ${ritual ? "opacity-0" : ""}`}
       >
         <section className="card overflow-hidden p-0">
           <MonthStrip month={shown.month} design={shown.design} nights={looks} selected={selected} onSelect={select} />

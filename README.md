@@ -6,7 +6,7 @@ Each alcohol-free night of the month sets one leaf of a stained-glass window. A 
 
 <p>
 <img src="docs/screens/1-tonight.jpg" width="190" alt="Tonight: the month's window above, the row of nights and tonight's card below">
-<img src="docs/screens/2-wind-down.jpg" width="190" alt="The wind-down: three steps in place of the evening drink">
+<img src="docs/screens/2-wind-down.jpg" width="190" alt="The wind-down: three slow breaths, paced on screen">
 <img src="docs/screens/4-how-heavy.jpg" width="190" alt="How heavy was today: light, normal or heavy">
 <img src="docs/screens/6-set.jpg" width="190" alt="Tonight's leaf set, with its line">
 </p>
@@ -75,7 +75,7 @@ Why it fits the business: a streak gets more fragile the longer it runs. A windo
 | **Back** | The next alcohol-free night mends it: gold lead, soldered as you watch |
 | **Monthly** | A new window in a new design, its palette set by your intention. The finished ones hang together on a wall |
 
-Every evening, around the hour the drink used to come, the app asks one thing: was today alcohol-free? Then a short wind-down takes the drink's place (something warm in a mug, the lights down, three slow breaths), "how heavy was today?", and an optional line, which turns the window into a diary in your own words.
+Every evening, around the hour the drink used to come, the app asks one thing: was today alcohol-free? Then three slow breaths, paced on screen, "how heavy was today?", and an optional line, which turns the window into a diary in your own words. It asks as little as it can: there's nothing to tick off, and the breaths can be skipped.
 
 **The night of a drink gets the most care,** because it's where people leave. The view pulls back to the whole month, every leaf before tonight still in color, and one line: "One night doesn't undo the others." Then the wind-down goes on, as on any night. Nothing is said about gold or about tomorrow. The mend is found, not promised: the next alcohol-free night, its gold is soldered while you watch.
 
@@ -118,8 +118,8 @@ Identity wording has strong lab results and mixed field replications, which is e
 
 1. **Tonight.** The month's window, tonight's leaf breathing in it. Below, the month as a row you can tap, each night the same piece as in the window (a leaf this month, a petal in the rose, a ray in the sunburst), and a card with tonight's wind-down.
 2. **Was today alcohol-free?** Two equal answers, "Yes" and "I had a drink", so the honest one is never the harder one to tap.
-3. **After "I had a drink",** the dimming lifts: the whole month, every leaf before tonight still in color, and "One night doesn't undo the others." Then the wind-down, as on any night.
-4. **The wind-down.** Pour something warm, dim the lights, three slow breaths. It takes the place the drink had in the evening. The breaths are paced on screen, because that's the step people skip when it's just a checkbox.
+3. **After "I had a drink",** the dimming lifts: the whole month, every leaf before tonight still in color, and "One night doesn't undo the others." Then the breaths, as on any night.
+4. **Three slow breaths,** paced on screen. They start by themselves, and "Skip" is always there.
 5. **How heavy was today?** One tap. Heavier days set deeper glass.
 6. **One line, if you want.** An effort, a success or a bit of progress (Nate Zinsser's E-S-P), your pick. It's there on a night with a drink too ("Stopped at one.").
 7. **Tonight's leaf is set.** The view moves in to it while it fills with color. If last night had a drink, the view then goes to that clear leaf and its gold is soldered as you watch: a hot point runs round it, sparks fly, and the lead cools to gold behind it. Then the whole month again, and tomorrow's leaf starts to wait, faintly. (The sample month is set up so this happens tonight.)
@@ -136,6 +136,7 @@ Identity wording has strong lab results and mixed field replications, which is e
 
 - **The name.** A leadlight is a window of small pieces of glass held in lead, and the lead is where the gold mend goes.
 - **Tonight is preselected.** No choices at bedtime.
+- **Nothing to tick off.** The leaf comes from the honest answer, not from finishing tasks. The wind-down is three breaths, and they can be skipped.
 - **Only an alcohol-free night mends,** and one is enough. The first day back is the hardest, so the reward can't be further away than that. A run of clear nights is mended together by that first night back.
 - **A night with a drink is clear glass,** not a hole and not a reset: light still passes through it, and it keeps its line.
 - **The mend is never announced.** It's found the next alcohol-free night. Promising it the night of a drink would turn comfort into a deal.

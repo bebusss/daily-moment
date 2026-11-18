@@ -1,17 +1,18 @@
 "use client";
 
-// Tonight's check-in and wind-down, over the dimmed window:
+// Tonight's check-in and wind-down, over the dimmed window. It asks as little as it can:
 //   0. was today alcohol-free? Yes, or "I had a drink";
-//   1. the wind-down itself (each step from the data; the breaths are paced on screen),
+//   1. three slow breaths, paced on screen. They start by themselves, and "Skip" is always there:
+//      nothing to tick off, the leaf comes from the answer, not from chores;
 //   2. how heavy today was (one tap: it sets how deep tonight's glass is),
 //   3. one optional line: an effort, a success or progress (Zinsser's E-S-P), the person picks.
 // After "I had a drink" the dimming lifts: the whole month's window, every leaf before tonight
-// still in color, and one line. Then the wind-down goes on as on any night. Nothing is said about
-// what comes next. An alcohol-free night sets tonight's leaf; a night with a drink stays clear.
+// still in color, and one line. Then the breaths, as on any night. Nothing is said about what
+// comes next. An alcohol-free night sets tonight's leaf; a night with a drink stays clear.
 
 import { useEffect, useState } from "react";
 import Glass from "@/components/Glass";
-import { LINES, WEIGHTS, type DailyGoal, type LineKind, type RitualStep, type Weight } from "@/lib/data";
+import { LINES, WEIGHTS, type DailyGoal, type LineKind, type Weight } from "@/lib/data";
 
 type Step = 0 | 1 | 2 | 3;
 type Props = {
@@ -22,27 +23,27 @@ type Props = {
   onDone: (night: { weight: Weight; note: string; line: LineKind; drank: boolean }) => void;
 };
 
+const BREATHS = { breaths: 3, inhale: 4, exhale: 6 };
+
 export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
   const [step, setStep] = useState<Step>(0);
   const [drank, setDrank] = useState(false);
   const [held, setHeld] = useState(false);
-  const [checked, setChecked] = useState<string[]>([]);
-  const [guided, setGuided] = useState<RitualStep | null>(null);
   const [weight, setWeight] = useState<Weight>(2);
   const [note, setNote] = useState("");
   const [line, setLine] = useState<LineKind>("success");
+  const breaths = goal.ritual.find((r) => r.guide)?.guide ?? BREATHS;
 
-  const check = (id: string) => setChecked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
   const hold = (on: boolean) => {
     setHeld(on);
     onReveal(on);
   };
   const back = () => {
-    if (guided) setGuided(null);
-    else if (held) hold(false);
+    if (held) hold(false);
     else if (step === 0) onClose();
     else setStep((s) => (s - 1) as Step);
   };
+  const first = step === 0 && !held;
 
   return (
     <div
@@ -53,16 +54,16 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
         held ? "bg-transparent" : "bg-night/80 backdrop-blur-sm"
       } animate-fade [animation-duration:0.4s]`}
     >
-      {/* While the window shows through, the night still covers the card, where the words sit. */}
+      {/* While the window shows through, the night still covers the bottom, where the words sit. */}
       <div
         aria-hidden
         className={`pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,var(--color-night)_0%,rgb(18_13_10/0.94)_34%,transparent_58%)] transition-opacity duration-1000 ${held ? "opacity-100" : "opacity-0"}`}
       />
       <div className="relative mx-auto flex h-full max-w-[430px] flex-col px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-between">
-          <button onClick={back} className="-ml-2 rounded-full p-2 text-mist hover:text-ink" aria-label={step === 0 && !guided && !held ? "Close" : "Back"}>
+          <button onClick={back} className="-ml-2 rounded-full p-2 text-mist hover:text-ink" aria-label={first ? "Close" : "Back"}>
             <svg viewBox="0 0 20 20" className="size-5" aria-hidden>
-              {step === 0 && !guided && !held ? (
+              {first ? (
                 <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               ) : (
                 <path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -77,15 +78,7 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
           <span className="w-9" />
         </div>
 
-        {guided?.guide ? (
-          <Breaths
-            {...guided.guide}
-            onDone={() => {
-              if (!checked.includes(guided.id)) check(guided.id);
-              setGuided(null);
-            }}
-          />
-        ) : held ? (
+        {held ? (
           // The night someone had a drink: the month they've built, still there, and one true line.
           <section key="held" className="flex flex-1 flex-col justify-end">
             <p className="animate-rise font-display text-[30px] leading-snug text-ink [animation-delay:0.9s] [animation-duration:1.2s] [animation-fill-mode:both]">
@@ -127,45 +120,7 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
             </div>
           </section>
         ) : step === 1 ? (
-          <section key="ritual" className="flex flex-1 flex-col justify-end animate-rise">
-            <h2 className="font-display text-[28px] leading-tight">Tonight&apos;s wind-down</h2>
-            <ul className="mt-6 space-y-2.5">
-              {goal.ritual.map((r) => {
-                const on = checked.includes(r.id);
-                return (
-                  <li key={r.id}>
-                    <button
-                      onClick={() => (r.guide && !on ? setGuided(r) : check(r.id))}
-                      aria-pressed={on}
-                      className={`flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-1 transition-colors duration-300 ${
-                        on ? "bg-gold/10 ring-gold/40" : "bg-white/4 ring-white/8"
-                      }`}
-                    >
-                      <span className="flex-1">
-                        <span className="block text-base text-ink">{r.label}</span>
-                        <span className="mt-0.5 block text-sm text-mist">{r.guide && !on ? "Tap to breathe along" : r.detail}</span>
-                      </span>
-                      <span
-                        aria-hidden
-                        className={`grid size-6 place-items-center rounded-full ring-1 transition-colors duration-300 ${
-                          on ? "bg-gold text-night ring-gold" : "ring-white/25"
-                        }`}
-                      >
-                        {on && (
-                          <svg viewBox="0 0 12 12" className="size-3">
-                            <path d="M2.5 6.2 5 8.5l4.5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-            <button onClick={() => setStep(2)} disabled={checked.length < goal.ritual.length} className="btn-primary mt-6">
-              Continue
-            </button>
-          </section>
+          <Breaths key="breaths" {...breaths} onDone={() => setStep(2)} />
         ) : step === 2 ? (
           <section key="weight" className="flex flex-1 flex-col justify-end animate-rise">
             <h2 className="font-display text-[28px] leading-tight">How heavy was today?</h2>
@@ -228,7 +183,10 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
   );
 }
 
-/** Paced breathing: a warm light grows as you breathe in and fades as you breathe out. */
+/**
+ * Paced breathing: a warm light grows as you breathe in and fades as you breathe out. It starts
+ * on its own after a short pause; "Skip" moves on whenever the person would rather not.
+ */
 function Breaths({ breaths, inhale, exhale, onDone }: { breaths: number; inhale: number; exhale: number; onDone: () => void }) {
   // Each breath is two beats (in, out). Beat -1 is a short pause before the first.
   const [beat, setBeat] = useState(-1);
@@ -236,10 +194,10 @@ function Breaths({ breaths, inhale, exhale, onDone }: { breaths: number; inhale:
 
   useEffect(() => {
     if (beat === breaths * 2) {
-      const t = setTimeout(onDone, 500);
+      const t = setTimeout(onDone, 700);
       return () => clearTimeout(t);
     }
-    const t = setTimeout(() => setBeat((b) => b + 1), beat < 0 ? 600 : (inward ? inhale : exhale) * 1000);
+    const t = setTimeout(() => setBeat((b) => b + 1), beat < 0 ? 1200 : (inward ? inhale : exhale) * 1000);
     return () => clearTimeout(t);
   }, [beat, breaths, inhale, exhale, inward, onDone]);
 
@@ -247,24 +205,29 @@ function Breaths({ breaths, inhale, exhale, onDone }: { breaths: number; inhale:
   const grown = beat >= 0 && beat < breaths * 2 && inward;
 
   return (
-    <section key="breaths" className="flex flex-1 flex-col items-center justify-center animate-fade" aria-live="polite">
-      <div className="relative grid size-64 place-items-center">
-        <span
-          aria-hidden
-          className="absolute inset-0 rounded-full ease-in-out"
-          style={{
-            background: "radial-gradient(circle, rgb(255 214 150 / 0.95) 0%, rgb(231 160 70 / 0.55) 38%, rgb(231 160 70 / 0) 70%)",
-            transform: `scale(${grown ? 1 : 0.42})`,
-            opacity: grown ? 1 : 0.55,
-            transitionProperty: "transform, opacity",
-            transitionDuration: `${grown ? inhale : exhale}s`,
-          }}
-        />
+    <section className="flex flex-1 flex-col items-center animate-fade" aria-live="polite">
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <div className="relative grid size-64 place-items-center">
+          <span
+            aria-hidden
+            className="absolute inset-0 rounded-full ease-in-out"
+            style={{
+              background: "radial-gradient(circle, rgb(255 214 150 / 0.95) 0%, rgb(231 160 70 / 0.55) 38%, rgb(231 160 70 / 0) 70%)",
+              transform: `scale(${grown ? 1 : 0.42})`,
+              opacity: grown ? 1 : 0.55,
+              transitionProperty: "transform, opacity",
+              transitionDuration: `${grown ? inhale : exhale}s`,
+            }}
+          />
+        </div>
+        <p className="mt-8 font-display text-[28px]">
+          {beat < 0 ? "Three slow breaths" : beat >= breaths * 2 ? "Done" : inward ? "Breathe in" : "Breathe out"}
+        </p>
+        <p className="mt-2 text-sm text-mist">{beat < 0 ? "Get comfortable" : `${breath} of ${breaths}`}</p>
       </div>
-      <p className="mt-8 font-display text-[28px]">{beat < 0 ? "Get comfortable" : beat >= breaths * 2 ? "Done" : inward ? "Breathe in" : "Breathe out"}</p>
-      <p className="mt-2 text-sm text-mist">
-        {breath} of {breaths}
-      </p>
+      <button onClick={onDone} className="rounded-full px-5 py-3 text-sm text-mist transition-colors hover:text-ink">
+        Skip
+      </button>
     </section>
   );
 }
