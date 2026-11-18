@@ -6,12 +6,13 @@
 // above, and one card below with the month's row of nights and the open night.
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import MonthStrip from "@/components/MonthStrip";
 import NightCard from "@/components/NightCard";
 import Ritual from "@/components/Ritual";
 import Windows from "@/components/Windows";
-import { dayOf, monthName, type DailyGoal, type LineKind, type Weight } from "@/lib/data";
+import { dayOf, monthName, type DailyGoal, type DesignName, type LineKind, type Weight } from "@/lib/data";
+import { DESIGNS } from "@/lib/designs";
 import { useSky } from "@/lib/sky";
 import { forgetNight, saveNight, useSavedNight } from "@/lib/tonight";
 import { nightLooks } from "@/lib/window-model";
@@ -43,13 +44,24 @@ function useInsets() {
   return { top, bottom, insets };
 }
 
+/** ?design=rose|sunburst|vine shows this month in another window design (for demos). */
+function useDesignOverride(): DesignName | null {
+  const asked = useSyncExternalStore(
+    () => () => {},
+    () => new URLSearchParams(window.location.search).get("design"),
+    () => null,
+  );
+  return asked && asked in DESIGNS ? (asked as DesignName) : null;
+}
+
 export default function Moment({ initial }: { initial: DailyGoal }) {
   // Tonight, once set, is kept on this device: a reload shows it set.
   const saved = useSavedNight(initial.today);
-  const goal = useMemo(
-    () => (saved && !initial.nights.some((n) => n.date === saved.date) ? { ...initial, nights: [...initial.nights, saved] } : initial),
-    [initial, saved],
-  );
+  const design = useDesignOverride();
+  const goal = useMemo(() => {
+    const withTonight = saved && !initial.nights.some((n) => n.date === saved.date) ? { ...initial, nights: [...initial.nights, saved] } : initial;
+    return design ? { ...withTonight, design } : withTonight;
+  }, [initial, saved, design]);
   const today = dayOf(goal.today);
   const [selected, setSelected] = useState(today);
   const [ritual, setRitual] = useState(false);

@@ -12,7 +12,8 @@
 import type { DailyGoal, Weight } from "@/lib/data";
 import type { Pt } from "@/lib/geometry";
 import { mix, paneColors, pick, saturate } from "@/lib/glass";
-import { moonShape, vineWindow, type Design, type LeafFrame, type PieceKind } from "@/lib/vine";
+import { cutWindow } from "@/lib/designs";
+import { moonShape, type Design, type LeafFrame, type PieceKind } from "@/lib/vine";
 
 export type PaneStatus = "done" | "gap" | "today" | "future" | "decor";
 
@@ -87,11 +88,12 @@ export function nightLooks(goal: DailyGoal): NightLook[] {
   });
 }
 
-/** The vine's geometry depends only on the month, so each month's is cut once and kept. */
+/** A window's geometry depends only on its month and design, so each is cut once and kept. */
 const designs = new Map<string, Design>();
-function designFor(month: string): Design {
-  let design = designs.get(month);
-  if (!design) designs.set(month, (design = vineWindow(daysIn(month), month)));
+function designFor(goal: DailyGoal): Design {
+  const key = `${goal.month}:${goal.design}`;
+  let design = designs.get(key);
+  if (!design) designs.set(key, (design = cutWindow(goal.design, daysIn(goal.month), goal.month)));
   return design;
 }
 
@@ -107,7 +109,7 @@ function moonFor(design: Design, moon: { lit: number; waxing: boolean }) {
 /** The month's window. With `moon` (from the sky API), its moon is tonight's phase; without, the drawn crescent. */
 export function buildWindow(goal: DailyGoal, moon?: { lit: number; waxing: boolean }): WindowModel {
   const looks = nightLooks(goal);
-  const design = designFor(goal.month);
+  const design = designFor(goal);
   let border = 0;
 
   const panes = design.pieces.map((p): PaneModel => {
@@ -127,6 +129,8 @@ export function buildWindow(goal: DailyGoal, moon?: { lit: number; waxing: boole
         return { ...base, status: "decor", color: pick(STEM, p.tone), glass: "cathedral", diffusion: 0.85 };
       case "bud":
         return { ...base, status: "decor", color: "#e2a23a", glass: "cathedral", diffusion: 0.8 };
+      case "sun":
+        return { ...base, status: "decor", color: "#f0b347", glass: "opal", diffusion: 0.9 };
       case "moon":
         return { ...base, points: moon ? moonFor(design, moon) : base.points, status: "decor", color: "#f2dc9c", glass: "opal", diffusion: 0.97 };
       case "star":

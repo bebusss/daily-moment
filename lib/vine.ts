@@ -23,7 +23,7 @@ import {
   type Pt,
 } from "@/lib/geometry";
 
-export type PieceKind = "night" | "ground" | "sky" | "stem" | "bud" | "border" | "fillet" | "jewel" | "moon" | "star";
+export type PieceKind = "night" | "ground" | "sky" | "stem" | "bud" | "border" | "fillet" | "jewel" | "moon" | "star" | "sun";
 
 /** A leaf's own frame, so the painter can draw its veins: where it starts, which way it points,
  * its size, how much its midrib bends, and its shape (a: where it's widest, b: how full it is). */
@@ -86,13 +86,13 @@ export function moonShape(c: Pt, r: number, lit: number, waxing: boolean, steps 
   return pts;
 }
 
-const W = 2.4;
-const H = 6.2;
-const BOTTOM = -H / 2;
+export const W = 2.4;
+export const H = 6.2;
+export const BOTTOM = -H / 2;
 /** The arch's radius as a share of the width: a little less pointed than equilateral. */
 const R = 0.86 * W;
 const ARCH = Math.sqrt(R * R - (R - W / 2) ** 2);
-const SPRING = BOTTOM + H - ARCH;
+export const SPRING = BOTTOM + H - ARCH;
 const BORDER = 0.15;
 const FILLET = 0.03;
 
@@ -165,7 +165,7 @@ function kept(list: Pt[], keep: (p: Pt) => boolean): Pt[] {
   return out;
 }
 
-const circle = (c: Pt, r: number, steps = 28): Pt[] => arc(c[0], c[1], r, 0, Math.PI * 2, steps).slice(0, steps);
+export const circle = (c: Pt, r: number, steps = 28): Pt[] => arc(c[0], c[1], r, 0, Math.PI * 2, steps).slice(0, steps);
 
 /** A leaf's outline: a midrib that bends a little, and a width that swells and tapers to a point. */
 function leafOutline(f: LeafFrame): Pt[] {
@@ -184,12 +184,22 @@ function leafOutline(f: LeafFrame): Pt[] {
   return [...right, ...left.reverse().slice(1)];
 }
 
-export function vineWindow(days: number, seed: string): Design {
-  const rand = seeded(seed + ":vine");
-  const pieces: Piece[] = [];
-  const piece = (p: Omit<Piece, "tone" | "grain"> & { grain?: number }) =>
-    pieces.push({ tone: rand(), grain: p.grain ?? (rand() - 0.5) * 0.6 + Math.PI / 2, ...p });
+/** Adds one piece of glass to a window being cut (its tone and, unless given, its grain at random). */
+export type Cut = (p: Omit<Piece, "tone" | "grain"> & { grain?: number }) => void;
 
+/** A window being cut: its pieces, and how to add one. */
+export function cutter(rand: () => number) {
+  const pieces: Piece[] = [];
+  const piece: Cut = (p) => void pieces.push({ tone: rand(), grain: p.grain ?? (rand() - 0.5) * 0.6 + Math.PI / 2, ...p });
+  return { pieces, piece };
+}
+
+/**
+ * What every month's window shares: the lancet's border of deep glass with a jewel in every third
+ * length, the pale fillet inside it, and the night sky in the head of the arch with its moon and a
+ * few stars. Returns the field below the sky, where the month's motif goes.
+ */
+export function lancetFrame(rand: () => number, piece: Cut) {
   // The border: deep glass cut in short lengths, a round jewel set in every third.
   const centerline = BORDER / 2;
   const segs = 46;
@@ -247,6 +257,37 @@ export function vineWindow(days: number, seed: string): Design {
   stars.forEach((c, i) => {
     if (edgeDistance(c, head) > 0.09) piece({ key: `star-${i}`, kind: "star", points: circle(c, 0.04 + 0.018 * ((i * 7) % 3), 16) });
   });
+  return { main, fieldBottom, headY, moon: { c: moonC, r: moonR } };
+}
+
+/** The pale glass behind a motif, cut in irregular pieces like old cathedral glass. */
+export function cathedralGround(rand: () => number, piece: Cut, main: Pt[], fieldBottom: number, headY: number) {
+  const groundSeeds: Pt[] = [];
+  const step = 0.34;
+  for (let y = fieldBottom + step / 2; y < headY; y += step) {
+    for (let x = -W / 2 + step / 2; x < W / 2; x += step * 1.1) {
+      const p: Pt = [x + (rand() - 0.5) * step * 0.9, y + (rand() - 0.5) * step * 0.9];
+      if (inside(p, main)) groundSeeds.push(p);
+    }
+  }
+  voronoi(relax(groundSeeds, main, 2), main).forEach((cell, i) => {
+    if (cell.length > 2) piece({ key: `ground-${i}`, kind: "ground", points: cell, grain: Math.PI / 2 + (rand() - 0.5) * 0.5 });
+  });
+}
+
+/** Puts the pieces in paint order (what's behind first) and completes the design. */
+export function finishDesign(pieces: Piece[], moon: Design["moon"]): Design {
+  const order: PieceKind[] = ["ground", "sky", "stem", "bud", "night", "sun", "moon", "star", "fillet", "border", "jewel"];
+  pieces.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
+  const bars = [0.2, 0.42, 0.64].map((f) => BOTTOM + (SPRING - BOTTOM) * f);
+  return { width: W, height: H, outline: lancetOutline(0, 200), pieces, bars, moon };
+}
+
+/** November's window: a vine climbing the lancet, a leaf per night. */
+export function vineWindow(days: number, seed: string): Design {
+  const rand = seeded(seed + ":vine");
+  const { pieces, piece } = cutter(rand);
+  const { main, fieldBottom, headY, moon } = lancetFrame(rand, piece);
 
   // The vine: a stem that sways up the middle, cut in lengths, with a bud at the tip.
   const stemTop = headY - 0.22;
@@ -334,23 +375,7 @@ export function vineWindow(days: number, seed: string): Design {
   }
   leaves.forEach((l, i) => piece({ key: `night-${i + 1}`, kind: "night", day: i + 1, points: l.points, leaf: l.frame, grain: l.frame.angle }));
 
-  // The pale glass behind it all, cut in irregular pieces like old cathedral glass.
-  const groundSeeds: Pt[] = [];
-  const step = 0.34;
-  for (let y = fieldBottom + step / 2; y < headY; y += step) {
-    for (let x = -W / 2 + step / 2; x < W / 2; x += step * 1.1) {
-      const p: Pt = [x + (rand() - 0.5) * step * 0.9, y + (rand() - 0.5) * step * 0.9];
-      if (inside(p, main)) groundSeeds.push(p);
-    }
-  }
-  voronoi(relax(groundSeeds, main, 2), main).forEach((cell, i) => {
-    if (cell.length > 2) piece({ key: `ground-${i}`, kind: "ground", points: cell, grain: Math.PI / 2 + (rand() - 0.5) * 0.5 });
-  });
-
-  // Paint order, back to front: what's behind gets covered by what's in front of it.
-  const order: PieceKind[] = ["ground", "sky", "stem", "bud", "night", "moon", "star", "fillet", "border", "jewel"];
-  pieces.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
-
-  const bars = [0.2, 0.42, 0.64].map((f) => BOTTOM + (SPRING - BOTTOM) * f);
-  return { width: W, height: H, outline: lancetOutline(0, 200), pieces, bars, moon: { c: moonC, r: moonR } };
+  // The pale glass behind it all.
+  cathedralGround(rand, piece, main, fieldBottom, headY);
+  return finishDesign(pieces, moon);
 }

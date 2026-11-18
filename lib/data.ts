@@ -37,10 +37,26 @@ export type RitualStep = {
   guide?: { breaths: number; inhale: number; exhale: number };
 };
 
+/** A month's window design (lib/designs.ts). */
+export type DesignName = "vine" | "rose" | "sunburst";
+
+/** A month already done: its window stays as it was, on the wall. */
+export type PastMonth = {
+  month: string;
+  intention: string;
+  palette: string[];
+  design: DesignName;
+  nights: Night[];
+};
+
 export type DailyGoal = {
   goal: string;
   /** "YYYY-MM": the month this window belongs to. */
   month: string;
+  /** This month's window design. */
+  design: DesignName;
+  /** The months before, oldest first: the wall of windows. */
+  past: PastMonth[];
   /** What the person chose this month to be about. It sets the palette. */
   intention: string;
   /** This month's glass colors. */
@@ -54,6 +70,13 @@ export type DailyGoal = {
 
 export function getDailyGoal(): DailyGoal {
   return sample as DailyGoal;
+}
+
+/** A past month as a finished month: every night is behind it. */
+export function finishedMonth(goal: DailyGoal, past: PastMonth): DailyGoal {
+  const [y, m] = past.month.split("-").map(Number);
+  const days = new Date(y, m, 0).getDate();
+  return { ...goal, ...past, today: `${past.month}-${String(days + 1).padStart(2, "0")}` };
 }
 
 // Dates are plain "YYYY-MM-DD" strings, read at noon so no time zone can move them a day.

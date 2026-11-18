@@ -31,6 +31,7 @@ import { ToneMappingMode } from "postprocessing";
 import type { DailyGoal } from "@/lib/data";
 import type { Sky } from "@/lib/sky";
 import { timed } from "@/lib/perf";
+import { centroid } from "@/lib/geometry";
 import { leafMid } from "@/lib/vine";
 import { buildWindow, type WindowModel } from "@/lib/window-model";
 import FlatWindow from "./FlatWindow";
@@ -63,7 +64,7 @@ function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled,
   const focus = useMemo(() => {
     const pane = spotlight ? model.panes.find((p) => p.kind === "night" && p.day === spotlight) : undefined;
     if (!pane) return null;
-    return pane.leaf ? leafMid(pane.leaf, 0.5) : pane.points[0];
+    return pane.leaf ? leafMid(pane.leaf, 0.5) : centroid(pane.points);
   }, [model, spotlight]);
   return (
     <>
