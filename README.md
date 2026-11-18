@@ -197,7 +197,12 @@ Measured on the production build, as a mid-range phone (390×844 at 3×, the CPU
 - Patterns from the heavy days ("heavy days cluster on Fridays"), as a gentle way to spot triggers.
 - Drinking less, not only none: a nightly limit you choose (two drinks, say), with nights within it set in color.
 - On the night someone comes back after a drink, an optional "what got in the way?", a light version of how CBT looks at a lapse.
-- A way to reach a person (a coach, a helpline) from the night of a drink, for when it's more than a slip.
+- **Support for when it's more than a slip,** the first thing I'd build next. The rule: never scan what people write, always offer a way to a person.
+  - At sign-up, a short screening (AUDIT-C or similar) for heavy daily drinking, where stopping all at once can be medically dangerous. It points to a doctor, or to drinking less before stopping.
+  - On the night of a drink, a quiet "Need someone tonight?" under the line, always in the same place, never a pop-up.
+  - When the pattern says so (several nights with a drink in a row, heavy days piling up, check-ins that stop after a drink), a gentle question the next evening, with "Not now" as easy to tap as yes.
+  - One tap to a person you chose ahead of time, to a coach if the service has one, or to the helplines for your country.
+  - No alerts to anyone without consent, the diary stays on the device, and no chatbot playing therapist. The copy and the thresholds would be reviewed by a clinician, and judged on whether the people who open it come back.
 
 ## Tools, AI included
 
