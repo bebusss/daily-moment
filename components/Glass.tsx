@@ -1,5 +1,5 @@
-// A single piece of leaded glass as a UI swatch: how heavy a day was, shown the
-// same way the window shows it (light days pale, heavy days deep).
+// A single piece of leaded glass as a UI swatch: how hard a day was, shown the
+// same way the window shows it (easy days pale, hard days deep).
 
 import type { Weight } from "@/lib/data";
 

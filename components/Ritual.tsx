@@ -6,7 +6,7 @@
 //   0. was today alcohol-free? Yes, or "I had a drink";
 //   1. three slow breaths, paced on screen. They start by themselves, and "Skip" is always there:
 //      nothing to tick off, the leaf comes from the answer, not from chores;
-//   2. how heavy today was (one tap: it sets how deep tonight's glass is),
+//   2. how hard today was (one tap: it sets how deep tonight's glass is),
 //   3. one optional line, answering one question chosen by the night (lib/data: firstQuestion),
 //      with "Another question" if it doesn't fit. No categories to pick from.
 // After "I had a drink" the dimming lifts: the whole month's window, every leaf before tonight
@@ -199,8 +199,8 @@ export default function Ritual({ goal, onClose, onLog, onPhase, onDone }: Props)
           <Breaths key="breaths" {...breaths} onDone={() => setStep(2)} />
         ) : step === 2 ? (
           <section key="weight" className="flex flex-1 flex-col justify-end animate-rise">
-            <h2 className="font-display text-[28px] leading-tight">How heavy was today?</h2>
-            {!drank && <p className="mt-2 text-sm text-mist">Heavier days set darker glass.</p>}
+            <h2 className="font-display text-[28px] leading-tight">How hard was today?</h2>
+            {!drank && <p className="mt-2 text-sm text-mist">Harder days set darker glass.</p>}
             <div className="mt-6 grid grid-cols-3 gap-2.5">
               {([1, 2, 3] as Weight[]).map((w) => (
                 <button

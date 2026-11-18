@@ -70,12 +70,12 @@ Why it fits the business: a streak gets more fragile the longer it runs. A windo
 
 | | |
 |---|---|
-| **Alcohol-free** | Colored glass, darker on heavier days |
+| **Alcohol-free** | Colored glass, darker on harder days |
 | **A drink, or no check-in** | Stays clear glass. Light still passes. A forgotten night can be filled in later |
 | **Back** | The next alcohol-free night mends it: gold lead, soldered as you watch |
 | **Monthly** | A new window every month, in a new design. The finished ones hang together on a wall |
 
-Every evening, around the hour the drink used to come, the app asks one thing: was today alcohol-free? Then three slow breaths, paced on screen, "how heavy was today?" (light, normal or heavy: how hard the day felt), and an optional one-line note, which turns the window into a diary in your own words. It asks as little as it can: there's nothing to tick off, and the breaths can be skipped.
+Every evening, around the hour the drink used to come, the app asks one thing: was today alcohol-free? Then three slow breaths, paced on screen, "how hard was today?" (easy, normal or hard), and an optional one-line note, which turns the window into a diary in your own words. It asks as little as it can: there's nothing to tick off, and the breaths can be skipped.
 
 **The night of a drink gets the most care,** because it's where people leave. The view pulls back to the whole month, every leaf before tonight still in color, and one line: "One night doesn't undo the others." Then the breaths and the note, as on any night. Nothing is said about gold or about tomorrow. The mend is found, not promised: the next alcohol-free night, its gold is soldered while you watch.
 
@@ -117,7 +117,7 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 3. **Was today alcohol-free?** Two equal answers, "Yes" and "I had a drink", so the honest one is never the harder one to tap.
 4. **After "I had a drink",** the dimming lifts: the whole month, every leaf before tonight still in color, and "One night doesn't undo the others." Then the breaths, as on any night.
 5. **Three slow breaths,** paced on screen. They start by themselves, and "Skip" is always there.
-6. **How heavy was today?** One tap: light, normal or heavy. Heavier days set darker glass.
+6. **How hard was today?** One tap: easy, normal or hard. Harder days set darker glass.
 7. **A one-line note, if you want,** answering one question chosen by the night: "What went right today?"; after a drink, "What did you try today?" ("Stopped at one."); and on the night you come back, "What did you handle better than before?". "Another question" if it doesn't fit.
 8. **Tonight's leaf is set.** The view moves in to it while it fills with color. Then the mend gets a moment of its own. The card steps away, and the view goes to each clear night this check-in mended, in turn, oldest first: a hot point runs round the leaf, sparks fly, and the lead cools to gold behind it. Once the first gold is laid, one quote about falling and getting up, from a small hand-picked set, a different one each time: Hemingway's "strong at the broken places", Leonard Cohen's "There is a crack in everything. That's how the light gets in", Helen Keller, Oliver Goldsmith, Mary Anne Radmacher, a Japanese proverb. Each was checked against its source, wording and author. Then the slow way back to the whole month, and tomorrow's leaf starts to glow faintly.
 9. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A night with a drink shows its note and the night that mended it, and its gold is soldered again.
@@ -188,14 +188,14 @@ Measured on the production build, as a mid-range phone (390×844 at 3×, the CPU
 
 **Next, in this order**
 
-1. **Support for when it's more than a slip.** Safety comes first. At sign-up, a short screening (AUDIT-C or similar) for heavy daily drinking, where stopping all at once can be medically dangerous: it points to a doctor, or to drinking less before stopping. On the night of a drink, a quiet "Need someone tonight?" under "One night doesn't undo the others", always in the same place, never a pop-up. When the pattern says so (several nights with a drink in a row, heavy days piling up, check-ins that stop after a drink), a gentle question the next evening, with "Not now" as easy to tap as yes. One tap to a person you chose ahead of time, to a coach if the service has one, or to the helplines for your country. The rule: never scan what people write, always offer a way to a person. No alerts to anyone without consent, the diary stays on the device, and no chatbot playing therapist. The copy and the thresholds would be reviewed by a clinician.
+1. **Support for when it's more than a slip.** Safety comes first. At sign-up, a short screening (AUDIT-C or similar) for heavy daily drinking, where stopping all at once can be medically dangerous: it points to a doctor, or to drinking less before stopping. On the night of a drink, a quiet "Need someone tonight?" under "One night doesn't undo the others", always in the same place, never a pop-up. When the pattern says so (several nights with a drink in a row, hard days piling up, check-ins that stop after a drink), a gentle question the next evening, with "Not now" as easy to tap as yes. One tap to a person you chose ahead of time, to a coach if the service has one, or to the helplines for your country. The rule: never scan what people write, always offer a way to a person. No alerts to anyone without consent, the diary stays on the device, and no chatbot playing therapist. The copy and the thresholds would be reviewed by a clinician.
 2. **"Having a craving?"**, my proposal for the live session. The drink happens at 7 pm, not at the 11 pm check-in, so this is a quiet line on the home card, never a notification. It opens urge surfing, Marlatt's own technique and the core of mindfulness-based relapse prevention (Bowen, Chawla and Marlatt; in a 2014 trial it cut drug use and heavy drinking at 12 months more than standard relapse prevention or usual care): the craving watched as a wave that rises and passes, with the breaths and the month's window as the anchor, then "Did it pass?". "Still here" offers more time, or "Need someone tonight?". It closes the circle on the same model: before the drink (the craving), the slip (the mend), and the confidence (the nightly note). It reuses the breaths, the window and the camera.
 
 **Later**
 
 3. **Drinking less, not only none:** a nightly limit you choose (two drinks, say), with nights within it set in color.
 4. **"What got in the way?"** as an option on the night someone comes back after a drink: a light version of how CBT looks at a lapse.
-5. **Patterns,** from heavy days and from cravings ("heavy days cluster on Fridays", "the cravings come at 7 pm"), as a gentle way to spot triggers.
+5. **Patterns,** from hard days and from cravings ("hard days cluster on Fridays", "the cravings come at 7 pm"), as a gentle way to spot triggers.
 6. **The Plus crafts built for real** (mosaic, tapestry, vase); they're mocks for now.
 7. **The month's colors** picked from the goal you set, or from your favorite color.
 8. **The full year on the wall,** and a print of a finished window.

@@ -3,10 +3,10 @@
 
 import sample from "@/data/sample.json";
 
-/** How heavy the day felt: 1 light, 2 normal, 3 heavy. Heavier days make deeper glass. */
+/** How hard the day felt: 1 easy, 2 normal, 3 hard. Harder days make deeper glass. */
 export type Weight = 1 | 2 | 3;
 
-export const WEIGHTS: Record<Weight, string> = { 1: "Light day", 2: "Normal day", 3: "Heavy day" };
+export const WEIGHTS: Record<Weight, string> = { 1: "Easy day", 2: "Normal day", 3: "Hard day" };
 
 /**
  * The night's one line: small proof of what you can do, banked every night. In Marlatt's

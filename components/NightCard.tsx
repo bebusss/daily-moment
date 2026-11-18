@@ -1,5 +1,5 @@
 // What the open night says, under the month row: tonight (what there is to do, or how it went
-// once it's checked in), or a past night (how heavy it was and its line; for a night with a
+// once it's checked in), or a past night (how hard it was and its line; for a night with a
 // drink, also the night that mended it).
 
 import Glass from "@/components/Glass";

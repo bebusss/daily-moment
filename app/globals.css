@@ -42,7 +42,7 @@
   }
 }
 
-/* How heavy a day was, as glass: light days are pale, heavy days are deep.
+/* How hard a day was, as glass: easy days are pale, hard days are deep.
    "static" keeps them in the CSS even though only inline styles (components/Glass) read them. */
 @theme static {
   --color-glass-1: #f2d39d;

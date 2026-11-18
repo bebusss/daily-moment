@@ -3,7 +3,7 @@
 // 3D, components/FlatWindow as the flat fallback) only draw it.
 //
 // One leaf per night on a vine that climbs the window:
-// - an alcohol-free night is a leaf of colored glass, deeper the heavier the day was;
+// - an alcohol-free night is a leaf of colored glass, deeper the harder the day was;
 // - a night with a drink (or no check-in) is a leaf of clear glass: it stays, light passes through it;
 // - the next alcohol-free night mends it: its lead turns gold (never before, never announced);
 // - tonight's leaf waits, lit from within; the nights to come are pale, uncolored glass;
@@ -47,7 +47,7 @@ export const daysIn = (month: string) => {
   return new Date(y, m, 0).getDate();
 };
 
-/** Heavy days are deep, rich glass; light days are paler. */
+/** Hard days are deep, rich glass; easy days are paler. */
 const DEPTH: Record<Weight, { shade: number; sat: number }> = {
   3: { shade: -0.24, sat: 1.25 },
   2: { shade: -0.06, sat: 1.15 },
