@@ -122,7 +122,7 @@ Identity wording has strong lab results and mixed field replications, which is e
 
 <p>
 <img src="docs/screens/9-your-windows.jpg" width="190" alt="Your windows: September's rose, October's sunburst, November's vine, December still to choose">
-<img src="docs/screens/10-next-window.jpg" width="190" alt="December's piece: the window is free, a mosaic, a tapestry or a kintsugi vase are Plus">
+<img src="docs/screens/10-next-window.jpg" width="190" alt="December's piece: the window is free, a mosaic, a tapestry or a vase are Plus">
 </p>
 
 ## Decisions
@@ -143,9 +143,9 @@ Identity wording has strong lab results and mixed field replications, which is e
 The month is the unit of everything. Each piece takes a month, and each month is a billing cycle, so the three cycles the business needs are three pieces on your wall.
 
 - **Free:** the nightly ritual, a new window every month from the house rotation, and your whole record and wall, forever.
-- **Plus (the subscription, monthly or yearly):** choose next month's craft. Every craft keeps the same idea, a mark per night and a visible mend after a miss, in its own tradition: a **mosaic** (bare grout, then a gold tile), a **tapestry** (a gap darned in gold thread, like boro) or a **kintsugi** vase (shards joined with gold). These are mocks: only the window is built.
+- **Plus (the subscription, monthly or yearly):** choose next month's craft: a **mosaic**, a **tapestry** or a **vase**, each a little a night. In the app each is described only by what you'd expect. How it mends a missed night is a surprise you find the first time you come back, in its own tradition: a gold tile in the grout, a gap darned in gold thread (like boro), and for the vase, kintsugi. These are mocks: only the window is built.
 - **When it's offered:** on the 1st, when a piece is finished and the next one starts. Never at night, never during the ritual.
-- **Why the window is the free default and kintsugi isn't:** kintsugi is the metaphor everyone knows. For some people it's poetic, so it's there to choose, but as the default it would feel borrowed. The mending lead is this app's own version of it.
+- **Why the window is the free default and the vase isn't:** the vase's mend is kintsugi, the metaphor everyone knows. For some people it's poetic, so it's there to choose, but as the default it would feel borrowed. The mending lead is this app's own version of it.
 - Prices would be a test, judged on month-3 retention, not a guess written here.
 
 ## Tonight's sky: two public REST APIs
