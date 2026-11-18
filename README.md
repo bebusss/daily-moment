@@ -13,7 +13,7 @@ Each alcohol-free night of the month sets one leaf of a stained-glass window. A 
 
 **Contents:** [The brief, read as a business](#1-the-brief-read-as-a-business) · [What brings people back](#2-what-brings-people-back-and-how-each-one-fails) · [The bet](#3-the-bet) · [The concept](#4-the-concept) · [How I'd know it works](#5-how-id-know-it-works) · [The screen, step by step](#the-screen-step-by-step) · [Decisions](#decisions) · [Pricing](#pricing) · [Tonight's sky (REST)](#tonights-sky-three-public-rest-apis) · [Performance](#performance) · [Not built, written down](#not-built-written-down) · [Tools, AI included](#tools-ai-included) · [Where things live](#where-things-live) · [The original brief](#the-original-brief)
 
-**Short on time?** Sections 1 to 5 are the whole case. The same five sections also exist as [a short deck](https://claude.ai/artifact/7GmmF1yVZMWkXMUAfoFPeU), entirely optional: it says nothing that isn't here.
+**Short on time?** Sections 1 to 5 are the whole case.
 
 ---
 
