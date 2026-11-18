@@ -19,14 +19,14 @@ type Step = 0 | 1 | 2 | 3;
 type Props = {
   goal: DailyGoal;
   onClose: () => void;
-  /** The window shows through while the person looks at it (after "I had a drink"). */
-  onReveal: (shown: boolean) => void;
+  /** Where the check-in is, for the window behind it: the question, after a drink, or the wind-down. */
+  onPhase: (phase: "ask" | "held" | "wind") => void;
   onDone: (night: { weight: Weight; note: string; line: LineKind; drank: boolean }) => void;
 };
 
 const BREATHS = { breaths: 3, inhale: 4, exhale: 6 };
 
-export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
+export default function Ritual({ goal, onClose, onPhase, onDone }: Props) {
   const [step, setStep] = useState<Step>(0);
   const [drank, setDrank] = useState(false);
   const [held, setHeld] = useState(false);
@@ -37,12 +37,15 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
 
   const hold = (on: boolean) => {
     setHeld(on);
-    onReveal(on);
+    onPhase(on ? "held" : "ask");
   };
   const back = () => {
     if (held) hold(false);
     else if (step === 0) onClose();
-    else setStep((s) => (s - 1) as Step);
+    else {
+      if (step === 1) onPhase("ask");
+      setStep((s) => (s - 1) as Step);
+    }
   };
   const first = step === 0 && !held;
 
@@ -58,7 +61,7 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
       {/* While the window shows through, the night still covers the bottom, where the words sit. */}
       <div
         aria-hidden
-        className={`pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,var(--color-night)_0%,rgb(18_13_10/0.94)_34%,transparent_58%)] transition-opacity duration-1000 ${held ? "opacity-100" : "opacity-0"}`}
+        className={`pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,var(--color-night)_0px,rgb(18_13_10/0.92)_230px,transparent_320px)] transition-opacity duration-1000 ${held ? "opacity-100" : "opacity-0"}`}
       />
       <div className="relative mx-auto flex h-full max-w-[430px] flex-col px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-between">
@@ -82,15 +85,16 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
         {held ? (
           // The night someone had a drink: the month they've built, still there, and one true line.
           <section key="held" className="flex flex-1 flex-col justify-end">
-            <p className="animate-rise font-display text-[30px] leading-snug text-ink [animation-delay:0.9s] [animation-duration:1.2s] [animation-fill-mode:both]">
+            <p className="animate-rise font-display text-[30px] leading-snug text-ink [animation-delay:2.3s] [animation-duration:1.4s] [animation-fill-mode:both]">
               One night doesn&apos;t undo the others.
             </p>
             <button
               onClick={() => {
-                hold(false);
+                setHeld(false);
+                onPhase("wind");
                 setStep(1);
               }}
-              className="btn-primary mt-8 animate-fade [animation-delay:2.2s] [animation-duration:0.8s] [animation-fill-mode:both]"
+              className="btn-primary mt-8 animate-fade [animation-delay:3.5s] [animation-duration:0.8s] [animation-fill-mode:both]"
             >
               Wind down
             </button>
@@ -104,6 +108,7 @@ export default function Ritual({ goal, onClose, onReveal, onDone }: Props) {
                 onClick={() => {
                   setDrank(false);
                   setLine(firstQuestion(goal, false));
+                  onPhase("wind");
                   setStep(1);
                 }}
                 className="btn-quiet"

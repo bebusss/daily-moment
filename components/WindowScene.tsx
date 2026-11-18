@@ -54,9 +54,10 @@ type SceneProps = {
   insets: Insets;
   lite: boolean;
   weather?: Sky["weather"];
+  slow?: boolean;
 };
 
-function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled, weather }: SceneProps) {
+function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled, weather, slow }: SceneProps) {
   const { textures, paneAt } = useWindowTextures(model);
   const sun = useSun(model, textures);
   const still = useMedia("(prefers-reduced-motion: reduce)");
@@ -69,7 +70,7 @@ function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled,
   return (
     <>
       <color attach="background" args={["#0b0806"]} />
-      <Rig model={model} insets={insets} focus={focus} still={still} />
+      <Rig model={model} insets={insets} focus={focus} still={still} slow={slow} />
       <FirstFrame />
       <hemisphereLight args={["#6a4c38", "#0a0604", 0.5]} />
       {/* The glow of the glass, lighting the stone around it from inside the opening. */}
@@ -85,7 +86,16 @@ function Scene({ model, selected, spotlight, onSelect, insets, lite, onCompiled,
       <primitive object={sun.light} />
       <primitive object={sun.light.target} />
       <Wall model={model} stoneSize={lite ? STONE_LITE : STONE_FULL} />
-      <Glass model={model} textures={textures} paneAt={paneAt} selected={selected} spotlight={Boolean(spotlight)} still={still} weather={weather} onSelect={onSelect} />
+      <Glass
+        model={model}
+        textures={textures}
+        paneAt={paneAt}
+        selected={selected}
+        spotlight={Boolean(spotlight)}
+        still={still}
+        weather={weather}
+        onSelect={onSelect}
+      />
       <Bars model={model} />
       <Air sun={sun} model={model} slices={lite ? 14 : 26} clouds={weather?.clouds ?? 0} />
       <Dust sun={sun} model={model} />
@@ -159,6 +169,7 @@ export default function WindowScene({
   insets = { top: 0, bottom: 0 },
   paused = false,
   sky = {},
+  slow = false,
 }: {
   goal: DailyGoal;
   label: string;
@@ -172,6 +183,8 @@ export default function WindowScene({
   paused?: boolean;
   /** Tonight's real sky (lib/sky): the moon's phase, and the weather on the glass. */
   sky?: Sky;
+  /** Move the view slowly (the pull back to the whole month after a drink). */
+  slow?: boolean;
 }) {
   const lite = useLite();
   const [model, setModel] = useState<WindowModel | null>(null);
@@ -205,7 +218,17 @@ export default function WindowScene({
               gl.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
             }}
           >
-            <Scene model={model} selected={selected} spotlight={spotlight} onSelect={onSelect} insets={insets} lite={lite} onCompiled={reveal} weather={sky.weather} />
+            <Scene
+              model={model}
+              selected={selected}
+              spotlight={spotlight}
+              onSelect={onSelect}
+              insets={insets}
+              lite={lite}
+              onCompiled={reveal}
+              weather={sky.weather}
+              slow={slow}
+            />
             {lite && drawing && <Pace fps={30} />}
             {drawing && <Adapt frameMs={lite ? 1000 / 30 : 1000 / 60} />}
           </Canvas>

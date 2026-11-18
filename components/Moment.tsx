@@ -17,6 +17,11 @@ import { useSky } from "@/lib/sky";
 import { forgetNight, saveNight, useSavedNight } from "@/lib/tonight";
 import { nightLooks } from "@/lib/window-model";
 
+type Phase = "ask" | "held" | "wind";
+
+/** How much of the screen the words take after "I had a drink": the window gets the rest. */
+const HELD_WORDS = 290;
+
 // The 3D window (three.js and its effects, most of the page's code) loads on its own, after the
 // screen around it already responds; it fades in when it's ready.
 const WindowScene = dynamic(() => import("@/components/WindowScene"), { ssr: false });
@@ -71,8 +76,10 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   // The open night in the shown month; 0 is none (a past month just opened shows the whole window).
   const [selected, setSelected] = useState(today);
   const [ritual, setRitual] = useState(false);
-  // During the check-in, the window can show through (after "I had a drink").
-  const [revealed, setRevealed] = useState(false);
+  // Where the check-in is, for the window behind it: the question (the view moves in to tonight's
+  // leaf, under the dimming), after "I had a drink" (the dimming lifts and the view pulls back to the
+  // whole month), or the wind-down itself (the window rests, not drawn).
+  const [phase, setPhase] = useState<Phase>("ask");
   // After an alcohol-free night is set: the clear night it mended, while the view goes to it.
   const [mending, setMending] = useState<number | null>(null);
   // ...and until its gold is soldered, the row of nights still shows it clear.
@@ -115,7 +122,6 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
     saveNight(night);
     setSelected(today);
     setRitual(false);
-    setRevealed(false);
     if (drank) return;
     setSettling(true);
     const latest = mends.at(-1);
@@ -133,7 +139,15 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   }
 
   /** The night the window brings forward: a past night that's open, tonight's leaf as it's set, or the night it mended. */
-  const spotlight = viewing ? selected || null : (mending ?? (selected !== today ? selected : settling ? today : null));
+  const spotlight = viewing
+    ? selected || null
+    : ritual
+      ? phase === "ask"
+        ? today
+        : null
+      : (mending ?? (selected !== today ? selected : settling ? today : null));
+  // After "I had a drink" the window takes the room the card leaves, above the words.
+  const held = ritual && phase === "held";
 
   return (
     <main className="relative h-dvh w-full overflow-hidden">
@@ -143,8 +157,9 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
         selected={(mending ?? selected) || undefined}
         spotlight={spotlight}
         onSelect={select}
-        insets={insets}
-        paused={ritual && !revealed}
+        insets={held ? { top: insets.top, bottom: HELD_WORDS } : insets}
+        paused={ritual && phase === "wind"}
+        slow={held}
         // A past month keeps its own moon; the weather is tonight's, wherever you look.
         sky={viewing ? { weather: sky.weather } : sky}
       />
@@ -180,7 +195,10 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
                 key={`${shown.month}-${selected}-${shown.nights.length}`}
                 goal={shown}
                 day={selected}
-                onBegin={() => setRitual(true)}
+                onBegin={() => {
+                  setPhase("ask");
+                  setRitual(true);
+                }}
                 onBack={() => open(goal.month)}
               />
             ) : (
@@ -210,17 +228,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
         </section>
       </div>
 
-      {ritual && (
-        <Ritual
-          goal={goal}
-          onClose={() => {
-            setRitual(false);
-            setRevealed(false);
-          }}
-          onReveal={setRevealed}
-          onDone={checkIn}
-        />
-      )}
+      {ritual && <Ritual goal={goal} onClose={() => setRitual(false)} onPhase={setPhase} onDone={checkIn} />}
       {windows && <Windows goal={goal} shown={shown.month} onOpen={open} onClose={() => setWindows(false)} />}
     </main>
   );

@@ -19,9 +19,9 @@ export const ZOOM = 2.1;
  * Framing: the window (arch to ledge) as big as fits between the text above and the card below.
  * With a past night open, the view glides in to its leaf and centers it there instead.
  */
-export function Rig({ model, insets, focus, still }: { model: WindowModel; insets: Insets; focus: Pt | null; still: boolean }) {
+export function Rig({ model, insets, focus, still, slow = false }: { model: WindowModel; insets: Insets; focus: Pt | null; still: boolean; slow?: boolean }) {
   const size = useThree((s) => s.size);
-  const view = useRef<{ x: number; y: number; zoom: number } | null>(null);
+  const view = useRef<{ x: number; y: number; zoom: number; fit: number; middle: number } | null>(null);
   useFrame(({ camera }, delta) => {
     const cam = camera as THREE.PerspectiveCamera;
     const tan = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
@@ -34,17 +34,22 @@ export function Rig({ model, insets, focus, still }: { model: WindowModel; inset
     const free = Math.max(size.height - insets.top - insets.bottom, size.height * 0.4);
     // Pixels per scene unit: fill the free band, unless the width runs out first.
     const fit = Math.min((free * 0.96) / contentH, (size.width * 0.94) / contentW);
-    // Where to look and how close: the whole window, or the open night's leaf.
-    const target = focus ? { x: focus[0], y: focus[1], zoom: ZOOM } : { x: 0, y: (above - below) / 2, zoom: 1 };
+    // Where to look and how close: the whole window, or the open night's leaf. The free band
+    // eases too, so the window grows or shrinks smoothly when the UI around it changes.
+    const middle = insets.top + free / 2;
+    const target = focus ? { x: focus[0], y: focus[1], zoom: ZOOM, fit, middle } : { x: 0, y: (above - below) / 2, zoom: 1, fit, middle };
     const v = view.current ?? (view.current = { ...target });
-    const ease = still ? 1 : 1 - Math.exp(-delta * 3);
+    // Slow: the long pull back to the whole month after a drink, seen as the dimming lifts.
+    const ease = still ? 1 : 1 - Math.exp(-delta * (slow ? 0.85 : 3));
     v.x += (target.x - v.x) * ease;
     v.y += (target.y - v.y) * ease;
     v.zoom += (target.zoom - v.zoom) * ease;
-    const k = fit * v.zoom;
+    v.fit += (target.fit - v.fit) * ease;
+    v.middle += (target.middle - v.middle) * ease;
+    const k = v.fit * v.zoom;
     const distance = size.height / k / (2 * tan);
     // Put that point on the free band's middle.
-    const offset = (size.height / 2 - (insets.top + free / 2)) / k;
+    const offset = (size.height / 2 - v.middle) / k;
     const look = v.y - offset;
     const tilt = 0.5 / v.zoom;
     if (Math.abs(cam.position.z - distance) > 1e-4 || Math.abs(cam.position.y - (look - tilt)) > 1e-4 || Math.abs(cam.position.x - v.x) > 1e-4) {
