@@ -34,8 +34,8 @@ const MEDIUMS: Medium[] = [
   { id: "vase", name: "Vase", plus: true, how: "A vase you paint a little each night, a band at a time." },
 ];
 
-/** December's palette for the previews: winter jewels. */
-const DECEMBER = ["#3a6fb8", "#2f8f7a", "#b8424a", "#7a5cc0", "#d6a23a", "#5b9bd5"];
+/** December's palette for the previews: muted winter jewels (teal, lapis, plum, garnet, ochre, sage). */
+const DECEMBER = ["#2c5d6b", "#2a3f7a", "#6b3a5e", "#9a3b38", "#c49040", "#6f8a64"];
 
 type Props = { goal: DailyGoal; shown: string; onOpen: (month: string) => void; onClose: () => void };
 
