@@ -1,6 +1,6 @@
-// What the open night says, under the month row: tonight (what there is to do, or how
-// it went once it's set), or a past night (how heavy it was and its line, or a night with
-// no wind-down and the night that mended it).
+// What the open night says, under the month row: tonight (what there is to do, or how it went
+// once it's checked in), or a past night (how heavy it was and its line; for a night with a
+// drink, also the night that mended it).
 
 import Glass from "@/components/Glass";
 import { dateOf, dayOf, LINES, shortDate, WEIGHTS, type DailyGoal } from "@/lib/data";
@@ -12,32 +12,42 @@ export default function NightCard({ goal, day, onBegin, onBack }: Props) {
   const night = goal.nights[day - 1];
   const date = dateOf(goal.month, day);
   const done = goal.nights.filter((n) => n.done).length;
+  const tonight = day === today;
 
-  const head =
-    day === today ? (
-      <>
-        <span>Tonight · {shortDate(date)}</span>
-        <span className="tracking-normal normal-case">
-          {done} of {goal.nights.length} nights
-        </span>
-      </>
-    ) : (
-      <>
-        <span>{shortDate(date)}</span>
-        <button onClick={onBack} className="-my-2 -mr-2 rounded-full px-2 py-2 tracking-normal text-ink normal-case">
-          Back to tonight
-        </button>
-      </>
-    );
+  const head = tonight ? (
+    <>
+      <span>Tonight · {shortDate(date)}</span>
+      <span className="tracking-normal normal-case">
+        {done} of {goal.nights.length} alcohol-free
+      </span>
+    </>
+  ) : (
+    <>
+      <span>{shortDate(date)}</span>
+      <button onClick={onBack} className="-my-2 -mr-2 rounded-full px-2 py-2 tracking-normal text-ink normal-case">
+        Back to tonight
+      </button>
+    </>
+  );
+
+  // The night's own line, as the person wrote it.
+  const said = night?.note && (
+    <p className="mt-3 font-display text-xl leading-snug text-ink italic">
+      {night.note}
+      {night.line && (
+        <span className="ml-2 align-middle font-sans text-[11px] tracking-[0.16em] text-gold not-italic uppercase">{LINES[night.line].label}</span>
+      )}
+    </p>
+  );
 
   let body;
-  if (day === today && !night) {
+  if (tonight && !night) {
     body = (
       <>
-        <h2 className="mt-2 font-display text-xl leading-snug text-ink">Set tonight&apos;s leaf</h2>
+        <h2 className="mt-2 font-display text-xl leading-snug text-ink">Tonight&apos;s wind-down</h2>
         <p className="mt-1 text-sm text-mist">{goal.ritual.map((r, i) => (i ? r.label[0].toLowerCase() + r.label.slice(1) : r.label)).join(", ")}.</p>
         <button onClick={onBegin} className="btn-primary mt-3.5">
-          Begin the wind-down
+          Begin
         </button>
       </>
     );
@@ -46,28 +56,30 @@ export default function NightCard({ goal, day, onBegin, onBack }: Props) {
       <>
         <p className="mt-3 flex items-center gap-2.5 text-sm text-ink">
           <Glass weight={night.weight ?? 2} />
-          {WEIGHTS[night.weight ?? 2]}
-          {night.note && night.line && (
-            <span className="ml-auto text-[11px] tracking-[0.16em] text-gold uppercase">{LINES[night.line].label}</span>
-          )}
+          Alcohol-free · {WEIGHTS[night.weight ?? 2].toLowerCase()}
         </p>
-        {night.note ? (
-          <p className="mt-3 font-display text-xl leading-snug text-ink italic">{night.note}</p>
-        ) : (
-          <p className="mt-3 text-sm text-mist">No line {day === today ? "tonight" : "that night"}.</p>
-        )}
+        {said || <p className="mt-3 text-sm text-mist">No line {tonight ? "tonight" : "that night"}.</p>}
+      </>
+    );
+  } else if (tonight) {
+    // Tonight, with a drink: what the window showed, said again, and the person's own line.
+    body = (
+      <>
+        <p className="mt-3 font-display text-xl leading-snug text-ink">One night doesn&apos;t undo the others.</p>
+        {said}
       </>
     );
   } else {
-    // A night with no wind-down stays clear glass. The first night after it set gold lead around it.
+    // A clear night. The first alcohol-free night after it set gold lead around it.
     const back = goal.nights.findIndex((n, i) => i >= day && n.done);
     body = (
       <>
-        <p className="mt-3 text-sm text-ink">No wind-down that night.</p>
+        <p className="mt-3 text-sm text-ink">{night?.drank ? "A drink that night." : "No check-in that night."}</p>
+        {said}
         {back >= 0 && (
-          <p className="mt-2 flex items-center gap-2 text-sm text-gold">
+          <p className="mt-3 flex items-center gap-2 text-sm text-gold">
             <span aria-hidden className="gold-came" />
-            Mended {shortDate(goal.nights[back].date)}
+            Mended {back === today - 1 ? "tonight" : shortDate(goal.nights[back].date)}
           </p>
         )}
       </>

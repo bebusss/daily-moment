@@ -3,13 +3,13 @@
 // Your windows: every month's window on one wall, and next month's still to choose. Tapping the
 // month at the top opens it.
 //
-// - The months before stay exactly as they were (missed nights clear, mended in gold), each in
+// - The months before stay exactly as they were (nights with a drink clear, mended in gold), each in
 //   the design it had. This month's is in progress.
 // - Next month's piece is where the paid tier (Plus) goes. Free, it's another window, from the
 //   house rotation. With Plus you choose the craft: a mosaic, a tapestry or a vase. (A mock: only
 //   the window is built.)
-// - Each is described only by what you'd expect: a little of it a night. How it mends a missed
-//   night (gold lead, a gold tile, gold thread, the vase's kintsugi) is never announced: you find
+// - Each is described only by what you'd expect: a little of it a night. How it mends a night
+//   with a drink (gold lead, a gold tile, gold thread, the vase's kintsugi) is never announced: you find
 //   it the first time you come back.
 // - The nightly ritual and the record of your nights are never behind it.
 //
@@ -103,7 +103,7 @@ export default function Windows({ goal, shown: showing, onOpen, onClose }: Props
             </p>
             <h2 className="mt-1 font-display text-2xl leading-snug">{shown.goal.intention}</h2>
             <p className="mt-2 text-sm text-ink">
-              {shown.done} of {shown.nights} nights{shown.goal.month === goal.month ? " so far" : ""}
+              {shown.done} of {shown.nights} nights alcohol-free{shown.goal.month === goal.month ? " so far" : ""}
             </p>
             {shown.mended > 0 && (
               <p className="mt-1 flex items-center gap-2 text-sm text-gold">

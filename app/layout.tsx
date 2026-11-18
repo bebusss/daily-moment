@@ -13,10 +13,10 @@ const dmSans = DM_Sans({
   subsets: ["latin"],
 });
 
-// Leadlight: a window of small pieces of glass held in lead. Here each night sets a piece, and
-// coming back after a missed night mends its lead in gold.
+// Leadlight: a window of small pieces of glass held in lead. Here each alcohol-free evening sets a
+// piece of it.
 const name = "Leadlight";
-const description = "An evening wind-down. Each night sets a piece of a stained-glass window. A missed night stays clear glass, and coming back mends it in gold.";
+const description = "Alcohol-free evenings, one night at a time. Each alcohol-free night sets a piece of a stained-glass window.";
 
 export const metadata: Metadata = {
   title: name,

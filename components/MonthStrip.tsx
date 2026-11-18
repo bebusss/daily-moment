@@ -1,8 +1,8 @@
 "use client";
 
 // The month as a row you can read and tap: one piece per night (a leaf, a petal or a ray, as in
-// that month's window), the same glass as its piece in the window (colored, clear with gold lead,
-// tonight lit, the rest still pale).
+// that month's window), the same glass as its piece in the window (colored for an alcohol-free
+// night, clear for a night with a drink, gold-leaded once mended, tonight lit, the rest still pale).
 // The window is the picture; this row is how you find a night in it.
 
 import { useEffect, useRef } from "react";
@@ -23,8 +23,8 @@ function describe(n: NightLook, month: string) {
   const date = shortDate(dateOf(month, n.day));
   if (n.status === "today") return `Tonight, ${date}`;
   if (n.status === "future") return `${date}, still to come`;
-  if (n.status === "done") return `${date}, ${WEIGHTS[n.weight ?? 2].toLowerCase()}`;
-  return `${date}, no wind-down${n.mended ? ", mended" : ""}`;
+  if (n.status === "done") return `${date}, alcohol-free, ${WEIGHTS[n.weight ?? 2].toLowerCase()}`;
+  return `${date}, ${n.drank ? "a drink" : "no check-in"}${n.mended ? ", mended" : ""}`;
 }
 
 export default function MonthStrip({ month, design, nights, selected, onSelect }: Props) {

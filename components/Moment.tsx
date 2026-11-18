@@ -1,7 +1,7 @@
 "use client";
 
 // The daily moment's state: the month's nights (tonight's kept on this device), which night is
-// open, and whether tonight's wind-down is running. The window (WindowScene) only draws what it's given;
+// open, and whether tonight's check-in and wind-down are running. The window (WindowScene) only draws what it's given;
 // everything the person reads and touches sits on top of it: the month and intention
 // above, and one card below with the month's row of nights and the open night.
 
@@ -11,7 +11,7 @@ import MonthStrip from "@/components/MonthStrip";
 import NightCard from "@/components/NightCard";
 import Ritual from "@/components/Ritual";
 import Windows from "@/components/Windows";
-import { dayOf, finishedMonth, monthName, type DailyGoal, type DesignName, type LineKind, type Weight } from "@/lib/data";
+import { dayOf, finishedMonth, monthName, type DailyGoal, type DesignName, type LineKind, type Night, type Weight } from "@/lib/data";
 import { DESIGNS } from "@/lib/designs";
 import { useSky } from "@/lib/sky";
 import { forgetNight, saveNight, useSavedNight } from "@/lib/tonight";
@@ -71,6 +71,12 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   // The open night in the shown month; 0 is none (a past month just opened shows the whole window).
   const [selected, setSelected] = useState(today);
   const [ritual, setRitual] = useState(false);
+  // During the check-in, the window can show through (after "I had a drink").
+  const [revealed, setRevealed] = useState(false);
+  // After an alcohol-free night is set: the clear night it mended, while the view goes to it.
+  const [mending, setMending] = useState<number | null>(null);
+  // ...and until its gold is soldered, the row of nights still shows it clear.
+  const [unsoldered, setUnsoldered] = useState<number | null>(null);
   const [windows, setWindows] = useState(false);
   // Just after tonight's leaf is set, the window comes to it while it fills in, then steps back.
   const [settling, setSettling] = useState(false);
@@ -78,7 +84,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   // What the sky APIs said, in a line: the sunset, rain if it's raining, and the place.
   const skyLine = [sky.sunset && `Sunset ${sky.sunset}`, sky.weather?.rain && sky.weather.label, sky.place].filter(Boolean).join(" · ");
   const { top, bottom, insets } = useInsets();
-  const looks = useMemo(() => nightLooks(shown), [shown]);
+  const looks = useMemo(() => nightLooks(shown).map((l) => (!viewing && l.day === unsoldered ? { ...l, mended: false } : l)), [shown, viewing, unsoldered]);
   // When the screen first responds to taps (DevTools > Performance, or performance.getEntriesByName).
   useEffect(() => void performance.mark("ui:ready"), []);
   // ?fresh starts tonight over (handy for showing the wind-down again).
@@ -88,7 +94,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
 
   const done = shown.nights.filter((n) => n.done).length;
   const mended = looks.filter((l) => l.mended).length;
-  const label = `${shown.intention}: ${monthName(shown.month)}'s window, ${done} of ${viewing ? looks.length : shown.nights.length} nights`;
+  const label = `${shown.intention}: ${monthName(shown.month)}'s window, ${done} of ${viewing ? looks.length : shown.nights.length} nights alcohol-free`;
   const select = (day: number) => day <= last && setSelected(day);
 
   /** Opens a month from the wall: a past one as it was, or back to this one's tonight. */
@@ -98,28 +104,47 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
     setSelected(month === goal.month ? today : 0);
   }
 
-  /** Tonight's leaf is set: the window gets a new night and fills it in. */
-  function setTonight(weight: Weight, note: string, line: LineKind) {
-    saveNight({ date: goal.today, done: true, weight, ...(note ? { note, line } : {}) });
+  /**
+   * Tonight is checked in. Alcohol-free: tonight's leaf is set and fills in, and if it mends a
+   * clear night, the view then goes to that leaf while its gold is soldered (never announced
+   * before). With a drink: tonight stays clear glass, and the window simply stays as it is.
+   */
+  function checkIn({ weight, note, line, drank }: { weight: Weight; note: string; line: LineKind; drank: boolean }) {
+    const night: Night = { date: goal.today, done: !drank, weight, ...(drank ? { drank } : {}), ...(note ? { note, line } : {}) };
+    const mends = drank ? [] : looks.filter((l) => l.status === "gap" && !l.mended).map((l) => l.day);
+    saveNight(night);
     setSelected(today);
     setRitual(false);
+    setRevealed(false);
+    if (drank) return;
     setSettling(true);
-    setTimeout(() => setSettling(false), 4200);
+    const latest = mends.at(-1);
+    if (!latest) {
+      setTimeout(() => setSettling(false), 4200);
+      return;
+    }
+    setUnsoldered(latest);
+    setTimeout(() => setMending(latest), 3400);
+    setTimeout(() => setUnsoldered(null), 6300);
+    setTimeout(() => {
+      setMending(null);
+      setSettling(false);
+    }, 8400);
   }
 
-  /** The night the window brings forward: a past night that's open, or tonight's leaf as it's set. */
-  const spotlight = viewing ? selected || null : selected !== today ? selected : settling ? today : null;
+  /** The night the window brings forward: a past night that's open, tonight's leaf as it's set, or the night it mended. */
+  const spotlight = viewing ? selected || null : (mending ?? (selected !== today ? selected : settling ? today : null));
 
   return (
     <main className="relative h-dvh w-full overflow-hidden">
       <WindowScene
         goal={shown}
         label={label}
-        selected={selected || undefined}
+        selected={(mending ?? selected) || undefined}
         spotlight={spotlight}
         onSelect={select}
         insets={insets}
-        paused={ritual}
+        paused={ritual && !revealed}
         // A past month keeps its own moon; the weather is tonight's, wherever you look.
         sky={viewing ? { weather: sky.weather } : sky}
       />
@@ -142,12 +167,22 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
         <p className="mt-1 h-4 text-xs text-mist">{!viewing && skyLine && <span className="animate-fade">{skyLine}</span>}</p>
       </header>
 
-      <div ref={bottom} className="absolute inset-x-0 bottom-0 mx-auto max-w-[430px] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      {/* While the window shows through the check-in, the card steps away so only the window and the line remain. */}
+      <div
+        ref={bottom}
+        className={`absolute inset-x-0 bottom-0 mx-auto max-w-[430px] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-opacity duration-700 ${revealed ? "opacity-0" : ""}`}
+      >
         <section className="card overflow-hidden p-0">
           <MonthStrip month={shown.month} design={shown.design} nights={looks} selected={selected} onSelect={select} />
           <div className="border-t border-white/6">
             {selected ? (
-              <NightCard key={`${shown.month}-${selected}-${shown.nights.length}`} goal={shown} day={selected} onBegin={() => setRitual(true)} onBack={() => open(goal.month)} />
+              <NightCard
+                key={`${shown.month}-${selected}-${shown.nights.length}`}
+                goal={shown}
+                day={selected}
+                onBegin={() => setRitual(true)}
+                onBack={() => open(goal.month)}
+              />
             ) : (
               // A past month, no night open yet: what the month was.
               <div key={shown.month} className="min-h-[200px] animate-rise px-5 pt-3.5 pb-4">
@@ -160,7 +195,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
                   </button>
                 </div>
                 <p className="mt-3 text-sm text-ink">
-                  {done} of {looks.length} nights
+                  {done} of {looks.length} nights alcohol-free
                 </p>
                 {mended > 0 && (
                   <p className="mt-1 flex items-center gap-2 text-sm text-gold">
@@ -175,7 +210,17 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
         </section>
       </div>
 
-      {ritual && <Ritual goal={goal} onClose={() => setRitual(false)} onDone={setTonight} />}
+      {ritual && (
+        <Ritual
+          goal={goal}
+          onClose={() => {
+            setRitual(false);
+            setRevealed(false);
+          }}
+          onReveal={setRevealed}
+          onDone={checkIn}
+        />
+      )}
       {windows && <Windows goal={goal} shown={shown.month} onOpen={open} onClose={() => setWindows(false)} />}
     </main>
   );

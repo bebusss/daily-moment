@@ -3,11 +3,11 @@
 // 3D, components/FlatWindow as the flat fallback) only draw it.
 //
 // One leaf per night on a vine that climbs the window:
-// - a night done is a leaf of colored glass, deeper the heavier the day was;
-// - a night missed is a leaf of clear glass: it stays, you can see through it;
-// - coming back after a miss mends it: its lead turns gold;
+// - an alcohol-free night is a leaf of colored glass, deeper the heavier the day was;
+// - a night with a drink (or no check-in) is a leaf of clear glass: it stays, light passes through it;
+// - the next alcohol-free night mends it: its lead turns gold (never before, never announced);
 // - tonight's leaf waits, lit from within; the nights to come are pale, uncolored glass;
-// - once tonight is set, tomorrow's leaf waits too, faintly.
+// - once tonight is checked in, tomorrow's leaf waits too, faintly.
 
 import type { DailyGoal, Weight } from "@/lib/data";
 import type { Pt } from "@/lib/geometry";
@@ -25,7 +25,7 @@ export type PaneModel = {
   kind: PieceKind;
   day?: number;
   status: PaneStatus;
-  /** A missed night someone came back from: its lead is gold. */
+  /** A clear night (a drink, or no check-in) followed by an alcohol-free one: its lead is gold. */
   mended: boolean;
   next?: boolean;
   weight?: Weight;
@@ -63,6 +63,8 @@ export type NightLook = {
   day: number;
   status: Exclude<PaneStatus, "decor">;
   mended: boolean;
+  /** A clear night the person checked in on: they had a drink. */
+  drank?: boolean;
   /** Tomorrow's leaf, once tonight's is set: it waits too, faintly. */
   next?: boolean;
   weight?: Weight;
@@ -76,15 +78,16 @@ export function nightLooks(goal: DailyGoal): NightLook[] {
   const night = (day: number) => goal.nights[day - 1];
   return Array.from({ length: days }, (_, i): NightLook => {
     const day = i + 1;
-    const status = day > today ? "future" : night(day)?.done ? "done" : day === today ? "today" : "gap";
+    // Tonight waits until it's checked in; checked in with a drink, it's clear glass like any other.
+    const status = day > today ? "future" : night(day)?.done ? "done" : day === today && !night(day) ? "today" : "gap";
     if (status === "done") {
       const weight = (night(day)?.weight ?? 2) as Weight;
       const { shade, sat } = DEPTH[weight];
       return { day, status, mended: false, weight, color: mix(saturate(colors[day - 1], sat), shade) };
     }
-    // A missed night is mended once any later night (before tonight) was done.
-    if (status === "gap") return { day, status, mended: goal.nights.slice(day).some((n) => n.done), color: "#f2efe6" };
-    const next = status === "future" && day === today + 1 && Boolean(night(today)?.done);
+    // A clear night is mended only by a later alcohol-free night (tonight's included, once it's set).
+    if (status === "gap") return { day, status, mended: goal.nights.slice(day).some((n) => n.done), drank: night(day)?.drank, color: "#f2efe6" };
+    const next = status === "future" && day === today + 1 && Boolean(night(today));
     return { day, status, mended: false, next, color: status === "today" ? "#f0d6a4" : next ? "#d2dcc0" : "#b9c4a5" };
   });
 }

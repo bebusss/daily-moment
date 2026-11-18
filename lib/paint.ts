@@ -8,7 +8,7 @@
 // - lead:  where the lead cames are (a rounded profile, brightest along their middle);
 // - mask:  red = gold (mended) lead, as its height; green = tonight's glow; blue = how milky the glass is;
 // - ids:   which piece each pixel belongs to (for picking, and for tonight's glow).
-// repaintWindow() redoes only the pieces that changed (tonight's leaf when it's set, a missed
+// repaintWindow() redoes only the pieces that changed (tonight's leaf when it's set, a clear
 // night when it's mended), reusing the rest. paintOutside() paints the evening the window looks
 // out on; paintStone() the wall.
 
@@ -252,7 +252,7 @@ export function paintWindow(model: WindowModel): PaintedWindow {
 }
 
 /**
- * The same window after some nights changed (tonight's leaf set, a missed night mended): only
+ * The same window after some nights changed (tonight's leaf set, a clear night mended): only
  * those pieces are painted again; the lead and the piece map are reused as they are.
  * Returns null when the geometry differs (another month), so the caller paints from scratch.
  */

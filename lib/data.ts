@@ -20,10 +20,15 @@ export const LINES: Record<LineKind, { label: string; prompt: string; example: s
   progress: { label: "Progress", prompt: "What did you handle better than before?", example: "Left early, no explaining." },
 };
 
-/** One night of the month. A night that isn't done stays clear glass. */
+/**
+ * One night of the month. Done means it was alcohol-free: its leaf is set in color. A night that
+ * isn't done stays clear glass, whether the person had a drink (and said so) or didn't check in.
+ */
 export type Night = {
   date: string;
   done: boolean;
+  /** The person checked in and had a drink. The wind-down still happened. */
+  drank?: boolean;
   weight?: Weight;
   note?: string;
   line?: LineKind;

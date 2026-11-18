@@ -1,12 +1,12 @@
-# Leadlight: an evening wind-down
+# Leadlight: alcohol-free evenings
 
-Each night of the month sets one leaf of a stained-glass window. Miss a night and its leaf stays clear glass. Come back and gold lead mends it.
+Each alcohol-free night of the month sets one leaf of a stained-glass window. A night with a drink stays clear glass. The next alcohol-free night mends it in gold.
 
 **Live:** https://horizon-takehome.vercel.app (open it on a phone) · **Run it:** `npm install && npm run dev`, then http://localhost:3000 at phone size.
 
 <p>
 <img src="docs/screens/1-tonight.jpg" width="190" alt="Tonight: the month's window above, the row of nights and tonight's card below">
-<img src="docs/screens/2-wind-down.jpg" width="190" alt="The wind-down: three steps">
+<img src="docs/screens/2-wind-down.jpg" width="190" alt="The wind-down: three steps in place of the evening drink">
 <img src="docs/screens/4-how-heavy.jpg" width="190" alt="How heavy was today: light, normal or heavy">
 <img src="docs/screens/6-set.jpg" width="190" alt="Tonight's leaf set, with its line">
 </p>
@@ -56,28 +56,32 @@ Sources I leaned on: loss aversion and commitment contracts (Giné, Karlan and Z
 | A score breaks | An identity bends |
 |---|---|
 | 14 → 0 | 13 of 14 |
-| "I ruined my streak. Why bother?" | "I'm someone who shows up. I missed Tuesday." |
+| "I've blown it. Why bother?" | "I'm someone who's cutting back. I had one on Tuesday." |
 
-The first missed night is where people leave, so that's the moment the design has to handle best.
+The first drink after a run of alcohol-free nights is where people leave, so that's the moment the design has to handle best.
 
-We learn who we are partly by watching what we do (Bem, self-perception theory). Relapse research calls the "I failed" spiral after a slip the abstinence violation effect (Marlatt and Gordon). The risks: identity is slow, so the first night already counts as evidence. It's abstract, so the evidence has to be visual. And it can get cheesy, so the app never tells you who you are. It shows you what you did.
+We learn who we are partly by watching what we do (Bem, self-perception theory). Research on drinking relapse calls the "I've blown it" spiral after one drink the abstinence violation effect (Marlatt and Gordon): what hurts is less the drink than what the person decides it means. The risks: identity is slow, so the first night already counts as evidence. It's abstract, so the evidence has to be visual. And it can get cheesy, so the app never tells you who you are. It shows you what you did.
 
 Why it fits the business: a streak gets more fragile the longer it runs. A window gets more valuable. By month three you have three of them on a wall, with your own lines in them. That's what I'd expect people to miss.
 
 ## 4. The concept
 
-**An evening wind-down that builds a stained-glass window, one night at a time.**
+**An evening check-in that builds a stained-glass window, one alcohol-free night at a time.**
 
 | | |
 |---|---|
-| **Done** | Colored glass, deeper on heavier days |
-| **Missed** | Stays clear glass. Light still passes |
-| **Back** | A gold mending lead around the gap |
+| **Alcohol-free** | Colored glass, deeper on heavier days |
+| **A drink** | Stays clear glass. Light still passes |
+| **Back** | The next alcohol-free night mends it: gold lead, soldered as you watch |
 | **Monthly** | A new window in a new design, its palette set by your intention. The finished ones hang together on a wall |
 
-Tonight's leaf is already waiting, so there are no choices at bedtime. Each night takes three light steps: the ritual, "how heavy was today?", and an optional line, which turns the window into a diary in your own words. No emotional copy anywhere: the glass says the kind part.
+Every evening, around the hour the drink used to come, the app asks one thing: was today alcohol-free? Then a short wind-down takes the drink's place (something warm in a mug, the lights down, three slow breaths), "how heavy was today?", and an optional line, which turns the window into a diary in your own words.
 
-This month's window happens to be a vine, but the plant isn't the mechanism. The record is. September's was a rose and October's a sunburst. Each month's window stays exactly as you left it: the missed nights clear, mended in gold.
+**The night of a drink gets the most care,** because it's where people leave. The view pulls back to the whole month, every leaf before tonight still in color, and one line: "One night doesn't undo the others." Then the wind-down goes on, as on any night. Nothing is said about gold or about tomorrow. The mend is found, not promised: the next alcohol-free night, its gold is soldered while you watch.
+
+**Why alcohol.** It's Choose Your Horizon's own world, and it's where a slip costs the most. I first built this as a sleep wind-down, and the mend didn't mean much: missing three breaths before bed isn't a break. A drink on a night you'd decided not to have one is.
+
+This month's window happens to be a vine, but the plant isn't the mechanism. The record is. September's was a rose and October's a sunburst. Each month's window stays exactly as you left it: the nights with a drink clear, mended in gold.
 
 **Inspiration.**
 
@@ -88,15 +92,16 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 
 ## 5. How I'd know it works
 
-**One number matters most: coming back after a miss.**
+**One number matters most: coming back after a drink.**
 
 | | | |
 |---|---|---|
-| **Main metric** | Lapse recovery | Share of people back within two days of their first missed night. It measures the exact moment this bet is supposed to win. |
-| **Early hook** | Day 7 and day 30 return | Are people still opening it after the first week and month? |
+| **Main metric** | Lapse recovery | Share of people with an alcohol-free night within two days of their first night with a drink. It measures the exact moment this bet is supposed to win. |
+| **Honesty** | Drinks logged, not hidden | Nights checked in with a drink against nights with no check-in. If slips go unlogged, the design is making honesty feel expensive. |
+| **Early hook** | Day 7 and day 30 return | Are people still checking in after the first week and month? |
 | **Business** | Month-3 retention | Still subscribed at break-even, by signup cohort. |
-| **A/B tests** | The mechanic and the framing | A gold mend against a plain gap, and "Wind down tonight" against "Be someone who winds down", both judged on lapse recovery. |
-| **On this screen** | Where people drop off | Each of the three steps, how many leave a line, and which of E, S or P they pick. Writing a line is a stronger sign of ownership than a tap. |
+| **A/B tests** | The mechanic and the framing | A gold mend against a plain gap, and the line after a drink against no line at all, both judged on lapse recovery. |
+| **On this screen** | Where people drop off | Each step, how many leave a line (on alcohol-free nights and on nights with a drink), and which of E, S or P they pick. Writing a line is a stronger sign of ownership than a tap. |
 
 Identity wording has strong lab results and mixed field replications, which is exactly why I'd test it instead of assuming it.
 
@@ -111,14 +116,16 @@ Identity wording has strong lab results and mixed field replications, which is e
 <img src="docs/screens/8-rain.jpg" width="190" alt="Raining in your city: drops on the glass">
 </p>
 
-1. **Tonight.** The month's window, tonight's leaf breathing in it. Below, the month as a row you can tap, each night the same piece as in the window (a leaf this month, a petal in the rose, a ray in the sunburst), and a card that says what tonight asks for.
-2. **The wind-down.** Dim the lights, phone face down, three slow breaths. The breaths are paced on screen, because that's the step people skip when it's just a checkbox.
-3. **How heavy was today?** One tap. Heavier days set deeper glass.
-4. **One line, if you want.** An effort, a success or a bit of progress (Nate Zinsser's E-S-P), your pick.
-5. **Tonight's leaf is set.** The view moves in to it while it fills with color, then steps back to the whole month. Tomorrow's leaf starts to wait, faintly.
-6. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A missed night shows the night that mended it, and its gold is soldered again as you watch: a hot point runs round the leaf and the lead cools to gold behind it.
-7. **Your windows** (tap the month at the top). Every month's window on one wall, each in its own design, with its intention, its nights and how many were mended. Open one and the screen becomes that month, read-only: its window, its nights, its lines. "Back to tonight" returns.
-8. **Next month's piece** is where Plus goes: another window is free, and with Plus you choose the craft.
+1. **Tonight.** The month's window, tonight's leaf breathing in it. Below, the month as a row you can tap, each night the same piece as in the window (a leaf this month, a petal in the rose, a ray in the sunburst), and a card with tonight's wind-down.
+2. **Was today alcohol-free?** Two equal answers, "Yes" and "I had a drink", so the honest one is never the harder one to tap.
+3. **After "I had a drink",** the dimming lifts: the whole month, every leaf before tonight still in color, and "One night doesn't undo the others." Then the wind-down, as on any night.
+4. **The wind-down.** Pour something warm, dim the lights, three slow breaths. It takes the place the drink had in the evening. The breaths are paced on screen, because that's the step people skip when it's just a checkbox.
+5. **How heavy was today?** One tap. Heavier days set deeper glass.
+6. **One line, if you want.** An effort, a success or a bit of progress (Nate Zinsser's E-S-P), your pick. It's there on a night with a drink too ("Stopped at one.").
+7. **Tonight's leaf is set.** The view moves in to it while it fills with color. If last night had a drink, the view then goes to that clear leaf and its gold is soldered as you watch: a hot point runs round it, sparks fly, and the lead cools to gold behind it. Then the whole month again, and tomorrow's leaf starts to wait, faintly. (The sample month is set up so this happens tonight.)
+8. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A night with a drink shows its line and the night that mended it, and its gold is soldered again.
+9. **Your windows** (tap the month at the top). Every month's window on one wall, each in its own design, with its intention, its nights and how many were mended. Open one and the screen becomes that month, read-only: its window, its nights, its lines. "Back to tonight" returns.
+10. **Next month's piece** is where Plus goes: another window is free, and with Plus you choose the craft.
 
 <p>
 <img src="docs/screens/9-your-windows.jpg" width="190" alt="Your windows: September's rose, October's sunburst, November's vine, December still to choose">
@@ -129,11 +136,15 @@ Identity wording has strong lab results and mixed field replications, which is e
 
 - **The name.** A leadlight is a window of small pieces of glass held in lead, and the lead is where the gold mend goes.
 - **Tonight is preselected.** No choices at bedtime.
+- **Only an alcohol-free night mends,** and one is enough. The first day back is the hardest, so the reward can't be further away than that. A run of clear nights is mended together by that first night back.
+- **A night with a drink is clear glass,** not a hole and not a reset: light still passes through it, and it keeps its line.
+- **The mend is never announced.** It's found the next alcohol-free night. Promising it the night of a drink would turn comfort into a deal.
+- **Words it never uses:** relapse, sober, fail, streak.
 - **Heavier days set deeper glass.** Hard days count more, with no points.
-- **No emotional copy.** The app never tells you who you are. It shows you what you did.
+- **The app never tells you who you are.** It shows you what you did, and on the night of a drink, the rest of your month.
 - **The line is E-S-P.** A bank of proof of what you can do (Bandura's self-efficacy), in your own words instead of an app's quotes.
 - **The window comes to the night you open,** so the window and the row read as one thing.
-- **Tomorrow's leaf waits too,** once tonight's is set: a reason to come back, with no words.
+- **Tomorrow's leaf waits too,** once tonight is checked in, whatever the answer: a reason to come back, with no words.
 - **A wall, not a collection.** The month-three payoff made visible. Nothing is unlocked: every window is a record.
 - **A new design every month** from the house rotation: a fresh start on the 1st.
 - **The paid feature is choosing your craft** (see Pricing). The ritual and your record are never behind the paywall: you pay for choice, never for your own evidence.
@@ -143,8 +154,8 @@ Identity wording has strong lab results and mixed field replications, which is e
 
 The month is the unit of everything. Each piece takes a month, and each month is a billing cycle, so the three cycles the business needs are three pieces on your wall.
 
-- **Free:** the nightly ritual, a new window every month from the house rotation, and your whole record and wall, forever.
-- **Plus (the subscription, monthly or yearly):** choose next month's craft: a **mosaic**, a **tapestry** or a **vase**, each a little a night. In the app each is described only by what you'd expect. How it mends a missed night is a surprise you find the first time you come back, in its own tradition: a gold tile in the grout, a gap darned in gold thread (like boro), and for the vase, kintsugi. These are mocks: only the window is built.
+- **Free:** the nightly check-in and wind-down, a new window every month from the house rotation, and your whole record and wall, forever.
+- **Plus (the subscription, monthly or yearly):** choose next month's craft: a **mosaic**, a **tapestry** or a **vase**, each a little a night. In the app each is described only by what you'd expect. How it mends a night with a drink is a surprise you find the first time you come back, in its own tradition: a gold tile in the grout, a gap darned in gold thread (like boro), and for the vase, kintsugi. These are mocks: only the window is built.
 - **When it's offered:** on the 1st, when a piece is finished and the next one starts. Never at night, never during the ritual.
 - **Why the window is the free default and the vase isn't:** the vase's mend is kintsugi, the metaphor everyone knows. For some people it's poetic, so it's there to choose, but as the default it would feel borrowed. The mending lead is this app's own version of it.
 - Prices would be a test, judged on month-3 retention, not a guess written here.
@@ -183,7 +194,9 @@ Measured on the production build, as a mid-range phone (390×844 at 3×, the CPU
 - Your intention, or your favorite color, sets the month's palette.
 - The full year on the wall, and a print of a finished window.
 - Patterns from the heavy days ("heavy days cluster on Fridays"), as a gentle way to spot triggers.
-- On the night someone comes back after a miss, an optional "what got in the way?", a light version of how CBT looks at a lapse.
+- Drinking less, not only none: a nightly limit you choose (two drinks, say), with nights within it set in color.
+- On the night someone comes back after a drink, an optional "what got in the way?", a light version of how CBT looks at a lapse.
+- A way to reach a person (a coach, a helpline) from the night of a drink, for when it's more than a slip.
 
 ## Tools, AI included
 
@@ -197,7 +210,7 @@ AI: Claude Code wrote most of the code with me. I set the direction and judged e
 <summary>The code, for building on it together</summary>
 
 - `app/page.tsx` loads the month and renders `components/Moment.tsx`, which holds the screen's state.
-- `components/MonthStrip.tsx` is the row of nights, `components/NightCard.tsx` the card under it, `components/Ritual.tsx` tonight's three steps, `components/Windows.tsx` the wall of windows and where Plus goes.
+- `components/MonthStrip.tsx` is the row of nights, `components/NightCard.tsx` the card under it, `components/Ritual.tsx` tonight's check-in and wind-down, `components/Windows.tsx` the wall of windows and where Plus goes.
 - `components/WindowScene.tsx` puts the 3D window together from `components/window/`: the glass (`Glass`), the sun through it (`sun`), the light shafts and dust (`Air`), the stone (`Wall`), the camera and pacing (`frame`), the textures (`textures`). Without WebGL, `components/FlatWindow.tsx` draws it flat.
 - `lib/window-model.ts` decides what each piece of glass means. `lib/designs.ts` cuts the month's window in its design (Rose, Sunburst, or the Vine in `lib/vine.ts`, which also cuts the frame they share). `lib/paint.ts` paints it.
 - `lib/sky.ts` asks the APIs, `lib/tonight.ts` keeps tonight on the device, `lib/data.ts` types the month.

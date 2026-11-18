@@ -5,7 +5,7 @@
 // - a mosaic in the Ravenna manner: a lapis night, an ivory crescent, stars, a terracotta border;
 // - a woven hanging: hills at dusk under a setting sun, the first stars out;
 // - a vase in deep indigo glaze, painted with stars and a crescent.
-// How each one mends a missed night is never shown.
+// How each one mends a night with a drink is never shown.
 //
 // One renderer paints all four, one after the other, and is thrown away. Loaded only when the
 // December sheet opens (import() from components/CraftPreview), so the page never carries it.

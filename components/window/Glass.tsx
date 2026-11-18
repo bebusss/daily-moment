@@ -419,7 +419,7 @@ export function Glass({
   const shown = selected ?? model.panes[todayIndex]?.day;
   const selectedIndex = model.panes.findIndex((p) => p.day === shown);
   // The last window drawn and its waiting leaf, so a leaf just filled in can come up from it.
-  const drawn = useRef<{ textures: Painted; today: number; id: string } | null>(null);
+  const drawn = useRef<{ textures: Painted; today: number; id: string; mended: boolean[] } | null>(null);
   const lastPick = useRef(-1);
   const fill = useRef<{
     from: Painted;
@@ -438,9 +438,14 @@ export function Glass({
         index: before.today,
         start: null,
       };
+      // A clear night this one just mended keeps its plain lead until its gold is soldered: the
+      // view comes to it once tonight's leaf has filled in (or, if it doesn't, the iron starts anyway).
+      const fresh = model.panes.filter((p, i) => p.mended && !before.mended[i]);
+      const latest = fresh.reduce<PaneModel | undefined>((a, p) => (!a || (p.day ?? 0) > (a.day ?? 0) ? p : a), undefined);
+      if (latest && !still) solder.current = { ...ironPath(latest), start: NaN };
     }
-    drawn.current = { textures, today: todayIndex, id: model.id };
-  }, [textures, model, todayIndex]);
+    drawn.current = { textures, today: todayIndex, id: model.id, mended: model.panes.map((p) => p.mended) };
+  }, [textures, model, todayIndex, still]);
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
@@ -470,6 +475,7 @@ export function Glass({
       solder.current = spotlight && !still && pane?.mended ? { ...ironPath(pane), start: t + 0.8 } : null;
     }
     const s = solder.current;
+    if (s && Number.isNaN(s.start)) s.start = t + 4.2;
     if (s && t > s.start + RUN + COOL) solder.current = null;
     if (solder.current && s) {
       const run = Math.max(0, Math.min(1, (t - s.start) / RUN));
