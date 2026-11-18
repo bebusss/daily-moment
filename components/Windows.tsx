@@ -18,13 +18,13 @@
 // would feel borrowed. The window is this app's own version of the same idea.
 
 import { useMemo, useState } from "react";
-import CraftPreview, { type Craft } from "@/components/CraftPreview";
+import CraftPicture, { useCraftPictures, type Piece } from "@/components/CraftPreview";
 import FlatWindow from "@/components/FlatWindow";
 import { finishedMonth, monthName, type DailyGoal } from "@/lib/data";
 import { DESIGNS } from "@/lib/designs";
 import { buildWindow, nightLooks } from "@/lib/window-model";
 
-type Medium = { id: "window" | Craft; name: string; plus: boolean; how: string };
+type Medium = { id: Piece; name: string; plus: boolean; how: string };
 
 /** Next month's piece: another window is free; another craft is Plus. Described as you'd expect, mends unspoiled. */
 const MEDIUMS: Medium[] = [
@@ -57,10 +57,8 @@ export default function Windows({ goal, shown: showing, onOpen, onClose }: Props
     [goal],
   );
   const [open, setOpen] = useState<string>(showing);
-  const december = useMemo(() => {
-    const nights = Array.from({ length: 31 }, (_, i) => ({ date: `2026-12-${String(i + 1).padStart(2, "0")}`, done: true, weight: ([2, 1, 3, 2] as const)[i % 4] }));
-    return buildWindow({ ...goal, month: "2026-12", design: "rose", palette: DECEMBER, nights, today: "2026-12-32" });
-  }, [goal]);
+  // December's crafts, rendered in 3D once the choice is on screen.
+  const pictures = useCraftPictures(open === "next" ? goal : null, DECEMBER);
   const [picked, setPicked] = useState(MEDIUMS[0].id);
   const [asked, setAsked] = useState(false);
   const shown = wall.find((w) => w.goal.month === open);
@@ -135,16 +133,7 @@ export default function Windows({ goal, shown: showing, onOpen, onClose }: Props
                   aria-pressed={picked === d.id}
                   className={`rounded-2xl p-1.5 pb-2.5 ring-1 transition-colors duration-200 ${picked === d.id ? "bg-gold/10 ring-gold/60" : "bg-white/4 ring-white/8"}`}
                 >
-                  {d.id === "window" ? (
-                    // The real window engine, lit in the same room.
-                    <div className="flex aspect-[3/4] w-full items-center justify-center rounded-xl bg-[radial-gradient(ellipse_at_50%_30%,rgba(255,196,130,0.22),transparent_70%),#17110d]">
-                      <div className="w-[42%] drop-shadow-[0_0_18px_rgba(255,190,120,0.35)]">
-                        <FlatWindow model={december} label="December's window, a rose, finished" />
-                      </div>
-                    </div>
-                  ) : (
-                    <CraftPreview craft={d.id} palette={DECEMBER} label={`A ${d.name.toLowerCase()}, finished`} />
-                  )}
+                  <CraftPicture src={pictures?.[d.id]} label={d.id === "window" ? "December's window, a rose, finished" : `A ${d.name.toLowerCase()}, finished`} />
                   <span className="mt-2 flex items-baseline justify-between px-1.5">
                     <span className="text-sm text-ink">{d.name}</span>
                     <span className={`text-[10px] tracking-[0.14em] uppercase ${d.plus ? "text-gold" : "text-mist"}`}>{d.plus ? "Plus" : "Free"}</span>
