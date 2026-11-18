@@ -14,6 +14,7 @@ import Windows from "@/components/Windows";
 import { dayOf, finishedMonth, monthAsOf, monthName, withNights, type DailyGoal, type DesignName, type LineKind, type Night, type Weight } from "@/lib/data";
 import { DESIGNS } from "@/lib/designs";
 import { useSky } from "@/lib/sky";
+import { MEND_QUOTES, mendQuote, type Quote } from "@/lib/quotes";
 import { saveNights, useSavedNights, useTonight } from "@/lib/tonight";
 import { nightLooks } from "@/lib/window-model";
 
@@ -96,6 +97,8 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   // The mending, as a moment of its own: the card steps away, the line under the window, then the
   // slow way back to the whole month.
   const [mendMoment, setMendMoment] = useState<{ words: boolean; back: boolean; leaving?: boolean } | null>(null);
+  // What the window says then: a line about falling and getting up, a different one each time.
+  const [quote, setQuote] = useState<Quote>(MEND_QUOTES[0]);
   // Which nights were already mended when the check-in opened, to tell which ones it mended.
   const mendedAtOpen = useRef<Set<number>>(new Set());
   const [windows, setWindows] = useState(false);
@@ -148,6 +151,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
     // The view arrives (0.8 s), the iron goes round (2 s), a breath before the next.
     const [arrive, laid, step] = [600, 800 + 2000, 3300];
     setUnsoldered(fresh);
+    setQuote(mendQuote());
     setTimeout(() => setMendMoment({ words: false, back: false }), wait);
     turns.forEach((nights, i) => {
       const at = wait + arrive + i * step;
@@ -309,7 +313,10 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
           <div className="absolute inset-0 animate-fade bg-[linear-gradient(to_top,var(--color-night)_0px,rgb(18_13_10/0.92)_230px,transparent_320px)] [animation-duration:1s]" />
           <div className="absolute inset-x-0 bottom-0 mx-auto max-w-[430px] px-5 pb-[max(3rem,env(safe-area-inset-bottom))]">
             {mendMoment.words && (
-              <p className="animate-rise font-display text-[30px] leading-snug text-ink [animation-duration:1.4s]">The gold marks where you came back.</p>
+              <figure className="animate-rise [animation-duration:1.4s]">
+                <blockquote className="font-display text-[26px] leading-snug text-ink">{quote.text}</blockquote>
+                <figcaption className="mt-3 text-sm text-mist">{quote.by}</figcaption>
+              </figure>
             )}
           </div>
         </div>
