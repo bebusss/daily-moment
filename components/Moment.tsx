@@ -99,8 +99,6 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   const [mendMoment, setMendMoment] = useState<{ words: boolean; back: boolean; leaving?: boolean } | null>(null);
   // What the window says then: a line about falling and getting up, a different one each time.
   const [quote, setQuote] = useState<Quote>(MEND_QUOTES[0]);
-  // Which nights were already mended when the check-in opened, to tell which ones it mended.
-  const mendedAtOpen = useRef<Set<number>>(new Set());
   const [windows, setWindows] = useState(false);
   // Just after tonight's leaf is set, the window comes to it while it fills in, then steps back.
   const [settling, setSettling] = useState(false);
@@ -171,39 +169,34 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
   }
 
   function begin() {
-    mendedAtOpen.current = mendedNow();
     setPhase("ask");
     setRitual(true);
   }
 
-  /** The check-in closed without tonight's answer: nights filled in on the way may have mended others. */
-  function closeRitual() {
-    setRitual(false);
-    solder(mendedAtOpen.current, goal, 900);
-  }
-
   /**
-   * Tonight is checked in. Alcohol-free: tonight's leaf is set and fills in, then whatever the
-   * check-in mended is soldered. With a drink: tonight stays clear glass, and the window stays as
-   * it is (unless a night filled in before tonight mended one).
+   * Tonight is checked in. Alcohol-free: tonight's leaf is set and fills in, then the nights it
+   * mended are soldered. That moment belongs to coming back tonight, so only tonight's leaf gets it:
+   * nights filled in before tonight that mended others already show their gold. With a drink:
+   * tonight stays clear glass, and nothing is soldered.
    */
   function checkIn({ weight, note, line, drank }: { weight: Weight; note: string; line: LineKind; drank: boolean }) {
     const night: Night = { date: goal.today, done: !drank, weight, ...(drank ? { drank } : {}), ...(note ? { note, line } : {}) };
+    const before = mendedNow();
     saveNights([night]);
     setSelected(today);
     setRitual(false);
-    const over = solder(mendedAtOpen.current, withNights(goal, [night]), drank ? 900 : 3400);
     if (drank) return;
+    const over = solder(before, withNights(goal, [night]), 3400);
     setSettling(true);
     setTimeout(() => setSettling(false), Math.max(4200, over));
   }
 
-  /** A forgotten night filled in from its card. Alcohol-free, its leaf fills in, and may mend the ones before. */
+  /**
+   * A forgotten night filled in from its card. Alcohol-free, its leaf fills in, and the nights it
+   * mends simply show their gold: that was days ago, and the moment is for coming back tonight.
+   */
   function logNight(date: string, drank: boolean) {
-    const night: Night = drank ? { date, done: false, drank: true } : { date, done: true, weight: 2 };
-    const before = mendedNow();
-    saveNights([night]);
-    solder(before, withNights(goal, [night]), drank ? 900 : 3400);
+    saveNights([drank ? { date, done: false, drank: true } : { date, done: true, weight: 2 }]);
   }
 
   /** The night the window brings forward: a past night that's open, tonight's leaf as it's set, or the night it mended. */
@@ -321,7 +314,7 @@ export default function Moment({ initial }: { initial: DailyGoal }) {
           </div>
         </div>
       )}
-      {ritual && <Ritual goal={goal} onClose={closeRitual} onLog={saveNights} onPhase={setPhase} onDone={checkIn} />}
+      {ritual && <Ritual goal={goal} onClose={() => setRitual(false)} onLog={saveNights} onPhase={setPhase} onDone={checkIn} />}
       {windows && <Windows goal={goal} shown={shown.month} onOpen={open} onClose={() => setWindows(false)} />}
     </main>
   );
