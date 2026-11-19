@@ -11,7 +11,7 @@
 
 import type { DailyGoal, Weight } from "@/lib/data";
 import type { Pt } from "@/lib/geometry";
-import { mix, paneColors, pick, saturate } from "@/lib/glass";
+import { atDepth, mix, paneColors, pick, saturate } from "@/lib/glass";
 import { cutWindow } from "@/lib/designs";
 import { moonShape, type Design, type LeafFrame, type PieceKind } from "@/lib/vine";
 
@@ -47,11 +47,15 @@ export const daysIn = (month: string) => {
   return new Date(y, m, 0).getDate();
 };
 
-/** Hard days are deep, rich glass; easy days are paler. */
-const DEPTH: Record<Weight, { shade: number; sat: number }> = {
-  3: { shade: -0.24, sat: 1.25 },
-  2: { shade: -0.06, sat: 1.15 },
-  1: { shade: 0.14, sat: 1.0 },
+/**
+ * How hard the day was sets how deep the glass is, the same for every color: easy days are pale,
+ * hard days deep. The month's palette only picks the hue, so an easy blue night and an easy orange
+ * one read as equally light, and a hard night always reads as harder than an easy one.
+ */
+const DEPTH: Record<Weight, { lightness: number; chroma: number }> = {
+  1: { lightness: 0.85, chroma: 0.12 },
+  2: { lightness: 0.65, chroma: 0.16 },
+  3: { lightness: 0.4, chroma: 0.16 },
 };
 
 const GROUND = ["#ecdcbc", "#e4d9be", "#eedfbf", "#dfdcc0", "#e9d6b2", "#e2d3b4", "#ecdfc4", "#ebd7b4", "#dcdcc4", "#e6d3b0"];
@@ -82,8 +86,8 @@ export function nightLooks(goal: DailyGoal): NightLook[] {
     const status = day > today ? "future" : night(day)?.done ? "done" : day === today && !night(day) ? "today" : "gap";
     if (status === "done") {
       const weight = (night(day)?.weight ?? 2) as Weight;
-      const { shade, sat } = DEPTH[weight];
-      return { day, status, mended: false, weight, color: mix(saturate(colors[day - 1], sat), shade) };
+      const { lightness, chroma } = DEPTH[weight];
+      return { day, status, mended: false, weight, color: atDepth(colors[day - 1], lightness, chroma) };
     }
     // A clear night is mended only by a later alcohol-free night (tonight's included, once it's set).
     if (status === "gap") return { day, status, mended: goal.nights.slice(day).some((n) => n.done), drank: night(day)?.drank, color: "#f2efe6" };
