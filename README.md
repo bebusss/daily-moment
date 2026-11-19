@@ -70,7 +70,7 @@ Why it fits the business: a streak gets more fragile the longer it runs. A windo
 
 | | |
 |---|---|
-| **Alcohol-free** | Colored glass, darker on harder days |
+| **Alcohol-free** | Colored glass in the color of how hard the day was: blue for easy, amber for normal, ruby for hard |
 | **A drink, or no check-in** | Stays clear glass. Light still passes. A forgotten night can be filled in later |
 | **Back** | The next alcohol-free night mends it: gold lead, soldered as you watch |
 | **Monthly** | A new window every month, in a new design. The finished ones hang together on a wall |
@@ -117,7 +117,7 @@ This month's window happens to be a vine, but the plant isn't the mechanism. The
 3. **Was today alcohol-free?** Two equal answers, "Yes" and "I had a drink", so the honest one is never the harder one to tap.
 4. **After "I had a drink",** the dimming lifts: the whole month, every leaf before tonight still in color, and "One night doesn't undo the others." Then the breaths, as on any night.
 5. **Three slow breaths,** paced on screen. They start by themselves, and "Skip" is always there.
-6. **How hard was today?** One tap: easy, normal or hard. Harder days set darker glass.
+6. **How hard was today?** One tap: easy, normal or hard, each shown in its own color of glass: blue, amber or ruby. The leaf takes that color, every night and every month, so a glance tells easy days from hard ones.
 7. **A one-line note, if you want,** answering one question chosen by the night: "What went right today?"; after a drink, "What did you try today?" ("Stopped at one."); and on the night you come back, "What did you handle better than before?". "Another question" if it doesn't fit.
 8. **Tonight's leaf is set.** The view moves in to it while it fills with color. Then the mend gets a moment of its own. The card steps away, and the view goes to each clear night tonight's leaf mended, in turn, oldest first: a hot point runs round the leaf, sparks fly, and the lead cools to gold behind it. Once the first gold is laid, one quote about falling and getting up, from a small hand-picked set, a different one each time: Hemingway's "strong at the broken places", Leonard Cohen's "There is a crack in everything. That's how the light gets in", Helen Keller, Oliver Goldsmith, Mary Anne Radmacher, a Japanese proverb. Each was checked against its source, wording and author. Then the slow way back to the whole month, and tomorrow's leaf starts to glow faintly.
 9. **Any night, any time.** Tap a night in the row and the view moves in to its leaf. A night with a drink shows its note and the night that mended it, and its gold is soldered again.
@@ -205,7 +205,7 @@ Measured on the production build, as a mid-range phone (390×844 at 3×, the CPU
 
 The scaffold's stack (Next.js 16, React 19, Tailwind v4), three.js through React Three Fiber with postprocessing for the window, Open-Meteo and the US Naval Observatory for the sky.
 
-AI: Claude Code wrote most of the code with me. I set the direction and judged every version on a phone screenshot, and threw out a flat SVG window and a version that tilted with the mouse before this one. At one point two sessions worked in parallel on the same repo (one on the window scene, one on the flow and the UI), each committing only its own files. Every change was checked with Playwright screenshots at phone size, and the performance work was measured on the production build before and after each change, not guessed at.
+AI: I built it with Claude Code. I set the direction, made the design calls and judged every version on a phone screenshot, and threw out a flat SVG window and a version that tilted with the mouse before this one. At one point two sessions worked in parallel on the same repo (one on the window scene, one on the flow and the UI), each committing only its own files. Every change was checked with Playwright screenshots at phone size, and the performance work was measured on the production build before and after each change, not guessed at.
 
 ## Where things live
 

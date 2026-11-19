@@ -42,12 +42,13 @@
   }
 }
 
-/* How hard a day was, as glass: easy days are pale, hard days are deep.
+/* How hard a day was, as glass: blue for easy, amber for normal, ruby for hard (the window's
+   leaves use the same three, WEIGHT_GLASS in lib/window-model.ts).
    "static" keeps them in the CSS even though only inline styles (components/Glass) read them. */
 @theme static {
-  --color-glass-1: #f2d39d;
-  --color-glass-2: #dd9b48;
-  --color-glass-3: #a4561b;
+  --color-glass-1: #3d86c6;
+  --color-glass-2: #e8952f;
+  --color-glass-3: #b42a3c;
 }
 
 /* The few shapes the whole UI is built from, so nothing is styled one-off. */

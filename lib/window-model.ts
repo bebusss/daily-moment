@@ -3,7 +3,7 @@
 // 3D, components/FlatWindow as the flat fallback) only draw it.
 //
 // One leaf per night on a vine that climbs the window:
-// - an alcohol-free night is a leaf of colored glass, deeper the harder the day was;
+// - an alcohol-free night is a leaf of colored glass, one color for each answer to how hard the day was;
 // - a night with a drink (or no check-in) is a leaf of clear glass: it stays, light passes through it;
 // - the next alcohol-free night mends it: its lead turns gold (never before, never announced);
 // - tonight's leaf waits, lit from within; the nights to come are pale, uncolored glass;
@@ -11,7 +11,7 @@
 
 import type { DailyGoal, Weight } from "@/lib/data";
 import type { Pt } from "@/lib/geometry";
-import { atDepth, mix, paneColors, pick, saturate } from "@/lib/glass";
+import { mix, pick, saturate } from "@/lib/glass";
 import { cutWindow } from "@/lib/designs";
 import { moonShape, type Design, type LeafFrame, type PieceKind } from "@/lib/vine";
 
@@ -48,15 +48,11 @@ export const daysIn = (month: string) => {
 };
 
 /**
- * How hard the day was sets how deep the glass is, the same for every color: easy days are pale,
- * hard days deep. The month's palette only picks the hue, so an easy blue night and an easy orange
- * one read as equally light, and a hard night always reads as harder than an easy one.
+ * One color for each answer to "How hard was today?", every night and every month, so a glance
+ * tells easy from hard: blue for an easy day, amber for a normal one, ruby for a hard one. The
+ * check-in shows the same three (--color-glass-1/2/3 in app/globals.css).
  */
-const DEPTH: Record<Weight, { lightness: number; chroma: number }> = {
-  1: { lightness: 0.85, chroma: 0.12 },
-  2: { lightness: 0.65, chroma: 0.16 },
-  3: { lightness: 0.4, chroma: 0.16 },
-};
+export const WEIGHT_GLASS: Record<Weight, string> = { 1: "#3d86c6", 2: "#e8952f", 3: "#b42a3c" };
 
 const GROUND = ["#ecdcbc", "#e4d9be", "#eedfbf", "#dfdcc0", "#e9d6b2", "#e2d3b4", "#ecdfc4", "#ebd7b4", "#dcdcc4", "#e6d3b0"];
 const SKY = ["#203168", "#293c7a", "#1b2958", "#2f427e", "#24387a"];
@@ -78,7 +74,6 @@ export type NightLook = {
 export function nightLooks(goal: DailyGoal): NightLook[] {
   const days = daysIn(goal.month);
   const today = Number(goal.today.slice(8, 10));
-  const colors = paneColors(goal.palette, days, goal.month);
   const night = (day: number) => goal.nights[day - 1];
   return Array.from({ length: days }, (_, i): NightLook => {
     const day = i + 1;
@@ -86,8 +81,7 @@ export function nightLooks(goal: DailyGoal): NightLook[] {
     const status = day > today ? "future" : night(day)?.done ? "done" : day === today && !night(day) ? "today" : "gap";
     if (status === "done") {
       const weight = (night(day)?.weight ?? 2) as Weight;
-      const { lightness, chroma } = DEPTH[weight];
-      return { day, status, mended: false, weight, color: atDepth(colors[day - 1], lightness, chroma) };
+      return { day, status, mended: false, weight, color: WEIGHT_GLASS[weight] };
     }
     // A clear night is mended only by a later alcohol-free night (tonight's included, once it's set).
     if (status === "gap") return { day, status, mended: goal.nights.slice(day).some((n) => n.done), drank: night(day)?.drank, color: "#f2efe6" };

@@ -200,7 +200,7 @@ export default function Ritual({ goal, onClose, onLog, onPhase, onDone }: Props)
         ) : step === 2 ? (
           <section key="weight" className="flex flex-1 flex-col justify-end animate-rise">
             <h2 className="font-display text-[28px] leading-tight">How hard was today?</h2>
-            {!drank && <p className="mt-2 text-sm text-mist">Harder days set darker glass.</p>}
+            {!drank && <p className="mt-2 text-sm text-mist">Each answer sets its own color.</p>}
             <div className="mt-6 grid grid-cols-3 gap-2.5">
               {([1, 2, 3] as Weight[]).map((w) => (
                 <button

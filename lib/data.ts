@@ -3,7 +3,7 @@
 
 import sample from "@/data/sample.json";
 
-/** How hard the day felt: 1 easy, 2 normal, 3 hard. Harder days make deeper glass. */
+/** How hard the day felt: 1 easy, 2 normal, 3 hard. Each sets its own color of glass. */
 export type Weight = 1 | 2 | 3;
 
 export const WEIGHTS: Record<Weight, string> = { 1: "Easy day", 2: "Normal day", 3: "Hard day" };
